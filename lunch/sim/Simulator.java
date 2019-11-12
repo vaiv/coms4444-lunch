@@ -257,7 +257,6 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
 	 				Log.log("monkeys stole food item");
 	 				monkeys.get(j).steal(item.get_food_type());
-	 				agents.get(idx).stolen();
 	 				monkeys.get(j).next_move(null);
 	 				if(monkeys.get(j).check_stolen_item()!=null)
 	 				Log.log("monkeys ran away with " + monkeys.get(j).check_stolen_item().toString());
@@ -274,6 +273,12 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 	 			}
 	 			else
 	 				monkeys.get(j).next_move(null);
+	 		}
+
+	 		for(Integer j=0;j<players.size();j++)
+	 		{
+	 			if(count[j]>=3)
+	 				agents.get(j).stolen();
 	 		}
 
 	 		//Agents/Players move last

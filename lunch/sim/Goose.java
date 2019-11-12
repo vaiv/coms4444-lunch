@@ -12,7 +12,7 @@ public class Goose extends Monkey
 	{
 		super(seed);
 		this.speed = 3.0;
-		this.nest_location = new Point(70,70);
+		this.nest_location = new Point(55,55);
 		this.animal = AnimalType.GOOSE;
 	}
 
@@ -45,7 +45,7 @@ public class Goose extends Monkey
 			Double curr_dist = Point.dist(location, target);
 			bearing = Math.atan2((target.y - location.y),(target.x-location.x));
 
-			if(curr_dist>0)
+			if(curr_dist>speed)
 			{
 				location.x += speed*Math.cos(bearing);
 				location.y+= speed*Math.sin(bearing);

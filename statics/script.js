@@ -3,6 +3,7 @@ var geese_imgs = [];
 var family_imgs = [];
 var food_imgs = [];
 var bg_img;
+var nest_img;
 var monkeys;
 var geese;
 var family;
@@ -28,6 +29,8 @@ var bag_imgs = [];
 function init(monkeys,geese,family,food) {
 
     bg_img = new Image();
+    nest_img = new Image();
+    nest_img.src = 'nest.png';
     bg_img.src = 'background3.png';
 
     for (var i = 0; i < monkeys.length; i++) 
@@ -106,6 +109,9 @@ function draw()
     
     drawBorder(ctx);
 
+
+    ctx.drawImage(nest_img,1220,1220,80, 80*nest_img.height/nest_img.width);
+
     for (var i = 0; i < monkeys.length; i++) {
         var monkey = monkeys[i];
         var drawX = ((monkey.x + 50) /100) * 1200;
@@ -142,6 +148,11 @@ function draw()
                 aspect_ratio = 1.132;
                 img_size = 80;
             }
+        else if((i%4)==0)
+        {
+            aspect_ratio = 0.515;
+            img_size = 60;
+        }
 
         ctx.drawImage(family_imgs[i],drawX,drawY,img_size, img_size/aspect_ratio);
        
@@ -159,14 +170,14 @@ function draw()
             continue;
         switch(id)
         {
-            case 1: ctx.drawImage(sandwich_imgs[iterator[0]],drawX,drawY,20, sandwich_imgs[iterator[0]].height*20/sandwich_imgs[iterator[0]].width); iterator[0]++; break;
+            case 1: ctx.drawImage(sandwich_imgs[iterator[0]],drawX,drawY,35, sandwich_imgs[iterator[0]].height*35/sandwich_imgs[iterator[0]].width); iterator[0]++; break;
             case 2: ctx.drawImage(eaten_sandwich_imgs[iterator[1]],drawX,drawY,20, eaten_sandwich_imgs[iterator[1]].height*20/eaten_sandwich_imgs[iterator[1]].width);iterator[1]++; break;
             case 3: ctx.drawImage(fruit_imgs[iterator[2]],drawX,drawY,20, fruit_imgs[iterator[2]].height*20/fruit_imgs[iterator[2]].width);iterator[2]++; break;
             case 4: ctx.drawImage(eaten_fruit_imgs[iterator[3]],drawX,drawY,20, eaten_fruit_imgs[iterator[3]].height*20/eaten_fruit_imgs[iterator[3]].width); iterator[3]++; break;
             case 5: ctx.drawImage(egg_imgs[iterator[4]],drawX,drawY,20, egg_imgs[iterator[4]].height*20/egg_imgs[iterator[4]].width); iterator[4]++; break;
             case 6: ctx.drawImage(eaten_egg_imgs[iterator[5]],drawX,drawY,20, eaten_egg_imgs[iterator[5]].height*20/eaten_egg_imgs[iterator[5]].width); iterator[5]++; break;
-            case 7: ctx.drawImage(cookie_imgs[iterator[6]],drawX,drawY,20, cookie_imgs[iterator[6]].height*20/cookie_imgs[iterator[6]].width); iterator[6]++; break;
-            case 8: ctx.drawImage(eaten_cookie_imgs[iterator[7]],drawX,drawY,20, eaten_cookie_imgs[iterator[7]].height*20/eaten_cookie_imgs[iterator[7]].width); iterator[7]++; break;
+            case 7: ctx.drawImage(cookie_imgs[iterator[6]],drawX,drawY,35, cookie_imgs[iterator[6]].height*35/cookie_imgs[iterator[6]].width); iterator[6]++; break;
+            case 8: ctx.drawImage(eaten_cookie_imgs[iterator[7]],drawX,drawY,15, eaten_cookie_imgs[iterator[7]].height*15/eaten_cookie_imgs[iterator[7]].width); iterator[7]++; break;
             case 9: ctx.drawImage(bag_imgs[iterator[8]],drawX,drawY,40, bag_imgs[iterator[8]].height*40/bag_imgs[iterator[8]].width);iterator[8]++; break;
         }
 
@@ -278,7 +289,8 @@ function process(data) {
         init(monkeys,geese,family,food);
         first = false;
     }
-
+     timeElement = document.getElementById('time');
+    timeElement.innerHTML = "<pre>" + "Remaining Time: " + result.remaining_time + "</pre>";
 
     return refresh;
 }

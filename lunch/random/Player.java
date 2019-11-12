@@ -60,14 +60,14 @@ public class Player implements lunch.sim.Player
 		}
 
 		// abort taking out if animal is too close
-		// if(min_dist<1.0 && ps.is_player_searching() && ps.get_held_item_type()==null)
-		// {
-		// 	// System.out.println("abort command issued");
-		// 	// System.out.println(min_dist.toString());
-		// 	return new Command(CommandType.ABORT);
-		// }
+		if(min_dist<3.0 && ps.is_player_searching() && ps.get_held_item_type()==null)
+		{
+			// System.out.println("abort command issued");
+			// System.out.println(min_dist.toString());
+			return new Command(CommandType.ABORT);
+		}
 		// keep food item back if animal is too close
-		if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist<1.0)
+		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist<2.5)
 		{
 			System.out.println("keep back issued");
 			return new Command(CommandType.KEEP_BACK);
