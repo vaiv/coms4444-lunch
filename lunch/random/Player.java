@@ -67,9 +67,8 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.ABORT);
 		}
 		// keep food item back if animal is too close
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist<2.5)
+		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist<2.0)
 		{
-			System.out.println("keep back issued");
 			return new Command(CommandType.KEEP_BACK);
 		}
 		// move away from animal 
@@ -83,7 +82,6 @@ public class Player implements lunch.sim.Player
 				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
 				found_valid_move = Point.within_bounds(next_move);
 			}
-			System.out.println("move command issued");
 			return Command.createMoveCommand(next_move);
 			
 		}
@@ -94,8 +92,6 @@ public class Player implements lunch.sim.Player
 			{
 				if(ps.check_availability_item(food_type))
 				{
-					System.out.println("take out command issued");
-					// System.out.println(min_dist.toString());
 					Command c = new Command(CommandType.TAKE_OUT, food_type);
 					return c;
 				}
@@ -104,7 +100,6 @@ public class Player implements lunch.sim.Player
 		// if no animal in vicinity then take a bite
 		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null)
 		{
-			System.out.println("attempting to eat");
 			return new Command(CommandType.EAT);
 		}
 

@@ -215,7 +215,7 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 	 			//steal food item
 	 			else if(dist< 2+10e-7 && item!=null && agents.get(idx).visible_item() && (item.get_food_type()==FoodType.SANDWICH||item.get_food_type()==FoodType.SANDWICH1 || item.get_food_type()==FoodType.SANDWICH2))
 	 			{
-	 				Log.log("goose stole sandwich");
+	 				// Log.log("goose stole sandwich");
 	 				geese.get(j).steal(item.get_food_type());
 	 				agents.get(idx).stolen();
 	 				geese.get(j).next_move(geese.get(j).get_nest_location());
@@ -255,11 +255,9 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 	 			if(count[idx]>=3 && dist<5+10e-7 && !monkeys.get(j).busy_eating() && item!=null && agents.get(idx).visible_item())
 	 			{
 
-	 				Log.log("monkeys stole food item");
+	 				// Log.log("monkeys stole food item");
 	 				monkeys.get(j).steal(item.get_food_type());
 	 				monkeys.get(j).next_move(null);
-	 				if(monkeys.get(j).check_stolen_item()!=null)
-	 				Log.log("monkeys ran away with " + monkeys.get(j).check_stolen_item().toString());
 	 			}
 	 			else if(monkeys.get(j).busy_eating())
 	 			{
@@ -372,28 +370,6 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
  private static void execute_command(Command c, Agent a)
  {
- 	// Log.log("executing command");
- 	// Log.log(c.get_type().toString());
- 	// if((c==null || c.get_type()==null) && a.is_waiting())
- 	// {
- 	// 	Log.log("searching for food.");
-		// a.update_remaining_time();
-		// if(!a.is_waiting() && a.get_held_item()==null)
-		// {
-		// 	Log.log("retrieving food.");
-		// 	a.retrieve_item(a.get_food_request());
-		// }
-		// else if(!a.is_waiting())
-		// {
-		// 	a.keep_back_item();
-		// }
-
-		// return;
- 	// }
- 	// else if((c==null || c.get_type()==null))
- 	// {
- 	// 	Log.log("doing nothing");
- 	// }
  	switch(c.get_type())
  	{
  		case ABORT: 
@@ -610,6 +586,7 @@ private static void parseArgs(String[] args)
                             throw new IllegalArgumentException("Missing number of turns.");
                         }			
                         turns = Integer.parseInt(args[i]);
+                        count_down = turns;
                     }
                     else 
                     {
@@ -776,7 +753,14 @@ private static void parseArgs(String[] args)
         for (int i = 0; i < agents.size(); i++)
         {
             Point p =  agents.get(i).get_location();
-            json += "{\"x\" : " + p.x + ",\"y\" : " + p.y + ",\"id\":"+ i +"}";
+            boolean s_1=false,s_2=false,f_1=false,f_2=false,e=false,c=false;
+            s_1 = agents.get(i).check_available_item(FoodType.SANDWICH1);
+            s_2 = agents.get(i).check_available_item(FoodType.SANDWICH2);
+            f_1 = agents.get(i).check_available_item(FoodType.FRUIT1);
+            f_2 = agents.get(i).check_available_item(FoodType.FRUIT2);
+            e = agents.get(i).check_available_item(FoodType.EGG);
+            c = agents.get(i).check_available_item(FoodType.COOKIE);
+            json += "{\"x\" : " + p.x + ",\"y\" : " + p.y + ",\"id\":"+ i +  ",\"name\":" + "\"" + playerNames.get(i) + "\"" + ",\"score\":"+ agents.get(i).get_score() + ",\"s_1\":" + s_1 + ",\"s_2\":" + s_2 + ",\"f_1\":" + f_1 +",\"f_2\":" + f_2  + ",\"e\":" + e + ",\"c\":" + c+"}";
             if (i !=  agents.size() - 1)
             {
                 json += ",";

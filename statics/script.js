@@ -108,6 +108,7 @@ function draw()
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     drawBorder(ctx);
+    drawStats(ctx);
 
 
     ctx.drawImage(nest_img,1220,1220,80, 80*nest_img.height/nest_img.width);
@@ -258,6 +259,46 @@ function drawFamily(ctx, family) {
         img.src='jetson_'+((i%4)+1).toString()+'.png';
         //console.log(bale);
        
+    }
+}
+
+
+function drawStats(ctx)
+{
+    var colors = ["blue", "darkblue", "darkgreen", "darkmagenta", "salmon", "gold", "deeppink"]
+    for (var i = 0; i < family.length; i++)
+    {
+        var p = family[i];
+        ctx.fillStyle=colors[i];
+
+        ctx.font = "30px Arial";
+        var items_available = '';
+        var avatar = 'George Jetson';
+
+        if(i%4==1)
+            avatar = 'Jane Jetson';
+        else if (i%4==2)
+            avatar = 'Judy Jetson';
+        else if (i%4==3)
+            avatar = 'Elroy Jetson';
+
+
+        if(p.s_1)
+            items_available+='sandwich_1, ';
+        if(p.s_2)
+            items_available+= 'sandwich_2, ';
+        if(p.f_1)
+            items_available+='fruit_1, ';
+        if(p.f_2)
+            items_available+= 'fruit_2, ';
+        if(p.e)
+            items_available+= 'egg, ';
+        if(p.c)
+            items_available+= 'cookie, ';
+
+        ctx.fillText(p.name + ': ' +  avatar,1280,180*i + 30);
+        ctx.fillText('score: ' + p.score ,1280, 180*i + 80);
+        ctx.fillText('items in bag: ' + items_available ,1280,180*i + 130);
     }
 }
 
