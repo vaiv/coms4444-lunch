@@ -370,6 +370,7 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
  private static void execute_command(Command c, Agent a)
  {
+ 	if(c!=null && c.get_type()!=null)
  	switch(c.get_type())
  	{
  		case ABORT: 
@@ -465,6 +466,24 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
  		default:  
  			 Log.log("unknown command encountered.");
  	}
+
+
+ 	if(a.is_waiting())
+	{
+		// Log.log("searching for food.");
+		a.update_remaining_time();
+		if(!a.is_waiting() && a.get_held_item()==null)
+		{
+			// Log.log("retrieving food.");
+			a.retrieve_item(a.get_food_request());
+		}
+		else if(!a.is_waiting())
+		{
+			a.keep_back_item();
+		}
+	}
+
+
  }
 
 private static Integer get_nearest_agent(Point p)

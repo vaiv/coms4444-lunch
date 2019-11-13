@@ -104,7 +104,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// System.out.println("player is searching");
-		return new Command(CommandType.WAIT);
+		return new Command();
 
 	}
 
