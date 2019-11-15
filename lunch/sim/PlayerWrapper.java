@@ -28,10 +28,15 @@ public class PlayerWrapper {
         this.timer = new Timer();
     }
 
-    // Initialization function.
+   // Initialization function.
     // members: other family members collborating with your player.
-    // members_count: Number of family members.
+    // id: player id
+    // f: Number of family members.
+    // animals: list of animals
+    // m: number of monkeys
+    // g: number of geese 
     // t: Time limit for simulation.
+    // s: seed for random 
 
     public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
     {
