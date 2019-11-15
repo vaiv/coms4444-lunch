@@ -109,7 +109,7 @@ public class Player implements lunch.sim.Player {
                     dangerMonkey+=1;
                 }
             }else{//goose
-                if (Point.dist(animal.get_location(), member.get_location())<=2.0){ //&& member.get_held_item_type()==FoodType.SANDWICH){
+                if (Point.dist(animal.get_location(), member.get_location())<=2.0 && member.get_held_item_type()==FoodType.SANDWICH){
                     dangerGoose+=1;
                 }
             }
