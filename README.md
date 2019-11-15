@@ -36,8 +36,8 @@ This project belongs to Columbia University. It may be freely used for education
 ### Description of Important Classes
 #### Player: class to be implemented by your player.
 ##### Important methods in player class:
-init: return a string which represents family to be displayed(for default return empty string). The avatar PNGs should be added to the statics folder and should be named accprding to convention: avatar_1.png, avatar_2.png, etc.
-getCommand: return the command to ne executed for this round.
+```init```: return a string which represents family to be displayed(for default return empty string). The avatar PNGs should be added to the statics folder and should be named accprding to convention: avatar_1.png, avatar_2.png, etc.
+```getCommand```: return the command to ne executed for this round.
 
 #### Family: Contains properties of other family members.
 ##### Important methods in Family class:
