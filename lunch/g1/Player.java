@@ -34,9 +34,22 @@ public class Player implements lunch.sim.Player
 		random = new Random(s);
 	}
 
+	public ArrayList<FoodType> getPriority(){
+		   ArrayList<FoodType> priorityList = new ArrayList<>();
+		   priorityList.add(FoodType.COOKIE);
+		   priorityList.add(FoodType.FRUIT1);
+		   priorityList.add(FoodType.FRUIT2);
+		   priorityList.add(FoodType.EGG);
+		   priorityList.add(FoodType.SANDWICH1);
+		   priorityList.add(FoodType.SANDWICH2);
+
+		   return priorityList;
+
+	}
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
-
+//		ArrayList<FoodType> foodprior = new ArrayList<>();
+//		foodprior.add(COOKIE);
 		Double min_dist = Double.MAX_VALUE;
 
 		for(Integer i=0;i<animals.size();i++)
@@ -86,9 +99,12 @@ public class Player implements lunch.sim.Player
 			
 		}
 		// if no animal is near then take out food
+
+
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
-			for(FoodType food_type: FoodType.values())
+			ArrayList<FoodType> priorityList = getPriority();
+			for(FoodType food_type: priorityList)
 			{
 				if(ps.check_availability_item(food_type))
 				{
