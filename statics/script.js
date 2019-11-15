@@ -276,6 +276,10 @@ function drawStats(ctx)
             avatar = 'Elroy Jetson';
 
 
+        if(p.avatars!='jetson')
+            avatar = p.avatars+'_'+i.toString();
+
+
         if(p.s_1)
             items_available+='sandwich_1, ';
         if(p.s_2)
