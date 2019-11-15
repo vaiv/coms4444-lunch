@@ -122,13 +122,44 @@ public class Player implements lunch.sim.Player
 		}
 	}
 
+	// returns true if in the next time step there will be a goose that can grab your sandwich
+	// Geese can fly at 3 meters per second, if a goose makes it to within 2m of your position, they swoop in and grab your sandwich.
 	private boolean detectGeese(PlayerState ps, List<Animal> geese) {
-
+		for (Animal g: geese) {
+			Point playerLoc = ps.get_location();
+			Point gooseLoc = g.get_location();
+			double dist = Point.dist(gooseLoc, playerLoc);
+			// TODO: consider busyEating
+			if (dist <= 5.0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-
+	// returns true if in the next time step there will be one or more monkeys that can grab your sandwich
 	private boolean detectMonkeys(PlayerState ps, List<Animal> monkeys) {
-
+		int monkeyCount = 0;
+		for (Animal m: monkeys) {
+			Point playerLoc = ps.get_location();
+			Point monkeyLoc = m.get_location();
+			double dist = Point.dist(monkeyLoc, playerLoc);
+			if (dist <= 5.0) {
+				monkeyCount++;
+			}
+		}
+		if (monkeyCount < 3) {
+			return false;
+		}
+		for (Animal m: monkeys) {
+			Point playerLoc = ps.get_location();
+			Point monkeyLoc = m.get_location();
+			double dist = Point.dist(monkeyLoc, playerLoc);
+			if (dist <= 1.0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
