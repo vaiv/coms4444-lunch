@@ -28,14 +28,14 @@ public class Player implements lunch.sim.Player {
 
     public Player() {
         turn = 0;
-	}
+    }
     
     public void init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         this.id = id;
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>();
-	}
+    }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
@@ -44,7 +44,7 @@ public class Player implements lunch.sim.Player {
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
             min_dist = Math.min(min_dist, Point.dist(ps.get_location(), animals.get(i).get_location()));
-		}
+        }
         
         if (turn < 100) {
             boolean found_valid_move= false;
@@ -57,7 +57,7 @@ public class Player implements lunch.sim.Player {
             // System.out.println("move command issued");
             turn++;
             return Command.createMoveCommand(next_move);
-		}
+        }
 
         // Abort taking out if animal is too close
         if (min_dist < 3.0 && ps.is_player_searching() && ps.get_held_item_type() == null) {
@@ -68,7 +68,7 @@ public class Player implements lunch.sim.Player {
         // Keep food item back if animal is too close
         else if (!ps.is_player_searching() && ps.get_held_item_type() != null && min_dist < 2.0) {
             return new Command(CommandType.KEEP_BACK);
-		}
+        }
         // Move away from animal
         else if (min_dist < 3.0) {
             boolean found_valid_move = false;
