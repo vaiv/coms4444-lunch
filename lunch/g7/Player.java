@@ -60,25 +60,35 @@ public class Player implements lunch.sim.Player
 			return Command.createMoveCommand(next_move);
 		}
 
-		Collections.sort(monkeys, (a, b) -> Double.compare(Point.dist(a.get_location(), ps.get_location())
-				,Point.dist(b.get_location(), ps.get_location())));
-		Collections.sort(geese, (a, b) -> Double.compare(Point.dist(a.get_location(), ps.get_location())
-				,Point.dist(b.get_location(), ps.get_location())));
+		monkeys.sort(Comparator.comparingDouble(a -> Point.dist(a.get_location(), ps.get_location())));
+		geese.sort(Comparator.comparingDouble(a -> Point.dist(a.get_location(), ps.get_location())));
 
 		// abort taking out if animal is too close
-		if(ps.is_player_searching() && ps.get_held_item_type()==null && isDangerours(id, ps, monkeys, geese))
+		if(ps.is_player_searching() && ps.get_held_item_type() == null && isDangerours(ps, monkeys, geese))
 		{
 			return new Command(CommandType.ABORT);
 		}
 		// keep food item back if animal is too close
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && isDangerours(id, ps, monkeys, geese))
+		else if(!ps.is_player_searching() && ps.get_held_item_type() != null && isDangerours(ps, monkeys, geese))
 		{
-
+			foodToTakeOut = null;
 			return new Command(CommandType.KEEP_BACK);
 		}
 		// move away from animal 
-		else if(min_dist<3.0)
+		else if(isDangerours(ps, monkeys, geese))
 		{
+//			List<Double> directions = new ArrayList<>();
+//			for (Animal monkey : monkeys) {
+//				if (Point.dist(monkey.get_location(), ps.get_location()) <= 5) {
+//					directions.add(Math.atan(
+//							(monkey.get_location().y - ps.get_location().y) / (monkey.get_location().x - ps.get_location().x)));
+//				}
+//			}
+//
+//			for (Animal goose : geese) {
+//
+//			}
+
 			boolean found_valid_move= false;
 			Point next_move = new Point(-1,-1);
 			while(!found_valid_move)
@@ -88,10 +98,9 @@ public class Player implements lunch.sim.Player
 				found_valid_move = Point.within_bounds(next_move);
 			}
 			return Command.createMoveCommand(next_move);
-			
 		}
 		// if no animal is near then take out food
-		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
+		else if (!ps.is_player_searching() && ps.get_held_item_type()==null)
 		{
 			for(FoodType food_type: FoodType.values())
 			{
@@ -104,18 +113,17 @@ public class Player implements lunch.sim.Player
 			}
 		}
 		// if no animal in vicinity then take a bite
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null)
+		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
 			return new Command(CommandType.EAT);
 		}
 
-		// System.out.println("player is searching");
 		return new Command();
 
 	}
 
-	private boolean isDangerours(int id, PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
-		if (foodToTakeOut == FoodType.SANDWICH1 || foodToTakeOut == FoodType.SANDWICH2)
+	private boolean isDangerours(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
+		if (foodToTakeOut != null && (foodToTakeOut == FoodType.SANDWICH1 || foodToTakeOut == FoodType.SANDWICH2))
 			return detectGeese(ps, geese) || detectMonkeys(ps, monkeys);
 		else {
 			return detectMonkeys(ps, monkeys);
