@@ -60,11 +60,11 @@ This project belongs to Columbia University. It may be freely used for education
 ```check_availability_item```: check if the specified item is available for consumption. <br/>
 
 #### 5) Command: Specified command structure
-##### 6) Important methods in Command class:
+##### Important methods in Command class:
 ```createMoveCommand```: create a MOVE_TO command by specifying a location within bounds. <br/>
 ```createRetrieveCommand```: create a TAKE_OUT command by specifying the type of food to be taken out. <br/>
 
-#### 7) CommandType: Specifies the types of command
+#### 6) CommandType: Specifies the types of command
 
-#### 8) FoodType: Specifies the types of food items.
+#### 7) FoodType: Specifies the types of food items.
 
