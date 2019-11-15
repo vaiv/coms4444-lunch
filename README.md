@@ -34,24 +34,24 @@ TAs: Vaibhav Darbari, Chengyu Lin
 This project belongs to Columbia University. It may be freely used for educational purposes.
 
 ### Description of Important Classes
-#### Player: class to be implemented by your player.
+#### 1) Player: class to be implemented by your player.
 ##### Important methods in player class:
 ```init```: return a string which represents family to be displayed(for default return empty string). The avatar PNGs should be added to the statics folder and should be named accprding to convention: avatar_1.png, avatar_2.png, etc. <br/>
 ```getCommand```: return the command to ne executed for this round.
 
-#### Family: Contains properties of other family members.
+#### 2) Family: Contains properties of other family members.
 ##### Important methods in Family class:
 ```get_held_item_type```: get the type of food held by the family member. <br/>
 ```get_location```: get the location of family member.
 
-#### Animal: Contains properties of Animals.
+#### 3) Animal: Contains properties of Animals.
 ##### Important methods in Animal class:
 ```get_location```: get the location of animal. <br/>
 ```which_animal```: get the type of animal. <br/>
 ```get_max_speed```: get the max speed of the animal. <br/>
 ```busy_eating```: check if animal is busy eating something. <br/>
 
-#### PlayerState: Contains player's properties.
+#### 4) PlayerState: Contains player's properties.
 ##### Important methods in PlayerState class:
 ```time_to_eat_remaining```: time remaining for item in hand to be fully consumed. <br/>
 ```is_player_searching```: check if player is busy looking inside the bag. <br/>
@@ -59,12 +59,12 @@ This project belongs to Columbia University. It may be freely used for education
 ```get_time_for_item```: get the time remaining for item specified to be fully consumed. <br/>
 ```check_availability_item```: check if the specified item is available for consumption. <br/>
 
-#### Command: Specified command structure
-##### Important methods in Command class:
+#### 5) Command: Specified command structure
+##### 6) Important methods in Command class:
 ```createMoveCommand```: create a MOVE_TO command by specifying a location within bounds. <br/>
 ```createRetrieveCommand```: create a TAKE_OUT command by specifying the type of food to be taken out. <br/>
 
-#### CommandType: Specifies the types of command
+#### 7) CommandType: Specifies the types of command
 
-#### FoodType: Specifies the types of food items.
+#### 8) FoodType: Specifies the types of food items.
 
