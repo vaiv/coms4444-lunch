@@ -74,7 +74,7 @@ public class Player implements lunch.sim.Player
 			foodToTakeOut = null;
 			return new Command(CommandType.KEEP_BACK);
 		}
-		// move away from animal 
+		// move away from animal
 		else if(isDangerours(ps, monkeys, geese))
 		{
 //			List<Double> directions = new ArrayList<>();
@@ -118,6 +118,7 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.EAT);
 		}
 
+		// System.out.println("player is searching");
 		return new Command();
 
 	}
@@ -138,7 +139,7 @@ public class Player implements lunch.sim.Player
 			Point gooseLoc = g.get_location();
 			double dist = Point.dist(gooseLoc, playerLoc);
 			// TODO: consider busyEating
-			if (dist <= 5.0) {
+			if (dist <= 8.0) {
 				return true;
 			}
 		}
@@ -163,11 +164,26 @@ public class Player implements lunch.sim.Player
 			Point playerLoc = ps.get_location();
 			Point monkeyLoc = m.get_location();
 			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= 1.0) {
+			if (dist <= 3.0) {
 				return true;
 			}
 		}
 		return false;
 	}
 
+	// returns a valid move command from start to dest, if already in dest, return null
+	public Command getMove(Point start, Point dest) {
+		if (Math.abs(Point.dist(start, dest)) <= 0.00001) {
+			return null;
+		}
+		double dist = Math.sqrt(Math.pow(dest.x - start.x, 2) + Math.pow(dest.y - start.y, 2));
+		if (dist <= 1.0)
+			return Command.createMoveCommand(new Point(dest));
+
+		double ratio = 1 / dist;
+		double xVector = (dest.x - start.x) * ratio;
+		double yVector = (dest.y - start.y) * ratio;
+
+		return new Command(CommandType.MOVE_TO, new Point(xVector, yVector));
+	}
 }
