@@ -19,6 +19,7 @@ public class PlayerWrapper {
     private String name;
     private long timeout;
 
+
     public PlayerWrapper(Player player, String name, long timeout) 
     {
         this.player = player;
@@ -28,36 +29,37 @@ public class PlayerWrapper {
     }
 
     // Initialization function.
-    // pieces: Location of the pieces for the player.
-    // n: Number of pieces available.
-    // t: Total turns available.
-    public void init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+    // members: other family members collborating with your player.
+    // members_count: Number of family members.
+    // t: Time limit for simulation.
+
+    public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
     {
+        String str="";
         Log.record("Initializing player " + this.name);
-        // Initializing ID mapping array
          try {
             if (!timer.isAlive()) timer.start();
 
-            timer.call_start(new Callable<Void>() 
+            timer.call_start(new Callable<String>() 
             {
                 @Override
-                public Void call() throws Exception 
+                public String call() throws Exception 
                 {
-                    player.init(members, id, f, animals, m, g, t, s);
-                    return null;
+                    return player.init(members, id, f, animals, m, g, t, s);
                 }
             });
 
-            timer.call_wait(timeout);
+            str = timer.call_wait(timeout);
         }
         catch (Exception ex) 
         {
             System.out.println("Player " + this.name + " has possibly timed out.");
             Log.record("Player " + this.name + " has possibly timed out.");
+            Log.record(ex.getMessage());
             // throw ex;
         }       
         
-        
+        return str;
     }
     // Gets the moves from the player. Number of moves is specified by first parameter.
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)

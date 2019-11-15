@@ -53,14 +53,7 @@ function init(monkeys,geese,family,food) {
     {
         var member = family[i];
         var member_img = new Image();
-        if(i%4==0)
-            member_img.src = 'jetson_1.png';
-        else if (i%4==1)
-            member_img.src = 'jetson_2.png';
-        else if(i%4==2)
-            member_img.src = 'jetson_3.png';
-        else
-            member_img.src = 'jetson_4.png';
+        member_img.src = family[i].avatars+ '_'+(i+1).toString() + '.png';
         family_imgs.push(member_img);
     }
 
@@ -136,26 +129,26 @@ function draw()
         var member = family[i];
         var drawX = ((member.x + 50) /100) * 1200;
         var drawY = ((member.y + 50) /100) * 1200;
-        var aspect_ratio = 0.515;
-        var img_size = 50;
+        // var aspect_ratio = 0.515;
+        var img_size = 100;
 
-        if((i%4)+1==3)
-            {
-                aspect_ratio = 0.879;
-                img_size = 80;
-            }
-        else if ((i%4)+1==4)
-            {
-                aspect_ratio = 1.132;
-                img_size = 80;
-            }
-        else if((i%4)==0)
-        {
-            aspect_ratio = 0.515;
-            img_size = 60;
-        }
+        // if((i%4)+1==3)
+        //     {
+        //         aspect_ratio = 0.879;
+        //         img_size = 80;
+        //     }
+        // else if ((i%4)+1==4)
+        //     {
+        //         aspect_ratio = 1.132;
+        //         img_size = 80;
+        //     }
+        // else if((i%4)==0)
+        // {
+        //     aspect_ratio = 0.515;
+        //     img_size = 60;
+        // }
 
-        ctx.drawImage(family_imgs[i],drawX,drawY,img_size, img_size/aspect_ratio);
+        ctx.drawImage(family_imgs[i],drawX,drawY,img_size*family_imgs[i].width/family_imgs[i].height, img_size);
        
     }
 
@@ -297,7 +290,11 @@ function drawStats(ctx)
             items_available+= 'cookie, ';
 
         ctx.fillText(p.name + ': ' +  avatar,1280,180*i + 30);
-        ctx.fillText('score: ' + p.score ,1280, 180*i + 80);
+        var percent_rem = 100 - parseFloat(p.rem_time).toFixed(2);
+        percent_rem = percent_rem.toFixed(2);
+        if(percent_rem>100)
+            percent_rem = NaN;
+        ctx.fillText('score: ' + p.score + ' eating: ' + p.eating + ' (' + percent_rem + '%) ',1280, 180*i + 80);
         ctx.fillText('items in bag: ' + items_available ,1280,180*i + 130);
     }
 }
