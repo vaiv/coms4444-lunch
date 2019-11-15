@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.HashMap;
 import javafx.util.Pair; 
 import java.util.ArrayList;
+import java.util.*;
 
 import lunch.sim.Point;
 import lunch.sim.Command;
@@ -14,6 +15,7 @@ import lunch.sim.CommandType;
 import lunch.sim.Animal;
 import lunch.sim.Family;
 import lunch.sim.FoodType;
+import lunch.sim.AnimalType;
 import lunch.sim.PlayerState;
 
 import java.lang.Math;
@@ -52,6 +54,69 @@ public class Player implements lunch.sim.Player
 		   return priorityList;
 
 	}
+	//check if eating is in risk
+	//if a third Monkey is coming near
+	public boolean checkMonkey(ArrayList<Animal> animals, PlayerState ps){
+		int num_monkey_close = 0;
+		HashMap<Integer,Boolean> monkey_status = new HashMap<>();
+		for(Integer i=0; i < animals.size();i++){
+			if (animals.get(i).which_animal() == AnimalType.MONKEY){
+
+				if (Point.dist(ps.get_location(),animals.get(i).get_location()) < 4.0){
+					monkey_status.put(i,true);
+					num_monkey_close += 1;
+				}
+				else{
+					monkey_status.put(i,false);
+				}
+
+			}
+		}
+//		System.out.println(num_monkey_close);
+		//if three monkeys are around, immediately put back
+		if (num_monkey_close >= 3){
+//			System.out.println("three simultaneously come");
+			return true;}
+		//check if there is a third Monkey coming near
+		else if (num_monkey_close == 2){
+			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
+				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
+//					System.out.println("detect third monkey");
+					return true;
+				}
+			}
+		}
+		//two monkeys are coming near with 1 already within 2 meters
+		else if (num_monkey_close ==1){
+			int num_monkey_addition = 0;
+			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
+				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
+					num_monkey_addition += 1;
+				}
+
+			}
+			if (num_monkey_addition >= 2){
+//				System.out.println("detect additional monkeys");
+				return true;}
+		}
+		return false;
+	}
+
+	//if there is goose less than 3 meters away DANGER!
+	public boolean checkGeese(ArrayList<Animal> animals, PlayerState ps){
+		double dist;
+		for(Integer i=0;i<animals.size();i++){
+			//only matter if eating sandwich
+			if (animals.get(i).which_animal() == AnimalType.GOOSE &&
+					(ps.get_held_item_type() == FoodType.SANDWICH1 || ps.get_held_item_type() == FoodType.SANDWICH2 ) ){
+				dist = Point.dist(ps.get_location(),animals.get(i).get_location());
+				if (dist < 6.0){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	public Command getCommand( ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps ) {
         turn++;
@@ -81,6 +146,7 @@ public class Player implements lunch.sim.Player
 			min_dist = Math.min(min_dist,Point.dist(ps.get_location(),animals.get(i).get_location()));
 		}
 
+
 /*
 		if(turn<100)
 		{
@@ -99,34 +165,35 @@ public class Player implements lunch.sim.Player
 */
 
 		// abort taking out if animal is too close
-		if(min_dist<3.0 && ps.is_player_searching() && ps.get_held_item_type()==null)
+		if(min_dist < 4.0 && ps.is_player_searching() && ps.get_held_item_type()==null)
 		{
 			// System.out.println("abort command issued");
 			// System.out.println(min_dist.toString());
 			return new Command(CommandType.ABORT);
 		}
 		// keep food item back if animal is too close
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist<2.0)
+		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist < 2.0 &&
+				(checkMonkey(animals, ps) || checkGeese(animals,ps)))
 		{
 			return new Command(CommandType.KEEP_BACK);
 		}
 		// move away from animal 
-		else if(min_dist<3.0)
-		{
-			boolean found_valid_move= false;
-			Point next_move = new Point(-1,-1);
-			while(!found_valid_move)
-			{
-				Double bearing = random.nextDouble()*2*Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
-			}
-			return Command.createMoveCommand(next_move);
-			
-		}
+//		else if(min_dist<3.0)
+//		{
+//			boolean found_valid_move= false;
+//			Point next_move = new Point(-1,-1);
+//			while(!found_valid_move)
+//			{
+//				Double bearing = random.nextDouble()*2*Math.PI;
+//				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
+//				found_valid_move = Point.within_bounds(next_move);
+//			}
+//			return Command.createMoveCommand(next_move);
+//
+//		}
+
+
 		// if no animal is near then take out food
-
-
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
 			ArrayList<FoodType> priorityList = getPriority();
