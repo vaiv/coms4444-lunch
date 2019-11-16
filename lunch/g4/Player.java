@@ -28,7 +28,12 @@ public class Player implements lunch.sim.Player {
 	private String avatars;
 	private List<Animal> monkeys = new ArrayList<>();
 	private List<Animal> geese = new ArrayList<>();
-	private Point targetCorner = new Point(-50, -50);
+	private List<Point> targetCorners = Arrays.asList(new Point[]{
+			new Point(-50, -50), 
+			new Point(-50, 50), 
+			new Point(50, -50)
+			});
+	private Map<Integer, Point> targetCornersChosen = new HashMap<>();
 	private FoodType foodCurrentlySearchingFor = null;
 	private static final double MONKEY_DISTANCE_THRESHOLD = 6.0 + 10e-6;
 	private static final double GOOSE_DISTANCE_THRESHOLD = 5.0 + 10e-6;
@@ -45,7 +50,7 @@ public class Player implements lunch.sim.Player {
 	}
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-		if(turn < 300) {
+		if(turn < 100) {
 			boolean found_valid_move = false;
 			Point next_move = new Point(-1, -1);
 			while(!found_valid_move) {
@@ -158,6 +163,13 @@ public class Player implements lunch.sim.Player {
 				}
 				
 				Point currPoint = ps.get_location();
+				Point targetCorner = new Point(-1, -1);
+				if(!targetCornersChosen.containsKey(id)) {
+					targetCornersChosen.put(id, targetCorners.get(random.nextInt(targetCorners.size())));
+					System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id));
+				}
+				targetCorner = targetCornersChosen.get(id);
+
 				if(currPoint.x == targetCorner.x && currPoint.y == targetCorner.y) {
 					if(!gooseTooClose) {
 						System.out.println("Player " + id + " is taking out a sandwich.");
@@ -169,7 +181,7 @@ public class Player implements lunch.sim.Player {
 						return new Command();
 					}
 				}
-								
+				
 				double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
 				if(distanceFromCorner < 1.0) {
 					System.out.println("Player " + id + " is making its final move to the corner.");
@@ -177,8 +189,8 @@ public class Player implements lunch.sim.Player {
 				}
 
 				double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
-				double deltaX = -1.0 / Math.sqrt(Math.pow(slope, 2) + 1);
-				double deltaY = slope * deltaX;
+				double deltaX = (targetCorner.x > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
+				double deltaY = Math.abs(slope) * (targetCorner.y > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
 				System.out.println("Player " + id + " is moving to the corner.");
 				return Command.createMoveCommand(new Point(currPoint.x + deltaX, currPoint.y + deltaY));
 			}
