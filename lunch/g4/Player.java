@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Random;
 import java.util.HashMap;
-import javafx.util.Pair; 
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -21,7 +19,6 @@ import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 
 public class Player implements lunch.sim.Player {
-	private int seed;
 	private Random random;
 	private Integer id;
 	private Integer turn;
