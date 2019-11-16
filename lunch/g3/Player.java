@@ -5,7 +5,7 @@ import lunch.sim.CommandType;
 import java.util.List;
 import java.lang.Math;
 import java.util.ArrayList;
-import lunch.sim.PlayerState;
+import lunch.sim.*;
 
 public class Player implements lunch.sim.Player {
     // Initialization function.
@@ -21,25 +21,30 @@ public class Player implements lunch.sim.Player {
         return null;
     };
 
-    public boolean inDanger(ArrayList<Animal> animals, PlayerState ps) {
-        if(ps.held_food_item == null) {
-            return false;
-        }
+    public boolean shouldStopEating(ArrayList<Animal> animals, PlayerState ps) {
         int dangerMonkeys = 0;
         for (Animal animal : animals) {
-            if(animal.animal == GOOSE) {
-                if(distToAnimal(animal, ps) > 6) {
-                    continue;
+            if(animal.which_animal() == AnimalType.GOOSE) {
+                if(distToAnimal(animal, ps) <= 6) {
+                    return true;
                 }
             } else {
                 //monkey
-                if(distToAnimal(animal, ps))
+                if(distToAnimal(animal, ps) <= 6) {
+                    if(dangerMonkeys == 2) {
+                        return true;
+                    }
+                    dangerMonkeys++;
+                }
             }
         }
         return false;
     }
+    public boolean shouldFinishRemoving(ArrayList<Animal> animals, PlayerState ps) {
+        return false;
+    }
 
     public double distToAnimal(Animal animal, PlayerState ps) {
-        return Math.sqrt(Math.pow(animal.location.x - player.location.x, 2) + Math.pow(animal.location.y - player.location.y, 2));
+        return Math.sqrt(Math.pow(animal.get_location().x - ps.get_location().x, 2) + Math.pow(animal.get_location().y - ps.get_location().y, 2));
     }
 }
