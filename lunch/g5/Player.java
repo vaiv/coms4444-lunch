@@ -71,11 +71,11 @@ public class Player implements lunch.sim.Player {
         // Initiate empty matrices for each timestep
         Point ourLocation = ps.get_location();
         for (int i = 0; i < nTimesteps; i++) {
-            int size = i + 3 + bufferLookahead * 2;
+            int size = i * 2 + 3 + bufferLookahead * 2;
             Matrix m = new Matrix(size, size);
             int origin = (size - 1) / 2 + 1;
-            int originX = origin + (int)Math.round(ourLocation.x);
-            int originY = origin + (int)Math.round(ourLocation.y);
+            int originX = origin - (int)Math.round(ourLocation.x);
+            int originY = origin - (int)Math.round(ourLocation.y);
             m.setOrigin(originX, originY);
             timesteps.add(m);
         }
@@ -129,12 +129,16 @@ public class Player implements lunch.sim.Player {
             System.out.println("-------");
         }
 
+        Command command = new Command();
+        Point nextMove = new Point(ps.get_location().x + 1, ps.get_location().y);
+        command = Command.createMoveCommand(nextMove);
+
         // Increase the turn counter
         turn++;
         // Store animals for the next turn
         previousAnimals = animals;
 
-        return new Command();
+        return command;
     }
 }
 
