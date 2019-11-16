@@ -102,6 +102,7 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.KEEP_BACK);
 		}
 
+		// actually we only want to abort if we're close to getting the food out
 		if (animalsTooClose && ps.is_player_searching()) {
 			// danger sensed, start putting food away
 			return new Command(CommandType.ABORT);
