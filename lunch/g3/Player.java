@@ -25,22 +25,41 @@ public class Player implements lunch.sim.Player {
         int dangerMonkeys = 0;
         for (Animal animal : animals) {
             if(animal.which_animal() == AnimalType.GOOSE) {
+                if(ps.get_held_item_type() == FoodType.SANDWICH && distToAnimal(animal, ps) <= 6) {
+                    return true;
+                }
+            } else {
+                //monkey
+                if(distToAnimal(animal, ps) <= 6) {
+                    dangerMonkeys++;
+                    if(dangerMonkeys == 3) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean shouldFinishRemoving(ArrayList<Animal> animals, PlayerState ps) {
+        int secondsRemaining = ps.time_to_finish_search(); //Will be used later
+        int dangerMonkeys = 0;
+        for (Animal animal : animals) {
+            if(animal.which_animal() == AnimalType.GOOSE) {
+                //TODO: check if we're pulling out a sandwich
                 if(distToAnimal(animal, ps) <= 6) {
                     return true;
                 }
             } else {
                 //monkey
                 if(distToAnimal(animal, ps) <= 6) {
-                    if(dangerMonkeys == 2) {
+                    dangerMonkeys++;
+                    if(dangerMonkeys == 3) {
                         return true;
                     }
-                    dangerMonkeys++;
                 }
             }
         }
-        return false;
-    }
-    public boolean shouldFinishRemoving(ArrayList<Animal> animals, PlayerState ps) {
         return false;
     }
 
