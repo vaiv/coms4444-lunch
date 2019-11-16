@@ -56,9 +56,14 @@ public class Player implements lunch.sim.Player {
 		return top_right;
     }
 
-    public Point getNextMoveToCorner(){
+    public Point getNextMoveToCorner(PlayerState ps){
         Double bearing = 1*2*Math.PI;
 		Point move_to_corner = new Point (ps.get_location().x + .5, ps.get_location().y + .5);
 		return move_to_corner;
     }
+
+    /*
+    public Double getBearingFromDestination(){
+		Math.atan()
+	}*/
 }
