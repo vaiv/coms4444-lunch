@@ -66,4 +66,23 @@ public class Player implements lunch.sim.Player {
     public double distToAnimal(Animal animal, PlayerState ps) {
         return Math.sqrt(Math.pow(animal.get_location().x - ps.get_location().x, 2) + Math.pow(animal.get_location().y - ps.get_location().y, 2));
     }
+
+    public Pair locateNearestCorner(){
+        ArrayList<Pair> corners = new ArrayList<Pair>();
+		Pair top_right = new Pair(0, 100);
+		Pair top_left = new Pair(0, 0);
+		corners.add(top_right);
+		return top_right;
+    }
+
+    public Point getNextMoveToCorner(PlayerState ps){
+        Double bearing = 1*2*Math.PI;
+		Point move_to_corner = new Point (ps.get_location().x + .5, ps.get_location().y + .5);
+		return move_to_corner;
+    }
+
+    /*
+    public Double getBearingFromDestination(){
+		Math.atan()
+	}*/
 }
