@@ -115,18 +115,21 @@ public class Player implements lunch.sim.Player {
 		if(ps.is_player_searching() && ps.get_held_item_type() == null &&
 				(monkeysTooClose || (gooseTooClose && foodCurrentlySearchingFor == FoodType.SANDWICH))) {
 			System.out.println("Player " + id + " is aborting search.");
+			foodCurrentlySearchingFor = null;
 			return new Command(CommandType.ABORT);
 		}
 
 		// Keep the food item back if the animal is too close
 		if(!ps.is_player_searching() && ps.get_held_item_type() != null && (((monkeysTooClose || gooseTooClose) && (ps.get_held_item_type() == FoodType.SANDWICH)) ||
 				(monkeysTooClose && (ps.get_held_item_type() != FoodType.SANDWICH)))) {
+			foodCurrentlySearchingFor = null;
 			System.out.println("Player " + id + " is keeping back " + ps.get_held_item_type().name() + ".");
 			return new Command(CommandType.KEEP_BACK);
 		}
 		
 		// Take out a food item (or move player) if no animal is too close
 		if (!ps.is_player_searching() && !monkeysTooClose && ps.get_held_item_type() == null) {
+			foodCurrentlySearchingFor = null;
 			FoodType foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE : 
 								ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
 								ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 : 
@@ -178,6 +181,7 @@ public class Player implements lunch.sim.Player {
 		
 		// Eat if no animal is too close
 		if(!ps.is_player_searching() && ps.get_held_item_type() != null) {
+			foodCurrentlySearchingFor = null;
 			if((!monkeysTooClose && (ps.get_held_item_type() != FoodType.SANDWICH)) ||
 				(!monkeysTooClose && !gooseTooClose && (ps.get_held_item_type() == FoodType.SANDWICH))) {
 				System.out.println("Player " + id + " is going to eat " + ps.get_held_item_type().name() + ".");
