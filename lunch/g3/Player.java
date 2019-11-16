@@ -5,6 +5,7 @@ import lunch.sim.CommandType;
 import java.util.List;
 import java.lang.Math;
 import java.util.ArrayList;
+import javafx.util.Pair;
 import lunch.sim.*;
 import javafx.util.Pair; 
 
@@ -21,34 +22,77 @@ public class Player implements lunch.sim.Player {
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-            if (!inCorner(ps)){
-                Point next_move = getNextMoveToCorner(ps);
-                return Command.createMoveCommand(next_move);
+        // Is food in hand? Yes -> should we stop?; No -> should we pull food out?
+        if (ps.get_held_item_type() != null) {
+            // Should we stop? Yes -> put food away; No -> keep eating
+            if (shouldStopEating(animals, ps)) {
+                return new Command(CommandType.KEEP_BACK);
             } else {
-                return null;
+                return new Command(CommandType.EAT, ps.get_held_item_type());
             }
+        } else {
+            // Are we pulling food out? Yes -> should we continue?; No -> are we in the corner?
+            if (ps.is_player_searching()) {
+                // Should we continue pulling food out? Yes -> pull out; No -> put it back
+                if (shouldFinishRemoving(animals, ps)) {
+                    return new Command(CommandType.WAIT);
+                } else {
+                    return new Command(CommandType.KEEP_BACK);
+                }
+            } else {
+                // Are we in a corner? Yes -> select food
+                if (inCorner(ps)) {
+                    return Command.createRetrieveCommand(selectFood(ps));
+                } else {
+                    return Command.createMoveCommand(getNextMoveToCorner(ps));
+                }
+            }
+        }
     };
+
+    public FoodType selectFood(PlayerState ps) {
+        return FoodType.COOKIE;
+    }
 
     public boolean shouldStopEating(ArrayList<Animal> animals, PlayerState ps) {
         int dangerMonkeys = 0;
         for (Animal animal : animals) {
             if(animal.which_animal() == AnimalType.GOOSE) {
+                if(ps.get_held_item_type() == FoodType.SANDWICH && distToAnimal(animal, ps) <= 6) {
+                    return true;
+                }
+            } else {
+                //monkey
+                if(distToAnimal(animal, ps) <= 6) {
+                    dangerMonkeys++;
+                    if(dangerMonkeys == 3) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean shouldFinishRemoving(ArrayList<Animal> animals, PlayerState ps) {
+        int secondsRemaining = ps.time_to_finish_search(); //Will be used later
+        int dangerMonkeys = 0;
+        for (Animal animal : animals) {
+            if(animal.which_animal() == AnimalType.GOOSE) {
+                //TODO: check if we're pulling out a sandwich
                 if(distToAnimal(animal, ps) <= 6) {
                     return true;
                 }
             } else {
                 //monkey
                 if(distToAnimal(animal, ps) <= 6) {
-                    if(dangerMonkeys == 2) {
+                    dangerMonkeys++;
+                    if(dangerMonkeys == 3) {
                         return true;
                     }
-                    dangerMonkeys++;
                 }
             }
         }
-        return false;
-    }
-    public boolean shouldFinishRemoving(ArrayList<Animal> animals, PlayerState ps) {
         return false;
     }
 
