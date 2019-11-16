@@ -18,9 +18,6 @@
  *
  * // shouldn't be equal since AB != BA in general
  * StdOut.println(A.times(B).eq(B.times(A)));
- *
- * Copyright © 2000–2017, Robert Sedgewick and Kevin Wayne
- * Modified: Adam Svystun
  ******************************************************************************/
 package lunch.g5;
 
