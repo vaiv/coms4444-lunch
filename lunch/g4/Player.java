@@ -51,15 +51,15 @@ public class Player implements lunch.sim.Player {
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
 		if(turn < 100) {
-			boolean found_valid_move = false;
-			Point next_move = new Point(-1, -1);
-			while(!found_valid_move) {
+			boolean foundValidMove = false;
+			Point nextMove = new Point(-1, -1);
+			while(!foundValidMove) {
 				Double bearing = random.nextDouble() * 2 * Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
+				nextMove = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
+				foundValidMove = Point.within_bounds(nextMove);
 			}
 			turn++;
-			return Command.createMoveCommand(next_move);
+			return Command.createMoveCommand(nextMove);
 		}
 
 		// Determine animals sorted by closest distance to player
