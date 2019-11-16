@@ -30,9 +30,6 @@ TAs: Vaibhav Darbari, Chengyu Lin
 
 --fps : fps
 
-
-This project belongs to Columbia University. It may be freely used for educational purposes.
-
 ### Description of Important Classes
 #### 1) Player: class to be implemented by your player.
 ##### Important methods in player class:
@@ -68,3 +65,4 @@ This project belongs to Columbia University. It may be freely used for education
 
 #### 7) FoodType: Specifies the types of food items.
 
+### This project belongs to Columbia University. It may be freely used for educational purposes.
