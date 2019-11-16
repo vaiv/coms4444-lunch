@@ -22,9 +22,9 @@ import lunch.sim.PlayerState;
 public class Player implements lunch.sim.Player {
 
     // Configs for calculating future matrices
-    private final int nTimesteps = 10;            // How much timesteps in the future to calculate
+    private final int nTimesteps = 10;           // How much timesteps in the future to calculate
     private final double dangerDistance = 5.0;   // How far way from the monkeys we still consider them in calculation
-    private final int bufferLookahead = 0;       // When calculation a matrix, how much aditional step to take
+    private final int bufferLookahead = 0;       // When calculating a matrix, how much aditional steps to consider
 
     // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
     private ArrayList<Animal> previousAnimals;
@@ -50,10 +50,14 @@ public class Player implements lunch.sim.Player {
     /**
      * A function that calculates board matrices in the future.
      *
+     * IMPORTANT: The matrices it returns have a diferent indexing method. The indices correspond to coordinates on the
+     * board. So m.get(0, 0) will always get the value at Point(0, 0) and not the point of the player.
+     *
      * Example usage:
      *
      * ArrayList<Matrix> matrices = getFutureMatrices(animals);
      * matrices.get(9).show(); // Prints a matrix at timestep 9 to System.out
+     * System.print(matrices.get(9).get(10, 10); // Prints what will happen at point (10, 10) at timestep 9
      *
      * @param animals: An array of current elements on the board
      * @param ps: Current player state object
