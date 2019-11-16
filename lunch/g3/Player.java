@@ -5,6 +5,7 @@ import lunch.sim.CommandType;
 import java.util.List;
 import java.lang.Math;
 import java.util.ArrayList;
+import javafx.util.Pair;
 import lunch.sim.*;
 
 public class Player implements lunch.sim.Player {
@@ -18,8 +19,37 @@ public class Player implements lunch.sim.Player {
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        return null;
+        // Is food in hand? Yes -> should we stop?; No -> should we pull food out?
+        if (ps.get_held_item_type() != null) {
+            // Should we stop? Yes -> put food away; No -> keep eating
+            if (shouldStopEating(animals, ps)) {
+                return new Command(CommandType.KEEP_BACK);
+            } else {
+                return new Command(CommandType.EAT, ps.get_held_item_type());
+            }
+        } else {
+            // Are we pulling food out? Yes -> should we continue?; No -> are we in the corner?
+            if (ps.is_player_searching()) {
+                // Should we continue pulling food out? Yes -> pull out; No -> put it back
+                if (shouldFinishRemoving(animals, ps)) {
+                    return new Command(CommandType.WAIT);
+                } else {
+                    return new Command(CommandType.KEEP_BACK);
+                }
+            } else {
+                // Are we in a corner? Yes -> select food
+                if (inCorner(ps)) {
+                    return Command.createRetrieveCommand(selectFood(ps));
+                } else {
+                    return Command.createMoveCommand(getNextMoveToCorner(ps));
+                }
+            }
+        }
     };
+
+    public FoodType selectFood(PlayerState ps) {
+        return FoodType.COOKIE;
+    }
 
     public boolean shouldStopEating(ArrayList<Animal> animals, PlayerState ps) {
         int dangerMonkeys = 0;
@@ -60,6 +90,10 @@ public class Player implements lunch.sim.Player {
         Double bearing = 1*2*Math.PI;
 		Point move_to_corner = new Point (ps.get_location().x + .5, ps.get_location().y + .5);
 		return move_to_corner;
+    }
+
+    public boolean inCorner(PlayerState ps) {
+        return false;
     }
 
     /*
