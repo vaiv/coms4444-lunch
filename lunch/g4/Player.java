@@ -42,7 +42,7 @@ public class Player implements lunch.sim.Player {
 		turn = 0;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
 		this.id = id;
 		avatars = "flintstone";
 		random = new Random();
@@ -71,14 +71,7 @@ public class Player implements lunch.sim.Player {
 		        return (int) Math.signum(distanceToAnimal1 - distanceToAnimal2);
 		    }
 		});
-		
-//		System.out.println("Player: " + id);
-//		for(Animal animal : clonedAnimals) {
-//			double distanceToAnimal = Point.dist(ps.get_location(), animal.get_location());
-//			System.out.println("Distance to animal: " + distanceToAnimal);
-//		}
-//		System.out.println();
-				
+						
 		// Assign monkeys and geese, each sorted by closest distance to player
 		monkeys = new ArrayList<>();
 		geese = new ArrayList<>();
@@ -131,19 +124,6 @@ public class Player implements lunch.sim.Player {
 			System.out.println("Player " + id + " is keeping back " + ps.get_held_item_type().name() + ".");
 			return new Command(CommandType.KEEP_BACK);
 		}
-		
-//		// Move away from the animal
-//		if(min_dist < 3.0) {
-//			boolean found_valid_move= false;
-//			Point next_move = new Point(-1, -1);
-//			while(!found_valid_move) {
-//				Double bearing = random.nextDouble()*2*Math.PI;
-//				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-//				found_valid_move = Point.within_bounds(next_move);
-//			}
-//			return Command.createMoveCommand(next_move);
-//			
-//		}
 		
 		// Take out a food item (or move player) if no animal is too close
 		if (!ps.is_player_searching() && !monkeysTooClose && ps.get_held_item_type() == null) {
