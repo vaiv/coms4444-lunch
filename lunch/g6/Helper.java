@@ -12,6 +12,7 @@ import lunch.sim.Point;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import lunch.sim.Animal;
+import lunch.sim.AnimalType;
 import lunch.sim.Family;
 import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
@@ -25,7 +26,7 @@ public class Helper {
      * @param dy
      * @return
     */
-    public Point find_boundary(Point loc, double dx, double dy) {
+    public static Point find_boundary(Point loc, double dx, double dy) {
         double curr_x = loc.x;
         double curr_y = loc.y;
         double t1, t2, new_x, new_y;
@@ -121,7 +122,7 @@ public class Helper {
      * @param prev_animals
      * @return
      */
-    public HashMap<Integer, Point> calculateTrajectories(ArrayList<Animal> animals, ArrayList<Animal> prev_animals) {
+    public static HashMap<Integer, Point> calculateTrajectories(ArrayList<Animal> animals, ArrayList<Animal> prev_animals) {
         HashMap<Integer, Point> result = new HashMap<>();
         // This assumes animal's position in array does not change
         for (int i = 0; i < prev_animals.size(); i++){
@@ -148,7 +149,7 @@ public class Helper {
      * @param targetPos
      * @return
      */
-    public Point moveTo(Point currPos, Point targetPos) {
+    public static Point moveTo(Point currPos, Point targetPos) {
         if (Point.dist(currPos, targetPos) <= 1.0) {
             // Distance to target position is no larget than 1
             return targetPos;
@@ -172,8 +173,8 @@ public class Helper {
     public Point getAnimalDisplacement(Animal animal, Animal prevAnimal) {
         Point currPos = animal.get_location();  // current location
         Point prevPos = prevAnimal.get_location();  // previous location
-        double delta_x = curr_loc.x - prev_loc.x;  // movement on the x-direction
-        double delta_y = curr_loc.y - prev_loc.y;  // movement on the y-direction
+        double delta_x = currPos.x - prevPos.x;  // movement on the x-direction
+        double delta_y = currPos.y - prevPos.y;  // movement on the y-direction
         Point displacement = new Point(delta_x, delta_y);
         return displacement;
     }
