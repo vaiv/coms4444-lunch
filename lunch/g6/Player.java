@@ -66,19 +66,6 @@ public class Player implements lunch.sim.Player {
         for (int i = 0; i < animals.size(); i++) {
             min_dist = Math.min(min_dist, Point.dist(ps.get_location(), animals.get(i).get_location()));
         }
-        
-        // if (turn < 100) {
-        //     boolean found_valid_move = false;
-        //     Point next_move = new Point(-1, -1);
-        //     while (!found_valid_move) {
-        //         Double bearing = random.nextDouble() * 2 * Math.PI;
-        //         next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-        //         found_valid_move = Point.within_bounds(next_move);
-        //     }
-        //     // System.out.println("move command issued");
-        //     turn++;
-        //     return Command.createMoveCommand(next_move);
-        // }
 
 
         // Step 1: Move to one of four corner locations 
@@ -88,28 +75,18 @@ public class Player implements lunch.sim.Player {
         }
         // Abort taking out if animal is too close
         if (min_dist < 3.0 && ps.is_player_searching() && ps.get_held_item_type() == null) {
-            // System.out.println("abort command issued");
-            // System.out.println(min_dist.toString());
             return new Command(CommandType.ABORT);
         }
+        // Put food away if anim
         // Keep food item back if animal is too close
         else if (!ps.is_player_searching() && ps.get_held_item_type() != null && min_dist < 2.0) {
             return new Command(CommandType.KEEP_BACK);
         }
-        // Move away from animal
-        // else if (min_dist < 3.0) {
-        //     boolean found_valid_move = false;
-        //     Point next_move = new Point(-1, -1);
-        //     while (!found_valid_move) {
-        //         Double bearing = random.nextDouble() * 2 * Math.PI;
-        //         next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-        //         found_valid_move = Point.within_bounds(next_move);
-        //     }
-        //     return Command.createMoveCommand(next_move);
-        // }
         // If no animal is near then take out food
         else if (!ps.is_player_searching() &&  min_dist >= 5 && ps.get_held_item_type() == null) {
-            for (FoodType food_type: FoodType.values()) {
+            // Implement priority: cookie --> non sandwhich --> sandwhich 
+            FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
+            for (FoodType food_type: ordered) {
                 if (ps.check_availability_item(food_type)) {
                     Command c = new Command(CommandType.TAKE_OUT, food_type);
                     return c;
