@@ -74,12 +74,17 @@ public class Player implements lunch.sim.Player {
         ArrayList<Matrix> timesteps = new ArrayList<>();
         // Initiate empty matrices for each timestep
         Point ourLocation = ps.get_location();
+        int ourLocationX = (int)Math.round(ourLocation.x);
+        int ourLocationY = (int)Math.round(ourLocation.y);
         for (int i = 0; i < nTimesteps; i++) {
-            int size = i * 2 + 3 + bufferLookahead * 2;
-            Matrix m = new Matrix(size, size);
-            int origin = (size - 1) / 2 + 1;
-            int originX = origin - (int)Math.round(ourLocation.x);
-            int originY = origin - (int)Math.round(ourLocation.y);
+            int size = i + 3 + bufferLookahead;
+            int sizeToLeft = Math.min(size, 50 + ourLocationX);
+            int sizeToTop = Math.min(size, 50 + ourLocationY);
+            int sizeToRight = Math.min(size, 50 - ourLocationX);
+            int sizeToBottom = Math.min(size, 50 - ourLocationY);
+            Matrix m = new Matrix(sizeToLeft + sizeToRight + 1, sizeToBottom + sizeToTop + 1);
+            int originX = sizeToLeft - ourLocationX;
+            int originY = sizeToTop - ourLocationY;
             m.setOrigin(originX, originY);
             timesteps.add(m);
         }
