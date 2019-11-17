@@ -16,6 +16,8 @@ public class Player implements lunch.sim.Player
 	private String avatars;
 	private FoodType foodToTakeOut = null;
 
+	private boolean inPosition = false;
+
 	public Player()
 	{
 		turn = 0;
@@ -45,19 +47,45 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		if(turn<300)
-		{
-			boolean found_valid_move= false;
-			Point next_move = new Point(-1,-1);
-			while(!found_valid_move)
-			{
-				Double bearing = random.nextDouble()*2*Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
+//		if(turn<300)
+//		{
+//			boolean found_valid_move= false;
+//			Point next_move = new Point(-1,-1);
+//			while(!found_valid_move)
+//			{
+//				Double bearing = random.nextDouble()*2*Math.PI;
+//				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
+//				found_valid_move = Point.within_bounds(next_move);
+//			}
+//			// System.out.println("move command issued");
+//			turn++;
+//			return Command.createMoveCommand(next_move);
+//		}
+
+		if (!inPosition) {
+			Point dest = new Point(0, 0);
+			switch (this.id % 4) {
+				case 0:
+					dest = new Point(-50, 50);
+					break;
+				case 1:
+					dest = new Point(50, 50);
+					break;
+				case 2:
+					dest = new Point(-50, -50);
+					break;
+				case 3:
+					dest = new Point(50, -50);
+					break;
 			}
-			// System.out.println("move command issued");
-			turn++;
-			return Command.createMoveCommand(next_move);
+			Point start = new Point(ps.get_location());
+			Command res = getMove(start, dest);
+			if (res == null) {
+				inPosition = true;
+			}
+			else {
+				return res;
+			}
 		}
 
 		monkeys.sort(Comparator.comparingDouble(a -> Point.dist(a.get_location(), ps.get_location())));
@@ -75,30 +103,30 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.KEEP_BACK);
 		}
 		// move away from animal
-		else if(isDangerours(ps, monkeys, geese))
-		{
-//			List<Double> directions = new ArrayList<>();
-//			for (Animal monkey : monkeys) {
-//				if (Point.dist(monkey.get_location(), ps.get_location()) <= 5) {
-//					directions.add(Math.atan(
-//							(monkey.get_location().y - ps.get_location().y) / (monkey.get_location().x - ps.get_location().x)));
-//				}
-//			}
+//		else if(isDangerours(ps, monkeys, geese))
+//		{
+////			List<Double> directions = new ArrayList<>();
+////			for (Animal monkey : monkeys) {
+////				if (Point.dist(monkey.get_location(), ps.get_location()) <= 5) {
+////					directions.add(Math.atan(
+////							(monkey.get_location().y - ps.get_location().y) / (monkey.get_location().x - ps.get_location().x)));
+////				}
+////			}
+////
+////			for (Animal goose : geese) {
+////
+////			}
 //
-//			for (Animal goose : geese) {
-//
+//			boolean found_valid_move= false;
+//			Point next_move = new Point(-1,-1);
+//			while(!found_valid_move)
+//			{
+//				Double bearing = random.nextDouble()*2*Math.PI;
+//				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
+//				found_valid_move = Point.within_bounds(next_move);
 //			}
-
-			boolean found_valid_move= false;
-			Point next_move = new Point(-1,-1);
-			while(!found_valid_move)
-			{
-				Double bearing = random.nextDouble()*2*Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
-			}
-			return Command.createMoveCommand(next_move);
-		}
+//			return Command.createMoveCommand(next_move);
+//		}
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() && ps.get_held_item_type()==null)
 		{
@@ -139,7 +167,7 @@ public class Player implements lunch.sim.Player
 			Point gooseLoc = g.get_location();
 			double dist = Point.dist(gooseLoc, playerLoc);
 			// TODO: consider busyEating
-			if (dist <= 8.0) {
+			if (dist <= 3.0) {
 				return true;
 			}
 		}
@@ -156,6 +184,9 @@ public class Player implements lunch.sim.Player
 			if (dist <= 5.0) {
 				monkeyCount++;
 			}
+			if (dist <= 1.0) { // todo
+				return true;
+			}
 		}
 		if (monkeyCount < 3) {
 			return false;
@@ -164,7 +195,7 @@ public class Player implements lunch.sim.Player
 			Point playerLoc = ps.get_location();
 			Point monkeyLoc = m.get_location();
 			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= 3.0) {
+			if (dist <= 3.1) { // todo
 				return true;
 			}
 		}
@@ -181,9 +212,8 @@ public class Player implements lunch.sim.Player
 			return Command.createMoveCommand(new Point(dest));
 
 		double ratio = 1 / dist;
-		double xVector = (dest.x - start.x) * ratio;
-		double yVector = (dest.y - start.y) * ratio;
-
-		return new Command(CommandType.MOVE_TO, new Point(xVector, yVector));
+		double xVector = start.x + (dest.x - start.x) * ratio * 0.999999;
+		double yVector = start.y + (dest.y - start.y) * ratio * 0.999999;
+		return Command.createMoveCommand(new Point(xVector, yVector));
 	}
 }
