@@ -18,6 +18,12 @@ import lunch.sim.Family;
 import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 
+/**
+ * @author adityasridhar
+ * 
+ * Represents a COMS 4444 player that is having lunch
+ *
+ */
 public class Player implements lunch.sim.Player {
 	private Random random;
 	private Integer id;
@@ -26,26 +32,57 @@ public class Player implements lunch.sim.Player {
 	private List<Animal> monkeys = new ArrayList<>();
 	private List<Animal> geese = new ArrayList<>();
 	private List<Point> targetCorners = Arrays.asList(new Point[]{
-			new Point(-50, -50), 
-			new Point(-50, 50), 
-			new Point(50, -50)
+			new Point(-50, -50), // Top-left corner
+			new Point(-50, 50),  // Bottom-left corner
+			new Point(50, -50)	 // Top-right corner
 			});
 	private Map<Integer, Point> targetCornersChosen = new HashMap<>();
 	private FoodType foodCurrentlySearchingFor = null;
 	private static final double MONKEY_DISTANCE_THRESHOLD = 6.0 + 10e-6;
 	private static final double GOOSE_DISTANCE_THRESHOLD = 5.0 + 10e-6;
-
+	
+	/**
+	 * Player constructor
+	 */
 	public Player() {
 		turn = 0;
 	}
 
+	/**
+	 * Initializes the player
+	 * 
+	 * @param members: all family members
+	 * @param id: player ID
+	 * @param f: number of family members
+	 * @param animals: all animals
+	 * @param m: number of monkeys
+	 * @param g: number of geese
+	 * @param t: simulation time
+	 * @param s: seed
+	 * 
+	 * @return the avatars the player will use
+	 * 
+	 */
 	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
 		this.id = id;
 		avatars = "flintstone";
 		random = new Random();
 		return avatars;
 	}
-
+	
+	/**
+	 *
+	 * Determines the command the player submits based on
+	 * information about family members, the available
+	 * food items, and the animals
+	 *
+	 * @param members: all family members
+	 * @param animals: all animals
+	 * @param ps: this player's state
+	 * 
+	 * @return the command/action submitted by the player
+	 *
+	 */
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
 		if(turn < 100) {
 			boolean foundValidMove = false;
@@ -59,7 +96,7 @@ public class Player implements lunch.sim.Player {
 			return Command.createMoveCommand(nextMove);
 		}
 
-		// Determine animals sorted by closest distance to player
+		// Determine animals sorted by closest distance to the player
 		ArrayList<Animal> clonedAnimals = new ArrayList<>(animals);
 		Collections.sort(clonedAnimals, new Comparator<Animal>() {
 		    public int compare(Animal animal1, Animal animal2) {
@@ -69,7 +106,7 @@ public class Player implements lunch.sim.Player {
 		    }
 		});
 						
-		// Assign monkeys and geese, each sorted by closest distance to player
+		// Assign monkeys and geese, each sorted by closest distance to the player
 		monkeys = new ArrayList<>();
 		geese = new ArrayList<>();
 		
@@ -82,6 +119,7 @@ public class Player implements lunch.sim.Player {
 		
 		boolean monkeysTooClose, gooseTooClose;
 		
+		// Determine if at least 3 monkeys are too close
 		System.out.println();
 		if(monkeys.size() < 3)
 			monkeysTooClose = false;
@@ -97,13 +135,15 @@ public class Player implements lunch.sim.Player {
 				monkeysTooClose = false;
 		}
 		
+		// Determine if any goose is too close
 		if(geese.size() == 0 || Point.dist(ps.get_location(), geese.get(0).get_location()) > GOOSE_DISTANCE_THRESHOLD)
 			gooseTooClose = false;
 		else {
 			System.out.println("Goose distance: " + Point.dist(ps.get_location(), geese.get(0).get_location()));
 			gooseTooClose = true;
 		}
-						
+		
+		// Print the state of the player
 		System.out.println("Player is still holding item: " + (ps.get_held_item_type() != null));
 		System.out.println("Player is still searching: " + (ps.is_player_searching()));
 		printAvailability(ps);
@@ -136,12 +176,15 @@ public class Player implements lunch.sim.Player {
 								null;
 			
 			if(foodType != null) {
+				
+				// Take out the food item if it is not a sandwich and monkeys are not too close
 				if(foodType != FoodType.SANDWICH1 && foodType != FoodType.SANDWICH2) {
 					System.out.println("Player " + id + " is taking out " + foodType.name() + ".");
 					foodCurrentlySearchingFor = foodType;
 					return new Command(CommandType.TAKE_OUT, foodType);
 				}
 				
+				// Assign a designated corner for the player to eat sandwiches
 				Point currPoint = ps.get_location();
 				Point targetCorner = new Point(-1, -1);
 				if(!targetCornersChosen.containsKey(id)) {
@@ -150,6 +193,7 @@ public class Player implements lunch.sim.Player {
 				}
 				targetCorner = targetCornersChosen.get(id);
 
+				// Eat sandwiches only if the player is in the corner and geese are not too close
 				if(currPoint.x == targetCorner.x && currPoint.y == targetCorner.y) {
 					if(!gooseTooClose) {
 						System.out.println("Player " + id + " is taking out a sandwich.");
@@ -162,12 +206,14 @@ public class Player implements lunch.sim.Player {
 					}
 				}
 				
+				// The player reaches the corner if the distance is within (or exactly) 1 m
 				double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
-				if(distanceFromCorner < 1.0) {
+				if(distanceFromCorner <= 1.0) {
 					System.out.println("Player " + id + " is making its final move to the corner.");
 					return Command.createMoveCommand(targetCorner);
 				}
 
+				// Move the player toward the corner
 				double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
 				double deltaX = (targetCorner.x > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
 				double deltaY = Math.abs(slope) * (targetCorner.y > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
@@ -185,10 +231,18 @@ public class Player implements lunch.sim.Player {
 				return new Command(CommandType.EAT);
 			}
 		}
+		
+		// The player is waiting, as it did not submit any other actions
 		System.out.println("Player " + id + " is going to wait.");
 		return new Command(CommandType.WAIT);
 	}
 	
+	/**
+	 * Prints all of the available items that
+	 * the player currently has left
+	 * 
+	 * @param ps: this player's state
+	 */
 	private void printAvailability(PlayerState ps) {
 		System.out.println("Cookie is available: " + ps.check_availability_item(FoodType.COOKIE)); 
 		System.out.println("Fruit 1 is available: " + ps.check_availability_item(FoodType.FRUIT1)); 
