@@ -350,4 +350,18 @@ public class Helper {
         // TODO
         return 0.0;
     }
+    
+    public static Command takeOutFood(PlayerState ps){
+        // Implement priority: cookie --> non sandwhich --> sandwhich 
+        FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
+        for (FoodType food_type: ordered) {
+            if (ps.check_availability_item(food_type)) {
+                Command c = new Command(CommandType.TAKE_OUT, food_type);
+                return c;
+            }
+        }
+        return new Command(); 
+    }
+
+    
 }

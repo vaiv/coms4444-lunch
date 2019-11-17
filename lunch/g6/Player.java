@@ -58,71 +58,69 @@ public class Player implements lunch.sim.Player {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
 
+        // Update prev animals to be where animals were this time
+        prev_animals = new ArrayList<>(animals);
+
 	    //determine which monkeys and birds are heading towards us.
         incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
 	    incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
 
+        // Not currently using, from random, could be helpful 
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
             min_dist = Math.min(min_dist, Point.dist(ps.get_location(), animals.get(i).get_location()));
         }
-        
-        // if (turn < 100) {
-        //     boolean found_valid_move = false;
-        //     Point next_move = new Point(-1, -1);
-        //     while (!found_valid_move) {
-        //         Double bearing = random.nextDouble() * 2 * Math.PI;
-        //         next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-        //         found_valid_move = Point.within_bounds(next_move);
-        //     }
-        //     // System.out.println("move command issued");
-        //     turn++;
-        //     return Command.createMoveCommand(next_move);
-        // }
-
 
         // Step 1: Move to one of four corner locations
         // If not at corner --> move towards it
         if(!ps.get_location().equals(corner)){
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), corner));
         }
-        // Abort taking out if animal is too close
-        if (min_dist < 3.0 && ps.is_player_searching() && ps.get_held_item_type() == null) {
-            // System.out.println("abort command issued");
-            // System.out.println(min_dist.toString());
-            return new Command(CommandType.ABORT);
-        }
-        // Keep food item back if animal is too close
-        else if (!ps.is_player_searching() && ps.get_held_item_type() != null && min_dist < 2.0) {
-            return new Command(CommandType.KEEP_BACK);
-        }
-        // Move away from animal
-        // else if (min_dist < 3.0) {
-        //     boolean found_valid_move = false;
-        //     Point next_move = new Point(-1, -1);
-        //     while (!found_valid_move) {
-        //         Double bearing = random.nextDouble() * 2 * Math.PI;
-        //         next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-        //         found_valid_move = Point.within_bounds(next_move);
-        //     }
-        //     return Command.createMoveCommand(next_move);
-        // }
-        // If no animal is near then take out food
-        else if (!ps.is_player_searching() &&  min_dist >= 5 && ps.get_held_item_type() == null) {
-            for (FoodType food_type: FoodType.values()) {
-                if (ps.check_availability_item(food_type)) {
-                    Command c = new Command(CommandType.TAKE_OUT, food_type);
-                    return c;
+
+        // based on incoming monkey / geese -- do we have time to eat?
+        // if yes: eat
+        // if no: no?
+        double geeseTime = Helper.getGeeseTime(animals, incomingGeese, ps);
+        double monkeyTime = Helper.getMonkeyTime(animals, incomingMonkeys, ps);
+
+        // No food in hand 
+        // Case 1: Not searching
+        // Case 2: Currently searching
+        double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() +1;
+        if (ps.get_held_item_type() == null){
+            // Due to ordering, this check implies not eating a sandwich 
+            if (ps.check_availability_item(FoodType.EGG)){
+                if (monkeyTime > minTime){
+                // Means we would have one second to eat 
+                return Helper.takeOutFood(ps);
                 }
             }
+            else{
+                if (monkeyTime > minTime && geeseTime > minTime){
+                    // Means we would have at least one second to eat 
+                    return Helper.takeOutFood(ps);
+                }
+            } 
         }
-        // If no animal in vicinity then take a bite
-        else if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
-            return new Command(CommandType.EAT);
+        // With food in hand 
+        // Case 3: Not searching 
+        // Case 4: Currently searching 
+        else if (ps.get_held_item_type() != null ){
+            // TODO: Check to make sure this is generic sandwich 
+            if ((ps.get_held_item_type()==FoodType.SANDWICH && geeseTime <= 1.0 )|| monkeyTime <= 1.0){
+                return new Command(CommandType.KEEP_BACK);
+            }
+            else{
+                return new Command(CommandType.EAT);
+            }
+
         }
-        
-        // Update prev animals to be where animals were this time
-        prev_animals = new ArrayList<>(animals);
+        // Missed case 
+        else{
+            System.out.println("oops");
+            return new Command();
+        }
+
         return new Command();
     }
 
