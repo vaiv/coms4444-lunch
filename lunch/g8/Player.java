@@ -10,6 +10,7 @@ import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
 import java.util.Collections;
+import lunch.sim.AnimalType;
 
 /**
  *
@@ -144,4 +145,31 @@ public class Player implements lunch.sim.Player {
         return ordered;
     }
 
+    //helper function: if (1). 3 monkeys, dist <=2 or (2) goose dist<=2, return true indicating animals are 
+    //dangerous and the input fmaily mamber should keep items back 
+    public static boolean dangerAnimal(Family member, ArrayList<Animal> animals){
+        int dangerGoose=0;
+        int dangerMonkey=0; 
+        for(Animal animal: animals){
+            if (animal.busy_eating()){continue;}
+            if (animal.which_animal()==AnimalType.MONKEY){//monkey
+                if (Point.dist(animal.get_location(), member.get_location())<=5.0){
+                    dangerMonkey+=1;
+                }
+            }else{//goose
+                if (Point.dist(animal.get_location(), member.get_location())<=2.0 && member.get_held_item_type()==FoodType.SANDWICH){
+                    dangerGoose+=1;
+                }
+            }
+        }
+        return (dangerGoose>=1 || dangerMonkey>=3);
+    }
+    //helper function: whether put food away 
+    //if hold food and is in danger: put food away; 
+    //else do nothing. 
+    public Command putFoodBack(Family member, ArrayList<Animal> animals){
+        if(dangerAnimal(member, animals)&& member.get_held_item_type()!=null){return new Command(CommandType.KEEP_BACK);}
+        return null;
+    }
+  
 }
