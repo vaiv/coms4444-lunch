@@ -7,18 +7,7 @@
  * Matrix D = new Matrix(d);
  * D.show();
  *
- * Matrix B = A.transpose();
- * B.show();
- *
- * Matrix C = Matrix.identity(5);
- * C.show();
- *
- * A.plus(B);
- * B.times(A);
- *
- * // shouldn't be equal since AB != BA in general
- * StdOut.println(A.times(B).eq(B.times(A)));
- ******************************************************************************/
+ *******************************************************************************/
 package lunch.g5;
 
 
@@ -27,9 +16,9 @@ public class Matrix {
     private final int nCols;             // number of columns
     private int originX = 0;
     private int originY = 0;
-    private final int[][] data;      // M-by-N array
+    private final int[][] data;      // nCols-by-nRows array
 
-    // create M-by-N matrix of 0's
+    // create nCols-by-nRows matrix of 0's
     public Matrix(int nCols, int nRows) {
         this.nCols = nCols;
         this.nRows = nRows;
