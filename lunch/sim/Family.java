@@ -46,15 +46,15 @@ public Point get_location()
 	return location;
 }
 
-public void update_location(Point p)
-{
-	location.x = p.x;
-	location.y = p.y;
-}
+// public void update_location(Point p)
+// {
+// 	location.x = p.x;
+// 	location.y = p.y;
+// }
 
-public void update_held_item(FoodType f)
-{
-	item = f;
-}
+// public void update_held_item(FoodType f)
+// {
+// 	item = f;
+// }
 
 }
