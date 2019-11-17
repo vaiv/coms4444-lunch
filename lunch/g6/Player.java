@@ -30,7 +30,7 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Animal> prev_animals;
     private HashMap<Integer, Point> trajectories;
     private ArrayList<Animal> incomingMonkeys;
-    private ArrayList<Animal> incomingBirds;
+    private ArrayList<Animal> incomingGeese;
 
     private Point corner;
 
@@ -59,8 +59,8 @@ public class Player implements lunch.sim.Player {
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
 
 	    //determine which monkeys and birds are heading towards us.
-        incomingMonkeys = findIncomingMonkeys(animals, prev_animals, ps);
-	    incomingGeese = findIncomingGeese(animals, prev_animals, ps);
+        incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
+	    incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
 
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
