@@ -49,7 +49,7 @@ public class Player implements lunch.sim.Player {
         corners.add(new Point(-34, 34));
         corners.add(new Point(34, -34));
         corners.add(new Point(34, 34));
-        int corner_ind = Math.abs(random.nextInt()%4);
+        int corner_ind = Math.abs(random.nextInt() % 4);
         corner = corners.get(corner_ind);
         return avatars;
     }
@@ -58,7 +58,7 @@ public class Player implements lunch.sim.Player {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
        
-	    // //determine which monkeys and birds are heading towards us.
+	    // Determine which monkeys and birds are heading towards us.
         // incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
         // incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
         
@@ -72,11 +72,11 @@ public class Player implements lunch.sim.Player {
 
         // Step 1: Move to one of four corner locations
         // If not at corner --> move towards it
-        if(!ps.get_location().equals(corner)){
+        if (!ps.get_location().equals(corner)) {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), corner));
         }
 
-        // based on incoming monkey / geese -- do we have time to eat?
+        // Based on incoming monkey / geese -- do we have time to eat?
         // if yes: eat
         // if no: no?
         double geeseTime = Helper.getGeeseTime(animals, incomingGeese, ps);
@@ -85,38 +85,32 @@ public class Player implements lunch.sim.Player {
         // No food in hand 
         // Case 1: Not searching
         // Case 2: Currently searching
-        double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() +1;
-        if (ps.get_held_item_type() == null){
+        double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() + 1;
+        if (ps.get_held_item_type() == null) {
             // Due to ordering, this check implies eating a sandwich 
             if ((!ps.check_availability_item(FoodType.EGG) && geeseTime > minTime) || (monkeyTime > minTime)) {
                 // Means we would have one second to eat 
                 return Helper.takeOutFood(ps);
-            }
-            else{
+            } else {
                 // Deal with what we do in case where don't have enough time to eat 
             }
-    
         }
         // With food in hand 
         // Case 3: Not searching 
         // Case 4: Currently searching 
-        else if (ps.get_held_item_type() != null ){
-            // TODO: Check to make sure this is generic sandwich 
-            if ((ps.get_held_item_type()==FoodType.SANDWICH && geeseTime <= 5.0 )|| monkeyTime <= 5.0){
+        else if (ps.get_held_item_type() != null) {
+            // TODO: Check to make sure this is generic sandwich (checked: yes)
+            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0)|| monkeyTime <= 1.0) {
                 return new Command(CommandType.KEEP_BACK);
-            }
-            else{
+            } else {
                 return new Command(CommandType.EAT);
             }
-
         }
         // Missed case 
-        else{
+        else {
             System.out.println("oops");
             return new Command();
         }
-
         return new Command();
     }
-
 }
