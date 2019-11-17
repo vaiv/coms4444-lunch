@@ -9,9 +9,8 @@ import lunch.sim.Family;
 import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
+import java.util.Collections;
 import lunch.sim.AnimalType;
-
-
 
 /**
  *
@@ -81,12 +80,20 @@ public class Player implements lunch.sim.Player {
 
         } // if no animal is near then take out food
         else if (!ps.is_player_searching() && minDist >= 5 && ps.get_held_item_type() == null) {
+            ArrayList<FoodType> unorderedFood = new ArrayList<>();
             for (FoodType food_type : FoodType.values()) {
-                if (ps.check_availability_item(food_type)) {
-                    Command c = new Command(CommandType.TAKE_OUT, food_type);
-                    return c;
+                if(ps.check_availability_item(food_type)){
+                    unorderedFood.add(food_type);
                 }
             }
+            //now, order the food:
+            ArrayList<FoodType> orderedFood = orderFood(unorderedFood);
+            for(FoodType f : orderedFood){
+                System.out.print(" " + f + " ");
+            }
+            //and then get the first element in the list
+            return new Command(CommandType.TAKE_OUT, orderedFood.get(0));
+            
         } // if no animal in vicinity then take a bite
         else if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
             return new Command(CommandType.EAT);
@@ -96,6 +103,47 @@ public class Player implements lunch.sim.Player {
         return new Command();
     }
 
+    public ArrayList<FoodType> orderFood(ArrayList<FoodType> unordered){
+        ArrayList<FoodType> ordered = new ArrayList<FoodType>();
+        ArrayList<Double> ord = new ArrayList<>();
+        for(FoodType f : unordered){
+            if(f == FoodType.SANDWICH1){
+                ord.add(3.1);
+            }
+            else if(f == FoodType.SANDWICH2){
+                ord.add(3.2);
+            }
+            else if(f == FoodType.COOKIE){
+                ord.add(4.0);
+            }
+            else if(f == FoodType.FRUIT1){
+                ord.add(2.1);
+            }
+            else if(f == FoodType.FRUIT2){
+                ord.add(2.2);
+            }
+            else if (f == FoodType.EGG){ 
+                ord.add(2.0);
+            }
+            else {
+                ord.add(1.0); //should never happen
+            }
+        }
+        Collections.sort(ord, Collections.reverseOrder());
+        System.out.println("ordered ");
+        for(Double d : ord){
+            if(d == 3.1){ ordered.add(FoodType.SANDWICH1);}
+            else if(d == 3.2){ ordered.add(FoodType.SANDWICH2);}
+            else if(d == 4.0){ ordered.add(FoodType.COOKIE);}
+            else if(d == 2.1){ ordered.add(FoodType.FRUIT1);}
+            else if(d == 2.2){ ordered.add(FoodType.FRUIT2);}
+            else if(d == 2.0){ ordered.add(FoodType.EGG);}
+            else{
+                System.out.println("There is an error - this food type is invalid");
+            }
+        }
+        return ordered;
+    }
 
     //helper function: if (1). 3 monkeys, dist <=2 or (2) goose dist<=2, return true indicating animals are 
     //dangerous and the input fmaily mamber should keep items back 
@@ -123,4 +171,5 @@ public class Player implements lunch.sim.Player {
         if(dangerAnimal(member, animals)&& member.get_held_item_type()!=null){return new Command(CommandType.KEEP_BACK);}
         return null;
     }
+  
 }
