@@ -142,7 +142,7 @@ public class Helper {
         return result;
     }
 
-    public ArrayList<Animal> findIncomingMonkeys (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
+    public static ArrayList<Animal> findIncomingMonkeys (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
 	    ArrayList<Animal> incomingMonkeys = new ArrayList<Animal>();
     	for(int i = 0; i<animals.size();i++){
 	        if (animals.get(i).which_animal() == AnimalType.GOOSE){
@@ -169,7 +169,7 @@ public class Helper {
 	    return incomingMonkeys;
     }
 
-    public ArrayList<Animal> findIncomingGeese (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
+    public static ArrayList<Animal> findIncomingGeese (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
         ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
         for(int i = 0; i<animals.size();i++){
             if (animals.get(i).which_animal() == AnimalType.MONKEY){
@@ -302,4 +302,18 @@ public class Helper {
         // TODO
         return 0.0;
     }
+    
+    public static Command takeOutFood(PlayerState ps){
+        // Implement priority: cookie --> non sandwhich --> sandwhich 
+        FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
+        for (FoodType food_type: ordered) {
+            if (ps.check_availability_item(food_type)) {
+                Command c = new Command(CommandType.TAKE_OUT, food_type);
+                return c;
+            }
+        }
+        return new Command(); 
+    }
+
+    
 }
