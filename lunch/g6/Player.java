@@ -7,7 +7,7 @@ import java.util.Random;
 import java.util.HashMap;
 
 import javafx.scene.shape.MoveTo;
-import javafx.util.Pair; 
+import javafx.util.Pair;
 import java.util.ArrayList;
 
 import lunch.sim.Point;
@@ -29,7 +29,10 @@ public class Player implements lunch.sim.Player {
 
     private ArrayList<Animal> prev_animals;
     private HashMap<Integer, Point> trajectories;
-    private Point corner; 
+    private ArrayList<Animal> incomingMonkeys;
+    private ArrayList<Animal> incomingBirds;
+
+    private Point corner;
 
     public Player() {
         turn = 0;
@@ -40,7 +43,7 @@ public class Player implements lunch.sim.Player {
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>();
-        // Define ideal locations 
+        // Define ideal locations
         ArrayList<Point> corners = new ArrayList<>();
         corners.add(new Point(-34, -34));
         corners.add(new Point(-34, 34));
@@ -48,19 +51,16 @@ public class Player implements lunch.sim.Player {
         corners.add(new Point(34, 34));
         int corner_ind = Math.abs(random.nextInt()%4);
         corner = corners.get(corner_ind);
-        return avatars; 
+        return avatars;
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
-        
-        
-        
-        // If safe: start eating (cookies first, then non sandwhich, then sandwhich)
-        // if unsafe: put away 
-        // alternate these 
 
+	    //determine which monkeys and birds are heading towards us.
+        incomingMonkeys = findIncomingMonkeys(animals, prev_animals, ps);
+	    incomingGeese = findIncomingGeese(animals, prev_animals, ps);
 
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
@@ -68,8 +68,8 @@ public class Player implements lunch.sim.Player {
         }
 
 
-        // Step 1: Move to one of four corner locations 
-        // If not at corner --> move towards it 
+        // Step 1: Move to one of four corner locations
+        // If not at corner --> move towards it
         if(!ps.get_location().equals(corner)){
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), corner));
         }
