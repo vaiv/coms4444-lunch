@@ -152,26 +152,26 @@ public class Helper {
             Point prev_loc = prev_animals.get(i).get_location();
             double delta_x = curr_loc.x - prev_loc.x;
             double delta_y = curr_loc.y - prev_loc.y;
-	    
-	        double animal_slope = delta_y/delta_x;
+            
+            double animal_slope = delta_y/delta_x;
 
             Point my_loc = ps.get_location();
-
-	        double an_human_dx = my_loc.x - prev_loc.x;
-	        double an_human_dy = my_loc.y - prev_loc.y;
-
-	        double human_slope = an_human_dy/an_human_dx;
-
-	        if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
-	    	    incomingMonkeys.add(animals.get(i));
-	        }
-	    }
-	    return incomingMonkeys;
+            
+            double an_human_dx = my_loc.x - prev_loc.x;
+            double an_human_dy = my_loc.y - prev_loc.y;
+            
+            double human_slope = an_human_dy / an_human_dx;
+            
+            if ((animal_slope >= human_slope - 1) && (animal_slope <= human_slope + 1)) {
+                incomingMonkeys.add(animals.get(i));
+            }
+        }
+        return incomingMonkeys;
     }
 
     public static ArrayList<Animal> findIncomingGeese (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
         ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
-        for(int i = 0; i<animals.size();i++){
+        for(int i = 0; i < animals.size(); i++){
             if (animals.get(i).which_animal() == AnimalType.MONKEY){
                 continue;
             }
@@ -180,22 +180,34 @@ public class Helper {
             double delta_x = curr_loc.x - prev_loc.x;
             double delta_y = curr_loc.y - prev_loc.y;
 
-            double animal_slope = delta_y/delta_x;
+            double animal_slope = delta_y / delta_x;
 
             Point my_loc = ps.get_location();
 
             double an_human_dx = my_loc.x - prev_loc.x;
             double an_human_dy = my_loc.y - prev_loc.y;
 
-            double human_slope = an_human_dy/an_human_dx;
+            double human_slope = an_human_dy / an_human_dx;
 
-            if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
+            if ((animal_slope >= human_slope - 1) && (animal_slope <= human_slope + 1)) {
                 incomingGeese.add(animals.get(i));
             }
         }
         return incomingGeese;
     }
-
+    
+    double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
+        double minTime = Double.MAX_DOUBLE;
+        double d, t;
+        for (Animal goose: incomingGeese) {
+            d = Point.dist(goose.get_location(), ps.get_location());
+            t = (d - 2.0) / goose.get_max_speed();
+            if (t < minTime) {
+                minTime = t;
+            }
+        }
+        return minTime;
+    }
     
     /**
      * Helper function: move a player to a new target position
