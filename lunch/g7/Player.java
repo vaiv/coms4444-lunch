@@ -66,16 +66,16 @@ public class Player implements lunch.sim.Player
 			Point dest = new Point(0, 0);
 			switch (this.id % 4) {
 				case 0:
-					dest = new Point(-50, 50);
+					dest = new Point(0,0);
 					break;
 				case 1:
-					dest = new Point(50, 50);
+					dest = new Point(-50, 50);
 					break;
 				case 2:
-					dest = new Point(-50, -50);
+					dest = new Point(50, -50);
 					break;
 				case 3:
-					dest = new Point(50, -50);
+					dest = new Point(-50, -50);
 					break;
 			}
 			Point start = new Point(ps.get_location());
@@ -216,4 +216,30 @@ public class Player implements lunch.sim.Player
 		double yVector = start.y + (dest.y - start.y) * ratio * 0.999999;
 		return Command.createMoveCommand(new Point(xVector, yVector));
 	}
+
+	private boolean shouldPullFood(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
+		int distMonkeys = 10;
+		int distGeese = 30;
+		int numMonkeys = 0;
+		int numGeese = 0;
+		for (Animal m: monkeys) {
+			Point playerLoc = ps.get_location();
+			Point monkeyLoc = m.get_location();
+			double dist = Point.dist(monkeyLoc, playerLoc);
+			if (dist <= distMonkeys) {
+				numMonkeys++;
+			}
+		}
+		for (Animal g: geese) {
+			Point playerLoc = ps.get_location();
+			Point geeseLoc = g.get_location();
+			double dist = Point.dist(geeseLoc, playerLoc);
+			if (dist <= distGeese) {
+				numGeese++;
+			}
+		}
+		return numGeese < 1 && numMonkeys < 3;
+	}
+
+
 }
