@@ -128,7 +128,7 @@ public class Player implements lunch.sim.Player
 //			return Command.createMoveCommand(next_move);
 //		}
 		// if no animal is near then take out food
-		else if (!ps.is_player_searching() && ps.get_held_item_type()==null)
+		else if (!ps.is_player_searching() && ps.get_held_item_type()==null && shouldPullFood(ps, monkeys, geese))
 		{
 			for(FoodType food_type: FoodType.values())
 			{
@@ -181,7 +181,7 @@ public class Player implements lunch.sim.Player
 			Point playerLoc = ps.get_location();
 			Point monkeyLoc = m.get_location();
 			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= 5.0) {
+			if (dist <= 6.0) {
 				monkeyCount++;
 			}
 			if (dist <= 1.0) { // todo
