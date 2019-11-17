@@ -145,7 +145,7 @@ public class Player implements lunch.sim.Player {
 				Point currPoint = ps.get_location();
 				Point targetCorner = new Point(-1, -1);
 				if(!targetCornersChosen.containsKey(id)) {
-					targetCornersChosen.put(id, targetCorners.get(random.nextInt(targetCorners.size())));
+					targetCornersChosen.put(id, targetCorners.get(id % targetCorners.size()));
 					System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id));
 				}
 				targetCorner = targetCornersChosen.get(id);
