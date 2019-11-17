@@ -31,11 +31,13 @@ public class Player implements lunch.sim.Player {
      * @param g number of geese
      * @param t number of turns
      * @param s seed for random number generation purposes
+     * @return a family avatar folder name
      */
     @Override
-    public void init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+    public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         random = new Random(s);
         turn = 0;
+        return "";
     }
 
     @Override
@@ -82,18 +84,18 @@ public class Player implements lunch.sim.Player {
         else if (!ps.is_player_searching() && minDist >= 5 && ps.get_held_item_type() == null) {
             ArrayList<FoodType> unorderedFood = new ArrayList<>();
             for (FoodType food_type : FoodType.values()) {
-                if(ps.check_availability_item(food_type)){
+                if (ps.check_availability_item(food_type)) {
                     unorderedFood.add(food_type);
                 }
             }
             //now, order the food:
             ArrayList<FoodType> orderedFood = orderFood(unorderedFood);
-            for(FoodType f : orderedFood){
+            for (FoodType f : orderedFood) {
                 System.out.print(" " + f + " ");
             }
             //and then get the first element in the list
             return new Command(CommandType.TAKE_OUT, orderedFood.get(0));
-            
+
         } // if no animal in vicinity then take a bite
         else if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
             return new Command(CommandType.EAT);
@@ -103,42 +105,47 @@ public class Player implements lunch.sim.Player {
         return new Command();
     }
 
-    public ArrayList<FoodType> orderFood(ArrayList<FoodType> unordered){
-        ArrayList<FoodType> ordered = new ArrayList<FoodType>();
+    /**
+     * Sorts the food by prioritizing the points obtained by eating it
+     * @param unordered the list of food without any order
+     * @return the ordered list of food
+     */
+    public ArrayList<FoodType> orderFood(ArrayList<FoodType> unordered) {
+        ArrayList<FoodType> ordered = new ArrayList<>();
         ArrayList<Double> ord = new ArrayList<>();
-        for(FoodType f : unordered){
-            if(f == FoodType.SANDWICH1){
+        for (FoodType f : unordered) {
+            if (f == FoodType.SANDWICH1) {
                 ord.add(3.1);
-            }
-            else if(f == FoodType.SANDWICH2){
+            } else if (f == FoodType.SANDWICH2) {
                 ord.add(3.2);
-            }
-            else if(f == FoodType.COOKIE){
+            } else if (f == FoodType.COOKIE) {
                 ord.add(4.0);
-            }
-            else if(f == FoodType.FRUIT1){
+            } else if (f == FoodType.FRUIT1) {
                 ord.add(2.1);
-            }
-            else if(f == FoodType.FRUIT2){
+            } else if (f == FoodType.FRUIT2) {
                 ord.add(2.2);
-            }
-            else if (f == FoodType.EGG){ 
+            } else if (f == FoodType.EGG) {
                 ord.add(2.0);
-            }
-            else {
+            } else {
                 ord.add(1.0); //should never happen
             }
         }
         Collections.sort(ord, Collections.reverseOrder());
         System.out.println("ordered ");
-        for(Double d : ord){
-            if(d == 3.1){ ordered.add(FoodType.SANDWICH1);}
-            else if(d == 3.2){ ordered.add(FoodType.SANDWICH2);}
-            else if(d == 4.0){ ordered.add(FoodType.COOKIE);}
-            else if(d == 2.1){ ordered.add(FoodType.FRUIT1);}
-            else if(d == 2.2){ ordered.add(FoodType.FRUIT2);}
-            else if(d == 2.0){ ordered.add(FoodType.EGG);}
-            else{
+        for (Double d : ord) {
+            if (d == 3.1) {
+                ordered.add(FoodType.SANDWICH1);
+            } else if (d == 3.2) {
+                ordered.add(FoodType.SANDWICH2);
+            } else if (d == 4.0) {
+                ordered.add(FoodType.COOKIE);
+            } else if (d == 2.1) {
+                ordered.add(FoodType.FRUIT1);
+            } else if (d == 2.2) {
+                ordered.add(FoodType.FRUIT2);
+            } else if (d == 2.0) {
+                ordered.add(FoodType.EGG);
+            } else {
                 System.out.println("There is an error - this food type is invalid");
             }
         }
@@ -147,29 +154,40 @@ public class Player implements lunch.sim.Player {
 
     //helper function: if (1). 3 monkeys, dist <=2 or (2) goose dist<=2, return true indicating animals are 
     //dangerous and the input fmaily mamber should keep items back 
-    public static boolean dangerAnimal(Family member, ArrayList<Animal> animals){
-        int dangerGoose=0;
-        int dangerMonkey=0; 
-        for(Animal animal: animals){
-            if (animal.busy_eating()){continue;}
-            if (animal.which_animal()==AnimalType.MONKEY){//monkey
-                if (Point.dist(animal.get_location(), member.get_location())<=5.0){
-                    dangerMonkey+=1;
+    /**
+     * 
+     * @param member
+     * @param animals
+     * @return 
+     */
+    public boolean dangerAnimal(Family member, ArrayList<Animal> animals) {
+        int dangerGoose = 0;
+        int dangerMonkey = 0;
+        for (Animal animal : animals) {
+            if (animal.busy_eating()) {
+                continue;
+            }
+            if (animal.which_animal() == AnimalType.MONKEY) {//monkey
+                if (Point.dist(animal.get_location(), member.get_location()) <= 5.0) {
+                    dangerMonkey += 1;
                 }
-            }else{//goose
-                if (Point.dist(animal.get_location(), member.get_location())<=2.0 && member.get_held_item_type()==FoodType.SANDWICH){
-                    dangerGoose+=1;
+            } else {//goose
+                if (Point.dist(animal.get_location(), member.get_location()) <= 2.0 && member.get_held_item_type() == FoodType.SANDWICH) {
+                    dangerGoose += 1;
                 }
             }
         }
-        return (dangerGoose>=1 || dangerMonkey>=3);
+        return (dangerGoose >= 1 || dangerMonkey >= 3);
     }
+
     //helper function: whether put food away 
     //if hold food and is in danger: put food away; 
     //else do nothing. 
-    public Command putFoodBack(Family member, ArrayList<Animal> animals){
-        if(dangerAnimal(member, animals)&& member.get_held_item_type()!=null){return new Command(CommandType.KEEP_BACK);}
+    public Command putFoodBack(Family member, ArrayList<Animal> animals) {
+        if (dangerAnimal(member, animals) && member.get_held_item_type() != null) {
+            return new Command(CommandType.KEEP_BACK);
+        }
         return null;
     }
-  
+
 }
