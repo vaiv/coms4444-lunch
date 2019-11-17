@@ -190,7 +190,7 @@ public class Helper {
     }
     
     // Get the time remaining before a goose can steal the food
-    public static double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
+    public static double getGeeseTime(ArrayList<Animal> animals, PlayerState ps) {
         double minTime = Double.MAX_VALUE;
         double d, t;
         for (Animal goose: animals) {
@@ -206,7 +206,7 @@ public class Helper {
     }
 
     // Get the time remaining before monkeys can steal the food
-    public static double getMonkeyTime(ArrayList<Animal> animals, ArrayList<Animal> incomingMonkeys, PlayerState ps) {
+    public static double getMonkeyTime(ArrayList<Animal> animals, PlayerState ps) {
         // Problem with this code: only considers monkeys that are headed in your direction. Must fix later.
         // 1. Find three closest Monkeys. How much time will it take 3rd closest monkey to get to you?
         double close_1 = Double.MAX_VALUE;
@@ -224,12 +224,10 @@ public class Helper {
                 close_3 = close_2;
                 close_2 = close_1;
                 close_1 = dist_between;
-            }
-            else if(dist_between < close_2) {
+            } else if (dist_between < close_2) {
                 close_3 = close_2;
                 close_2 = dist_between;
-            }
-            else if(dist_between < close_3) {
+            } else if (dist_between < close_3) {
                 close_3 = dist_between;
             }
         }
@@ -344,7 +342,7 @@ public class Helper {
     }
     
     public static Command takeOutFood(PlayerState ps) {
-        // Implement priority: cookie --> non sandwhich --> sandwhich 
+        // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
             if (ps.check_availability_item(food_type)) {

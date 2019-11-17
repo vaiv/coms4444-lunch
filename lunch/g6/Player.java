@@ -76,36 +76,39 @@ public class Player implements lunch.sim.Player {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), corner));
         }
 
-        // Based on incoming monkey / geese -- do we have time to eat?
-        // if yes: eat
-        // if no: no?
-        double geeseTime = Helper.getGeeseTime(animals, incomingGeese, ps);
-        double monkeyTime = Helper.getMonkeyTime(animals, incomingMonkeys, ps);
+        // Step 2: Based on incoming monkeys / geese, do we have time to eat?
+        // If yes: eat
+        // If no: no?
+        double geeseTime = Helper.getGeeseTime(animals, ps);
+        double monkeyTime = Helper.getMonkeyTime(animals, ps);
 
         // No food in hand 
-        // Case 1: Not searching
-        // Case 2: Currently searching
-        double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() + 1;
         if (ps.get_held_item_type() == null) {
-            // Due to ordering, this check implies eating a sandwich 
-            if ((!ps.check_availability_item(FoodType.EGG) && geeseTime > minTime) || (monkeyTime > minTime)) {
-                // Means we would have one second to eat 
+            double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
+            if ((!ps.check_availability_item(FoodType.EGG))) {
+                // Due to ordering, this check implies eating a sandwich
+                if ((geeseTime > minTime) && (monkeyTime > minTime)) {
+                    return Helper.takeOutFood(ps);
+                } else {
+                    // Deal with what we do in case where don't have enough time to eat
+                }
+            } else if (monkeyTime > minTime) {
                 return Helper.takeOutFood(ps);
             } else {
-                // Deal with what we do in case where don't have enough time to eat 
+                // Deal with what we do in case where don't have enough time to eat
             }
         }
+        
         // With food in hand 
-        // Case 3: Not searching 
-        // Case 4: Currently searching 
         else if (ps.get_held_item_type() != null) {
             // TODO: Check to make sure this is generic sandwich (checked: yes)
-            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0)|| monkeyTime <= 1.0) {
+            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0) || monkeyTime <= 1.0) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return new Command(CommandType.EAT);
             }
         }
+        
         // Missed case 
         else {
             System.out.println("oops");
