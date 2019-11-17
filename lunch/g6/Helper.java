@@ -140,6 +140,61 @@ public class Helper {
         }
         return result;
     }
+
+    public ArrayList<Animal> findIncomingMonkeys (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
+	    ArrayList<Animal> incomingMonkeys = new ArrayList<Animal>();
+    	for(int i = 0; i<animals.size();i++){
+	        if (animals.get(i).which_animal() == AnimalType.GOOSE){
+		        continue;
+	        }
+	        Point curr_loc = animals.get(i).get_location();
+            Point prev_loc = prev_animals.get(i).get_location();
+            double delta_x = curr_loc.x - prev_loc.x;
+            double delta_y = curr_loc.y - prev_loc.y;
+	    
+	        double animal_slope = delta_y/delta_x;
+
+            Point my_loc = ps.get_location();
+
+	        double an_human_dx = my_loc.x - prev_loc.x;
+	        double an_human_dy = my_loc.y - prev_loc.y;
+
+	        double human_slope = an_human_dy/an_human_dx;
+
+	        if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
+	    	    incomingMonkeys.add(animals.get(i));
+	        }
+	    }
+	    return incomingMonkeys;
+    }
+
+    public ArrayList<Animal> findIncomingGeese (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
+        ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
+        for(int i = 0; i<animals.size();i++){
+            if (animals.get(i).which_animal() == AnimalType.MONKEY){
+                continue;
+            }
+            Point curr_loc = animals.get(i).get_location();
+            Point prev_loc = prev_animals.get(i).get_location();
+            double delta_x = curr_loc.x - prev_loc.x;
+            double delta_y = curr_loc.y - prev_loc.y;
+
+            double animal_slope = delta_y/delta_x;
+
+            Point my_loc = ps.get_location();
+
+            double an_human_dx = my_loc.x - prev_loc.x;
+            double an_human_dy = my_loc.y - prev_loc.y;
+
+            double human_slope = an_human_dy/an_human_dx;
+
+            if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
+                incomingGeese.add(animals.get(i));
+            }
+        }
+        return incomingGeese;
+    }
+
     
     /**
      * Helper function: move a player to a new target position

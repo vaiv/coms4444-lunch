@@ -27,6 +27,9 @@ public class Player implements lunch.sim.Player {
 
     private ArrayList<Animal> prev_animals;
     private HashMap<Integer, Point> trajectories;
+    private ArrayList<Animal> incomingMonkeys;
+    private ArrayList<Animal> incomingBirds;
+
 
     public Player() {
         turn = 0;
@@ -42,7 +45,11 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
         trajectories = calculateTrajectories(animals, prev_animals);
-        
+
+	    //determine which monkeys and birds are heading towards us.
+        incomingMonkeys = findIncomingMonkeys(animals, prev_animals, ps);
+	    incomingGeese = findIncomingGeese(animals, prev_animals, ps);
+
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
             min_dist = Math.min(min_dist, Point.dist(ps.get_location(), animals.get(i).get_location()));
