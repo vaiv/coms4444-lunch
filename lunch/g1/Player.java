@@ -26,6 +26,7 @@ public class Player implements lunch.sim.Player
 	private Random random;
 	private Integer id;
 	private Integer turn;
+	private String avatars;
 
     Double min_dist = Double.MAX_VALUE;
 
@@ -37,8 +38,7 @@ public class Player implements lunch.sim.Player
 		turn = 0;
 	}
 
-
-	public void init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		this.animalLocations = new ArrayList<>();
@@ -47,7 +47,9 @@ public class Player implements lunch.sim.Player
 				animalLocations.add(animal.get_location());
 			}
 		}
+		avatars = "flintstone";
 		random = new Random(s);
+		return avatars;
 	}
 
 
