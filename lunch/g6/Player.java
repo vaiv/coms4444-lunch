@@ -57,14 +57,13 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
-
+       
+	    // //determine which monkeys and birds are heading towards us.
+        // incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
+        // incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
+        
         // Update prev animals to be where animals were this time
         prev_animals = new ArrayList<>(animals);
-
-	    //determine which monkeys and birds are heading towards us.
-        incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
-	    incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
-
         // Not currently using, from random, could be helpful 
         Double min_dist = Double.MAX_VALUE;
         for (int i = 0; i < animals.size(); i++) {
@@ -87,12 +86,14 @@ public class Player implements lunch.sim.Player {
         // Case 1: Not searching
         // Case 2: Currently searching
         double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() +1;
-        System.out.println("times: " + geeseTime + " " + monkeyTime);
         if (ps.get_held_item_type() == null){
             // Due to ordering, this check implies eating a sandwich 
             if ((!ps.check_availability_item(FoodType.EGG) && geeseTime > minTime) || (monkeyTime > minTime)) {
                 // Means we would have one second to eat 
                 return Helper.takeOutFood(ps);
+            }
+            else{
+                // Deal with what we do in case where don't have enough time to eat 
             }
     
         }
@@ -101,7 +102,7 @@ public class Player implements lunch.sim.Player {
         // Case 4: Currently searching 
         else if (ps.get_held_item_type() != null ){
             // TODO: Check to make sure this is generic sandwich 
-            if ((ps.get_held_item_type()==FoodType.SANDWICH && geeseTime <= 1.0 )|| monkeyTime <= 1.0){
+            if ((ps.get_held_item_type()==FoodType.SANDWICH && geeseTime <= 5.0 )|| monkeyTime <= 5.0){
                 return new Command(CommandType.KEEP_BACK);
             }
             else{

@@ -200,7 +200,8 @@ public class Helper {
     static double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
         double minTime = Double.MAX_VALUE;
         double d, t;
-        for (Animal goose: incomingGeese) {
+        for (Animal goose: animals) {
+            if (goose.which_animal() == AnimalType.MONKEY) continue; 
             d = Point.dist(goose.get_location(), ps.get_location());
             t = (d - 2.0) / goose.get_max_speed();
             if (t < minTime) {
@@ -218,8 +219,9 @@ public class Helper {
         double close_2 = Double.MAX_VALUE;
         double close_3 = Double.MAX_VALUE;
         double dist_between = 0;
-        for(int i = 0; i<incomingMonkeys.size();i++){
-            Animal cur_Monkey = incomingMonkeys.get(i);
+        for(int i = 0; i<animals.size();i++){
+            Animal cur_Monkey = animals.get(i);
+            if (cur_Monkey.which_animal() == AnimalType.GOOSE) continue; 
             Point monkey_loc = cur_Monkey.get_location();
             Point my_loc = ps.get_location();
             dist_between = Point.dist(my_loc, monkey_loc);
@@ -238,7 +240,7 @@ public class Helper {
                 close_3 = dist_between;
             }
         }
-        double time_to_reach = dist_between - 5;
+        double time_to_reach = close_3 - 5;
 
         return time_to_reach;
     }
