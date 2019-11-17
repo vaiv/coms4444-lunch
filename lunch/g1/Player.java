@@ -29,15 +29,24 @@ public class Player implements lunch.sim.Player
 
     Double min_dist = Double.MAX_VALUE;
 
+    List<Point> animalLocations;
+
     private Point corner_direction = new Point(0, 0);
 	
 	{
 		turn = 0;
 	}
 
+
 	public void init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
+		this.animalLocations = new ArrayList<>();
+		for(Animal animal : animals){
+			if(animal.which_animal() == AnimalType.MONKEY){
+				animalLocations.add(animal.get_location());
+			}
+		}
 		random = new Random(s);
 	}
 
@@ -54,6 +63,7 @@ public class Player implements lunch.sim.Player
 		   return priorityList;
 
 	}
+
 	//check if eating is in risk
 	//if a third Monkey is coming near
 	public boolean checkMonkey(ArrayList<Animal> animals, PlayerState ps){
@@ -120,7 +130,7 @@ public class Player implements lunch.sim.Player
 
 	public Command getCommand( ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps ) {
         turn++;
-
+		this.getAnimalMovement(animals);
         // make one random move (to get away from initial point 0,0)
         if (turn == 1) {
             Point next_move = getRandomMove(ps);
@@ -291,4 +301,40 @@ public class Player implements lunch.sim.Player
 		// System.out.println("move command issued");
 		return next_move;
     }
+
+    private double getAngle(Point newPoint, Point oldPoint){
+		double xDelt = newPoint.x - oldPoint.x;
+		double yDelt = -1 * (newPoint.y - oldPoint.y);
+		double theta = 0;
+		if(yDelt == 0 && xDelt > 0) theta = 0;
+		else if(yDelt == 0 && xDelt < 0) theta = Math.PI;
+		else if(yDelt > 0 && xDelt == 0) theta = Math.PI / 2;
+		else if(yDelt < 0 && xDelt == 0) theta = - Math.PI / 2;
+		else{
+			theta = Math.atan(yDelt / xDelt);
+//			System.out.println("yDelt " + yDelt);
+//			System.out.println("xDelt " + xDelt);
+//			System.out.println(theta);
+			if(yDelt > 0.0 && xDelt < 0.0) theta = Math.PI + theta;
+			else if(yDelt < 0.0 && xDelt < 0.0) theta = -Math.PI + theta;
+		}
+
+		return theta;
+	}
+
+    private HashMap<Integer, Double> getAnimalMovement( ArrayList<Animal> animals ){
+		HashMap<Integer, Double> movementMap = new HashMap<>();
+		int ind = 0;
+		for(Animal animal : animals){
+			if(animal.which_animal() == AnimalType.MONKEY){
+				Point oldPoint = animalLocations.get(ind);
+				Point newPoint = animal.get_location();
+				animalLocations.add(ind, newPoint);
+				double theta = getAngle(newPoint, oldPoint);
+				movementMap.put(ind, theta);
+				ind++;
+			}
+		}
+		return movementMap;
+	}
 }
