@@ -196,8 +196,8 @@ public class Helper {
         return incomingGeese;
     }
     
-    double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
-        double minTime = Double.MAX_DOUBLE;
+    static double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
+        double minTime = Double.MAX_VALUE;
         double d, t;
         for (Animal goose: incomingGeese) {
             d = Point.dist(goose.get_location(), ps.get_location());

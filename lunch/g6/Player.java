@@ -88,19 +88,12 @@ public class Player implements lunch.sim.Player {
         // Case 2: Currently searching
         double minTime = !ps.is_player_searching() ? 11.0 : ps.time_to_finish_search() +1;
         if (ps.get_held_item_type() == null){
-            // Due to ordering, this check implies not eating a sandwich 
-            if (ps.check_availability_item(FoodType.EGG)){
-                if (monkeyTime > minTime){
+            // Due to ordering, this check implies eating a sandwich 
+            if ((!ps.check_availability_item(FoodType.EGG) && geeseTime > minTime) || (monkeyTime > minTime)) {
                 // Means we would have one second to eat 
                 return Helper.takeOutFood(ps);
-                }
             }
-            else{
-                if (monkeyTime > minTime && geeseTime > minTime){
-                    // Means we would have at least one second to eat 
-                    return Helper.takeOutFood(ps);
-                }
-            } 
+    
         }
         // With food in hand 
         // Case 3: Not searching 
