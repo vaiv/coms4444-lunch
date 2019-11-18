@@ -280,7 +280,7 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
 	 		for(Integer j=0;j<players.size();j++)
 	 		{
-	 			if(count[j]>=3)
+	 			if(count[j]>=3 && agents.get(j).get_held_item()!=null && agents.get(j).visible_item())
 	 				agents.get(j).stolen();
 	 		}
 
