@@ -136,6 +136,8 @@ public class Player implements lunch.sim.Player
 		// scaffolding for monday's submission ////////////////////////
 		///////////////////////////////////////////////////////////////
 
+
+
 		// to be completed
 		if (!inPosition) {
 			return walkToPosition(ps, members);
@@ -226,4 +228,4 @@ public class Player implements lunch.sim.Player
 
 
 }
-///////////
+/////////////////
