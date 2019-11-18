@@ -41,6 +41,7 @@ private static Integer count_down = turns;
 private static Integer arbitrary_const = 100000;
 private static long timeout = 1000;
 private static String version = "1.0";
+private static String avatars="jetson";
 
 private static List<String> playerNames;
 private static HashMap<String, Integer> player_scores;
@@ -182,7 +183,11 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
  			try
  			{
  				Integer s_player = generator.nextInt(arbitrary_const);
- 				players.get(j).init(init_family,j,f,init_animals,m,g,turns,s_player);
+ 				String s = players.get(j).init(init_family,j,f,init_animals,m,g,turns,s_player);
+ 				if(s.length()>0)
+ 				{
+ 					avatars = s;
+ 				}
  			}
  			catch(Exception ex)
  			{
@@ -275,7 +280,7 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
 	 		for(Integer j=0;j<players.size();j++)
 	 		{
-	 			if(count[j]>=3)
+	 			if(count[j]>=3 && agents.get(j).get_held_item()!=null && agents.get(j).visible_item())
 	 				agents.get(j).stolen();
 	 		}
 
@@ -375,13 +380,13 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
  	{
  		case ABORT: 
  			// Log.log("abort command issued.");
- 			if(a.get_held_item()!=null && a.is_waiting())
- 			{
- 				a.make_visible();
- 				a.reset_wait_time();
- 				a.stop_looking();
- 			}
- 			else if(a.is_waiting())
+ 			// if(a.get_held_item()!=null && a.is_waiting())
+ 			// {
+ 			// 	a.make_visible();
+ 			// 	a.reset_wait_time();
+ 			// 	a.stop_looking();
+ 			// }
+ 			if(a.is_waiting() && a.get_held_item()==null)
  			{
  				a.set_food_request(null);
  				a.reset_wait_time();
@@ -779,7 +784,27 @@ private static void parseArgs(String[] args)
             f_2 = agents.get(i).check_available_item(FoodType.FRUIT2);
             e = agents.get(i).check_available_item(FoodType.EGG);
             c = agents.get(i).check_available_item(FoodType.COOKIE);
-            json += "{\"x\" : " + p.x + ",\"y\" : " + p.y + ",\"id\":"+ i +  ",\"name\":" + "\"" + playerNames.get(i) + "\"" + ",\"score\":"+ agents.get(i).get_score() + ",\"s_1\":" + s_1 + ",\"s_2\":" + s_2 + ",\"f_1\":" + f_1 +",\"f_2\":" + f_2  + ",\"e\":" + e + ",\"c\":" + c+"}";
+            String eating="";
+            Double percent_remaining = -1.0;
+            if(agents.get(i).get_held_item()!=null)
+            {
+            	eating = agents.get(i).get_held_item().get_food_type().toString();
+            	percent_remaining = (double)agents.get(i).get_rem_time_item(agents.get(i).get_held_item().get_food_type());
+            	FoodType item = agents.get(i).get_held_item().get_food_type();
+            	switch(item)
+            	{
+            		case SANDWICH1:
+            		case SANDWICH2:
+            		case SANDWICH: percent_remaining/= 180; break;
+            		case FRUIT1:
+            		case FRUIT2:
+            		case FRUIT: percent_remaining/= 120; break;
+            		case EGG: percent_remaining/= 120; break;
+            		case COOKIE: percent_remaining/= 60;break;
+            		default: ;
+            	}
+            }
+            json += "{\"x\" : " + p.x + ",\"y\" : " + p.y + ",\"id\":"+ i +  ",\"name\":" + "\"" + playerNames.get(i) + "\"" + ",\"score\":"+ agents.get(i).get_score() + ",\"s_1\":" + s_1 + ",\"s_2\":" + s_2 + ",\"f_1\":" + f_1 +",\"f_2\":" + f_2  + ",\"e\":" + e + ",\"c\":" + c+",\"eating\":" + "\""+ eating + "\"" + ",\"rem_time\":" + (percent_remaining*100) +  ",\"avatars\":" +"\"" + avatars + "\""  +"}";
             if (i !=  agents.size() - 1)
             {
                 json += ",";
@@ -912,8 +937,3 @@ private static void parseArgs(String[] args)
 
 
 }
-
-
-
-
-
