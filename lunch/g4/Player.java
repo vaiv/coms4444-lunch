@@ -41,6 +41,7 @@ public class Player implements lunch.sim.Player {
 	private FoodType foodCurrentlySearchingFor = null;
 	private static final double MONKEY_DISTANCE_THRESHOLD = 6.0 + 10e-6;
 	private static final double GOOSE_DISTANCE_THRESHOLD = 5.0 + 10e-6;
+	private double bearing = -1;
 	
 	/**
 	 * Player constructor
@@ -85,17 +86,18 @@ public class Player implements lunch.sim.Player {
 	 *
 	 */
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-		if(turn < 100) {
+		if(turn < 20) {
 			boolean foundValidMove = false;
 			Point nextMove = new Point(-1, -1);
 			while(!foundValidMove) {
-				Double bearing = random.nextDouble() * 2 * Math.PI;
+				if(bearing != -1)
+					bearing = random.nextDouble() * 2 * Math.PI;
 				nextMove = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
 				foundValidMove = Point.within_bounds(nextMove);
 			}
 			turn++;
 			return Command.createMoveCommand(nextMove);
-		}
+		}		
 
 		// Determine animals sorted by closest distance to the player
 		ArrayList<Animal> clonedAnimals = new ArrayList<>(animals);
@@ -165,10 +167,11 @@ public class Player implements lunch.sim.Player {
 			return new Command(CommandType.KEEP_BACK);
 		}
 		
+		FoodType foodType = null;
 		// Take out a food item (or move player) if no animal is too close
-		if (!ps.is_player_searching() && !monkeysTooClose && ps.get_held_item_type() == null) {
+		if (!ps.is_player_searching() && ps.get_held_item_type() == null) {
 			foodCurrentlySearchingFor = null;
-			FoodType foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE : 
+			foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE : 
 								ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
 								ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 : 
 								ps.check_availability_item(FoodType.EGG) ? FoodType.EGG :
@@ -180,46 +183,70 @@ public class Player implements lunch.sim.Player {
 				
 				// Take out the food item if it is not a sandwich and monkeys are not too close
 				if(foodType != FoodType.SANDWICH1 && foodType != FoodType.SANDWICH2) {
+					if(monkeysTooClose) {
+						System.out.println("Player " + id + " will move, as the monkeys are too close for eating.");
+						boolean foundValidMove = false;
+						Point nextMove = new Point(-1, -1);
+						while(!foundValidMove) {
+							bearing = random.nextDouble() * 2 * Math.PI;
+							nextMove = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
+							foundValidMove = Point.within_bounds(nextMove);
+						}
+						turn++;
+						return Command.createMoveCommand(nextMove);
+					}
 					System.out.println("Player " + id + " is taking out " + foodType.name() + ".");
 					foodCurrentlySearchingFor = foodType;
 					return new Command(CommandType.TAKE_OUT, foodType);
 				}
-				
-				// Assign a designated corner for the player to eat sandwiches
-				Point currPoint = ps.get_location();
-				Point targetCorner = new Point(-1, -1);
-				if(!targetCornersChosen.containsKey(id)) {
-					targetCornersChosen.put(id, targetCorners.get(id % targetCorners.size()));
-					System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id));
-				}
-				targetCorner = targetCornersChosen.get(id);
 
-				// Eat sandwiches only if the player is in the corner and geese are not too close
-				if(currPoint.x == targetCorner.x && currPoint.y == targetCorner.y) {
-					if(!gooseTooClose) {
-						System.out.println("Player " + id + " is taking out a sandwich.");
-						foodCurrentlySearchingFor = FoodType.SANDWICH;
-						return new Command(CommandType.TAKE_OUT, foodType);
+				if(!monkeysTooClose) {
+					
+					// Assign the closest corner for the player to eat sandwiches
+					Point currPoint = ps.get_location();
+					Point targetCorner = new Point(-1, -1);
+					if(!targetCornersChosen.containsKey(id)) {
+						double minCornerDist = Double.MAX_VALUE;
+						for(Point corner : targetCorners) {
+							double cornerDist = Point.dist(currPoint, corner);
+							if(cornerDist < minCornerDist) {
+								minCornerDist = cornerDist;
+								targetCorner = corner;
+							}
+						}
+						targetCornersChosen.put(id, targetCorner);
+						System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id) + ".");
 					}
-					else {
-						System.out.println("Player " + id + " is not going to take out a sandwich because the goose is too close.");
-						return new Command();
-					}
-				}
-				
-				// The player reaches the corner if the distance is within (or exactly) 1 m
-				double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
-				if(distanceFromCorner <= 1.0) {
-					System.out.println("Player " + id + " is making its final move to the corner.");
-					return Command.createMoveCommand(targetCorner);
-				}
+					else
+						targetCorner = targetCornersChosen.get(id);
 
-				// Move the player toward the corner
-				double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
-				double deltaX = (targetCorner.x > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
-				double deltaY = Math.abs(slope) * (targetCorner.y > 0 ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
-				System.out.println("Player " + id + " is moving to the corner.");
-				return Command.createMoveCommand(new Point(currPoint.x + deltaX, currPoint.y + deltaY));
+					// Eat sandwiches only if the player is in the corner and geese are not too close
+					if(currPoint.x == targetCorner.x && currPoint.y == targetCorner.y) {
+						if(!gooseTooClose) {
+							System.out.println("Player " + id + " is taking out a sandwich.");
+							foodCurrentlySearchingFor = FoodType.SANDWICH;
+							return new Command(CommandType.TAKE_OUT, foodType);
+						}
+						else {
+							System.out.println("Player " + id + " is not going to take out a sandwich because the goose is too close.");
+							return new Command();
+						}
+					}
+					
+					// The player reaches the corner if the distance is within (or exactly) 1 m
+					double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
+					if(distanceFromCorner <= 1.0) {
+						System.out.println("Player " + id + " is making its final move to the corner.");
+						return Command.createMoveCommand(targetCorner);
+					}
+
+					// Move the player toward the corner
+					double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
+					double deltaX = (targetCorner.x > currPoint.x ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
+					double deltaY = Math.abs(slope) * (targetCorner.y > currPoint.y ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
+					System.out.println("Player " + id + " is moving to the corner.");
+					return Command.createMoveCommand(new Point(currPoint.x + deltaX, currPoint.y + deltaY));					
+				}
 			}
 		}
 		
