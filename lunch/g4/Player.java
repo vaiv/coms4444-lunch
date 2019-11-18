@@ -34,7 +34,8 @@ public class Player implements lunch.sim.Player {
 	private List<Point> targetCorners = Arrays.asList(new Point[]{
 			new Point(-50, -50), // Top-left corner
 			new Point(-50, 50),  // Bottom-left corner
-			new Point(50, -50)	 // Top-right corner
+			new Point(50, -50),  // Top-right corner
+			new Point(50, 50)    // Bottom-right corner
 			});
 	private Map<Integer, Point> targetCornersChosen = new HashMap<>();
 	private FoodType foodCurrentlySearchingFor = null;
