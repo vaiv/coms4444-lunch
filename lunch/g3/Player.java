@@ -7,7 +7,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 import javafx.util.Pair;
 import lunch.sim.*;
-import javafx.util.Pair; 
+import javafx.util.Pair;
 
 
 public class Player implements lunch.sim.Player {
@@ -51,7 +51,13 @@ public class Player implements lunch.sim.Player {
     };
 
     public FoodType selectFood(PlayerState ps) {
-        return FoodType.COOKIE;
+        if (ps.check_availability_item(FoodType.COOKIE)) return FoodType.COOKIE;
+        else if (ps.check_availability_item(FoodType.EGG)) return FoodType.EGG;
+        else if (ps.check_availability_item(FoodType.FRUIT2)) return FoodType.FRUIT2;
+        else if (ps.check_availability_item(FoodType.FRUIT1)) return FoodType.FRUIT1;
+        else if (ps.check_availability_item(FoodType.SANDWICH2)) return FoodType.SANDWICH2;
+        else if (ps.check_availability_item(FoodType.SANDWICH1)) return FoodType.SANDWICH1;
+        else return null;
     }
 
     public boolean shouldStopEating(ArrayList<Animal> animals, PlayerState ps) {
@@ -129,7 +135,7 @@ public class Player implements lunch.sim.Player {
         return move_to_corner;
     }
 
-    
+
     public Double getBearingFromDestination(Point playerLocation, Point destination){
         double deltax = destination.x - playerLocation.x;
         double deltay = destination.y - playerLocation.y;
