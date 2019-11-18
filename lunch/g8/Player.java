@@ -2,15 +2,9 @@ package lunch.g8;
 
 import java.util.ArrayList;
 import java.util.Random;
-import lunch.sim.Animal;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
-import lunch.sim.Family;
-import lunch.sim.FoodType;
-import lunch.sim.PlayerState;
-import lunch.sim.Point;
-import java.util.Collections;
-import lunch.sim.AnimalType;
+import java.util.List;
 
 /**
  *
@@ -18,8 +12,18 @@ import lunch.sim.AnimalType;
  */
 public class Player implements lunch.sim.Player {
 
-    private Integer turn;
+    private int id;
+    private int turn;
     private Random random;
+    protected final List<FamilyMember> family;
+    protected final List<Animal> animals;
+    protected PlayerState state;
+    private Strategy strategy;
+
+    public Player() {
+        family = new ArrayList<>();
+        animals = new ArrayList<>();
+    }
 
     /**
      *
@@ -34,160 +38,91 @@ public class Player implements lunch.sim.Player {
      * @return a family avatar folder name
      */
     @Override
-    public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+    public String init(
+            ArrayList<lunch.sim.Family> members,
+            Integer id,
+            int f,
+            ArrayList<lunch.sim.Animal> animals,
+            Integer m,
+            Integer g,
+            double t,
+            Integer s) {
+        this.id = id;
         random = new Random(s);
         turn = 0;
+        for (lunch.sim.Family member : members) {
+            family.add(new FamilyMember(member));
+        }
+        for (lunch.sim.Animal ani : animals) {
+            this.animals.add(new Animal(ani));
+        }
         return "";
     }
 
     @Override
-    public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        Double minDist = Double.MAX_VALUE;
-
-        for (Integer i = 0; i < animals.size(); i++) {
-            minDist = Math.min(minDist, Point.dist(ps.get_location(), animals.get(i).get_location()));
+    public Command getCommand(
+            ArrayList<lunch.sim.Family> members,
+            ArrayList<lunch.sim.Animal> simAnimals,
+            lunch.sim.PlayerState ps) {
+        // finish initialization of elements that required some player state
+        if (state == null) {
+            state = new PlayerState(id, ps);
+        }
+        if (strategy == null) {
+            strategy = selectStrategy();
         }
 
-        if (turn < 100) {
-            boolean validMoveFound = false;
-            Point nextMove = new Point(-1, -1);
-            while (!validMoveFound) {
-                Double bearing = random.nextDouble() * 2 * Math.PI;
-                nextMove = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-                validMoveFound = Point.within_bounds(nextMove);
-            }
-            // System.out.println("move command issued");
-            turn++;
-            return Command.createMoveCommand(nextMove);
+        // update game information
+        update(members, simAnimals, ps);
+
+        // execute strategy to obtain a command
+        Command command;
+        try {
+            command = strategy.run();
+        } catch (AbortStrategyException ex) {
+            // change strategies
+            command = new Command();
         }
 
-        // abort taking out if animal is too close
-        if (minDist < 3.0 && ps.is_player_searching() && ps.get_held_item_type() == null) {
-            // System.out.println("abort command issued");
-            // System.out.println(min_dist.toString());
-            return new Command(CommandType.ABORT);
-        } // keep food item back if animal is too close
-        else if (!ps.is_player_searching() && ps.get_held_item_type() != null && minDist < 2.0) {
-            return new Command(CommandType.KEEP_BACK);
-        } // move away from animal 
-        else if (minDist < 3.0) {
-            boolean validMoveFound = false;
-            Point nextMove = new Point(-1, -1);
-            while (!validMoveFound) {
-                Double bearing = random.nextDouble() * 2 * Math.PI;
-                nextMove = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-                validMoveFound = Point.within_bounds(nextMove);
-            }
-            return Command.createMoveCommand(nextMove);
-
-        } // if no animal is near then take out food
-        else if (!ps.is_player_searching() && minDist >= 5 && ps.get_held_item_type() == null) {
-            ArrayList<FoodType> unorderedFood = new ArrayList<>();
-            for (FoodType food_type : FoodType.values()) {
-                if (ps.check_availability_item(food_type)) {
-                    unorderedFood.add(food_type);
-                }
-            }
-            //now, order the food:
-            ArrayList<FoodType> orderedFood = orderFood(unorderedFood);
-            for (FoodType f : orderedFood) {
-                System.out.print(" " + f + " ");
-            }
-            //and then get the first element in the list
-            return new Command(CommandType.TAKE_OUT, orderedFood.get(0));
-
-        } // if no animal in vicinity then take a bite
-        else if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
-            return new Command(CommandType.EAT);
+        // record the type of food we are taking out
+        if (command.get_type() == CommandType.TAKE_OUT) {
+            state.setFoodSearched(command.get_food_type());
         }
 
-        // System.out.println("player is searching");
-        return new Command();
+        // increase turn counter and return command
+        turn++;
+        return command;
     }
 
     /**
-     * Sorts the food by prioritizing the points obtained by eating it
-     * @param unordered the list of food without any order
-     * @return the ordered list of food
+     * Updates the game information based on the objects passed by the simulator
+     *
+     * @param members
+     * @param simAnimals
+     * @param ps
      */
-    public ArrayList<FoodType> orderFood(ArrayList<FoodType> unordered) {
-        ArrayList<FoodType> ordered = new ArrayList<>();
-        ArrayList<Double> ord = new ArrayList<>();
-        for (FoodType f : unordered) {
-            if (f == FoodType.SANDWICH1) {
-                ord.add(3.1);
-            } else if (f == FoodType.SANDWICH2) {
-                ord.add(3.2);
-            } else if (f == FoodType.COOKIE) {
-                ord.add(4.0);
-            } else if (f == FoodType.FRUIT1) {
-                ord.add(2.1);
-            } else if (f == FoodType.FRUIT2) {
-                ord.add(2.2);
-            } else if (f == FoodType.EGG) {
-                ord.add(2.0);
-            } else {
-                ord.add(1.0); //should never happen
-            }
+    protected void update(
+            ArrayList<lunch.sim.Family> members,
+            ArrayList<lunch.sim.Animal> simAnimals,
+            lunch.sim.PlayerState ps) {
+        for (int i = 0; i < family.size(); i++) {
+            FamilyMember fm = family.get(i);
+            fm.update(members.get(i));
         }
-        Collections.sort(ord, Collections.reverseOrder());
-        System.out.println("ordered ");
-        for (Double d : ord) {
-            if (d == 3.1) {
-                ordered.add(FoodType.SANDWICH1);
-            } else if (d == 3.2) {
-                ordered.add(FoodType.SANDWICH2);
-            } else if (d == 4.0) {
-                ordered.add(FoodType.COOKIE);
-            } else if (d == 2.1) {
-                ordered.add(FoodType.FRUIT1);
-            } else if (d == 2.2) {
-                ordered.add(FoodType.FRUIT2);
-            } else if (d == 2.0) {
-                ordered.add(FoodType.EGG);
-            } else {
-                System.out.println("There is an error - this food type is invalid");
-            }
+        for (int i = 0; i < animals.size(); i++) {
+            Animal a = animals.get(i);
+            a.update(simAnimals.get(i));
         }
-        return ordered;
+        state.update(ps);
     }
 
-    //helper function: if (1). 3 monkeys, dist <=2 or (2) goose dist<=2, return true indicating animals are 
-    //dangerous and the input fmaily mamber should keep items back 
     /**
-     * 
-     * @param member
-     * @param animals
-     * @return 
+     * Returns the strategy that the player should execute next
+     *
+     * @return
      */
-    public boolean dangerAnimal(Family member, ArrayList<Animal> animals) {
-        int dangerGoose = 0;
-        int dangerMonkey = 0;
-        for (Animal animal : animals) {
-            if (animal.busy_eating()) {
-                continue;
-            }
-            if (animal.which_animal() == AnimalType.MONKEY) {//monkey
-                if (Point.dist(animal.get_location(), member.get_location()) <= 5.0) {
-                    dangerMonkey += 1;
-                }
-            } else {//goose
-                if (Point.dist(animal.get_location(), member.get_location()) <= 2.0 && member.get_held_item_type() == FoodType.SANDWICH) {
-                    dangerGoose += 1;
-                }
-            }
-        }
-        return (dangerGoose >= 1 || dangerMonkey >= 3);
-    }
-
-    //helper function: whether put food away 
-    //if hold food and is in danger: put food away; 
-    //else do nothing. 
-    public Command putFoodBack(Family member, ArrayList<Animal> animals) {
-        if (dangerAnimal(member, animals) && member.get_held_item_type() != null) {
-            return new Command(CommandType.KEEP_BACK);
-        }
-        return null;
+    private Strategy selectStrategy() {
+        return new EatAtCornerStrategy(family, animals, state);
     }
 
 }
