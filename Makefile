@@ -8,6 +8,7 @@ gui:
 
 compile:
 	javac lunch/sim/*.java
+	javac lunch/g8/*.java
 
 clean:
 	rm lunch/*/*.class
