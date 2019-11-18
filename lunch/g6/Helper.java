@@ -195,9 +195,11 @@ public class Helper {
         double d, t;
         for (Animal goose: animals) {
             if (goose.which_animal() == AnimalType.MONKEY)
-                continue; 
+                continue;
             d = Point.dist(goose.get_location(), ps.get_location());
             t = (d - 2.0) / goose.get_max_speed();
+            if (!Point.within_bounds(goose.get_location()))
+                t = Double.MAX_VALUE;
             if (t < minTime) {
                 minTime = t;
             }
@@ -216,7 +218,7 @@ public class Helper {
         for (int i = 0; i < animals.size(); i++) {
             Animal cur_Monkey = animals.get(i);
             if (cur_Monkey.which_animal() == AnimalType.GOOSE)
-                continue; 
+                continue;
             Point monkey_loc = cur_Monkey.get_location();
             Point my_loc = ps.get_location();
             dist_between = Point.dist(my_loc, monkey_loc);
