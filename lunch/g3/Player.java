@@ -16,8 +16,8 @@ public class Player implements lunch.sim.Player {
     // members_count: Number of family members.
     // t: Time limit for simulation.
 
-    public void init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
-        return;
+    public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+        return "";
     };
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
@@ -87,19 +87,19 @@ public class Player implements lunch.sim.Player {
             if(animal.which_animal() == AnimalType.GOOSE) {
                 //TODO: check if we're pulling out a sandwich
                 if(distToAnimal(animal, ps) <= 6) {
-                    return true;
+                    return false;
                 }
             } else {
                 //monkey
                 if(distToAnimal(animal, ps) <= 6) {
                     dangerMonkeys++;
                     if(dangerMonkeys == 3) {
-                        return true;
+                        return false;
                     }
                 }
             }
         }
-        return false;
+        return true;
     }
 
     public double distToAnimal(Animal animal, PlayerState ps) {
