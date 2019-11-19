@@ -36,8 +36,10 @@ public class Matrix {
     }
 
     // copy constructor
-    private Matrix(Matrix A) {
+    public Matrix(Matrix A) {
         this(A.data);
+        this.originX = A.originX;
+        this.originY = A.originY;
     }
 
     // set origin
