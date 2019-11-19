@@ -190,6 +190,29 @@ public class Helper {
         return incomingGeese;
     }
     
+    // Get the time remaining before one particular goose can steal the food
+    public static double getOneGooseTime(Animal goose, Animal prevGoose, PlayerState ps) {
+        // Not yet finished
+        double curr_d = Point.dist(goose.get_location(), ps.get_location());
+        double t;
+        // Case 1: The goose is outside the boundary (in the nest)
+        if (!Point.within_bounds(goose.get_location())) {
+            return Double.MAX_VALUE;
+        }
+        // Case 2: The goose is within 20m from the player, and the player is holding a sandwich
+        if (curr_d <= 20.0 && ps.get_held_item_type() == FoodType.SANDWICH) {
+            t = (curr_d - 2.0) / goose.get_max_speed();
+            return t;
+        }
+        // Case 3: The goose is not within 20m from the player, and the player is holding a sandwich
+        else if (curr_d > 20.0 && ps.get_held_item_type() == FoodType.SANDWICH) {
+            // TODO
+            return 0.0;
+        }
+        // TODO
+        return 0.0;
+    }
+    
     // Get the time remaining before a goose can steal the food
     public static double getGeeseTime(ArrayList<Animal> animals, PlayerState ps) {
         double minTime = Double.MAX_VALUE;
@@ -307,43 +330,6 @@ public class Helper {
         return time;
     }
     
-    /**
-     * Helper function: takes current position and movement of an animal and player state
-     * returns time for this animal to arrive if player starts eating
-     * @param animal
-     * @param dx
-     * @param dy
-     * @param ps
-     * @return
-     */
-    public double getRemainingTime(Animal animal, double dx, double dy, PlayerState ps) {
-        // NOT YET FINISHED
-        AnimalType type = animal.which_animal();  // type of the animal (MONKEY or GOOSE)
-        Point locBoundary = find_boundary(animal.get_location(), dx, dy);  // the point on the boundary where the animal will hit
-        double timeToBoundary = getAnimalMoveTime(animal, locBoundary);  // time for the animal to arrive at that point
-        double new_x = animal.get_location().x + 10 * dx;
-        double new_y = animal.get_location().y + 10 * dy;
-        Point loc10Sec = new Point(new_x, new_y);  // location of the animal in 10 seconds, assuming it moves forward and no boundary
-        double seeDist;  // distance to player at which animal can see the food
-        double stealDist; // distance to player at which animal can steal the food
-        switch (type) {
-            case MONKEY:
-                seeDist = 40.0;
-                stealDist = 5.0;
-                break;
-            case GOOSE:
-                seeDist = 20.0;
-                stealDist = 2.0;
-                break;
-            default:
-                seeDist = 0.0;
-                stealDist = 0.0;
-                break;
-        }
-        // TODO
-        return 0.0;
-    }
-    
     public static Command takeOutFood(PlayerState ps) {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
@@ -368,28 +354,25 @@ public class Helper {
         for(Family f: members){
             Point curLoc = f.get_location();
             Point closestWall = walls.get(0);
-            for(Point wall : walls){
-                if (Point.dist(curLoc, wall) < Point.dist(curLoc, closestWall)){
+            for(Point wall: walls){
+                if (Point.dist(curLoc, wall) < Point.dist(curLoc, closestWall)) {
                     closestWall = wall; 
                 }
-                if(!wallMemberMap.containsKey(wall)){
+                if (!wallMemberMap.containsKey(wall)) {
                     wallMemberMap.put(wall, new ArrayList<Family>());
                 }
             }
             wallMemberMap.get(closestWall).add(f);
-            
-            
         }
         Point sparsestWall = null; 
         int nearbyFamily = Integer.MAX_VALUE; 
-        for (Point wall: wallMemberMap.keySet()){
-            if (wallMemberMap.get(wall).size() < nearbyFamily || sparsestWall == null){
+        for (Point wall: wallMemberMap.keySet()) {
+            if (wallMemberMap.get(wall).size() < nearbyFamily || sparsestWall == null) {
                 nearbyFamily = wallMemberMap.get(wall).size(); 
                 sparsestWall = wall; 
             }
         }
         return sparsestWall; 
     }
-
     
 }
