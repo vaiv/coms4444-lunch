@@ -1,9 +1,6 @@
 package lunch.g6;
 
-<<<<<<< HEAD
 import java.util.Arrays;
-=======
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
 import java.util.List;
 import java.lang.Double;
 import java.util.Collections;
@@ -147,38 +144,6 @@ public class Helper {
         return result;
     }
 
-<<<<<<< HEAD
-    public static ArrayList<Animal> findIncomingMonkeys (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
-	    ArrayList<Animal> incomingMonkeys = new ArrayList<Animal>();
-    	for(int i = 0; i<animals.size();i++){
-	        if (animals.get(i).which_animal() == AnimalType.GOOSE){
-		        continue;
-	        }
-	        Point curr_loc = animals.get(i).get_location();
-            Point prev_loc = prev_animals.get(i).get_location();
-            double delta_x = curr_loc.x - prev_loc.x;
-            double delta_y = curr_loc.y - prev_loc.y;
-	    
-	        double animal_slope = delta_y/delta_x;
-
-            Point my_loc = ps.get_location();
-
-	        double an_human_dx = my_loc.x - prev_loc.x;
-	        double an_human_dy = my_loc.y - prev_loc.y;
-
-	        double human_slope = an_human_dy/an_human_dx;
-
-	        if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
-	    	    incomingMonkeys.add(animals.get(i));
-	        }
-	    }
-	    return incomingMonkeys;
-    }
-
-    public static ArrayList<Animal> findIncomingGeese (ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps){
-        ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
-        for(int i = 0; i<animals.size();i++){
-=======
     // Get the list of incoming monkeys
     public static ArrayList<Animal> findIncomingMonkeys(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
         ArrayList<Animal> incomingMonkeys = new ArrayList<Animal>();
@@ -206,7 +171,6 @@ public class Helper {
     public static ArrayList<Animal> findIncomingGeese(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
         ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
         for(int i = 0; i < animals.size(); i++){
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
             if (animals.get(i).which_animal() == AnimalType.MONKEY){
                 continue;
             }
@@ -214,41 +178,18 @@ public class Helper {
             Point prev_loc = prev_animals.get(i).get_location();
             double delta_x = curr_loc.x - prev_loc.x;
             double delta_y = curr_loc.y - prev_loc.y;
-<<<<<<< HEAD
-
-            double animal_slope = delta_y/delta_x;
-
-            Point my_loc = ps.get_location();
-
-            double an_human_dx = my_loc.x - prev_loc.x;
-            double an_human_dy = my_loc.y - prev_loc.y;
-
-            double human_slope = an_human_dy/an_human_dx;
-
-            if((animal_slope>=human_slope-1)&&(animal_slope<=human_slope+1)){
-=======
             double animal_slope = delta_y / delta_x;
             Point my_loc = ps.get_location();
             double an_human_dx = my_loc.x - prev_loc.x;
             double an_human_dy = my_loc.y - prev_loc.y;
             double human_slope = an_human_dy / an_human_dx;
             if ((animal_slope >= human_slope - 1) && (animal_slope <= human_slope + 1)) {
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
                 incomingGeese.add(animals.get(i));
             }
         }
         return incomingGeese;
     }
     
-<<<<<<< HEAD
-    static double getGeeseTime(ArrayList<Animal> animals, ArrayList<Animal> incomingGeese, PlayerState ps) {
-        double minTime = Double.MAX_VALUE;
-        double d, t;
-        for (Animal goose: animals) {
-            if (goose.which_animal() == AnimalType.MONKEY) continue; 
-            d = Point.dist(goose.get_location(), ps.get_location());
-            t = (d - 2.0) / goose.get_max_speed();
-=======
     // Get the time remaining before a goose can steal the food
     public static double getGeeseTime(ArrayList<Animal> animals, PlayerState ps) {
         double minTime = Double.MAX_VALUE;
@@ -260,7 +201,6 @@ public class Helper {
             t = (d - 2.0) / goose.get_max_speed();
             if (!Point.within_bounds(goose.get_location()))
                 t = Double.MAX_VALUE;
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
             if (t < minTime) {
                 minTime = t;
             }
@@ -268,39 +208,14 @@ public class Helper {
         return minTime;
     }
 
-<<<<<<< HEAD
-
-    static double getMonkeyTime(ArrayList<Animal> animals, ArrayList<Animal> incomingMonkeys, PlayerState ps){
-=======
     // Get the time remaining before monkeys can steal the food
     public static double getMonkeyTime(ArrayList<Animal> animals, PlayerState ps) {
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
         // Problem with this code: only considers monkeys that are headed in your direction. Must fix later.
         // 1. Find three closest Monkeys. How much time will it take 3rd closest monkey to get to you?
         double close_1 = Double.MAX_VALUE;
         double close_2 = Double.MAX_VALUE;
         double close_3 = Double.MAX_VALUE;
         double dist_between = 0;
-<<<<<<< HEAD
-        for(int i = 0; i<animals.size();i++){
-            Animal cur_Monkey = animals.get(i);
-            if (cur_Monkey.which_animal() == AnimalType.GOOSE) continue; 
-            Point monkey_loc = cur_Monkey.get_location();
-            Point my_loc = ps.get_location();
-            dist_between = Point.dist(my_loc, monkey_loc);
-
-            if (dist_between < close_1){
-                close_3 = close_2;
-                close_2 = close_1;
-                close_1 = dist_between;
-            }
-            else if(dist_between < close_2){
-                close_3 = close_2;
-                close_2 = dist_between;
-
-            }
-            else if(dist_between < close_3){
-=======
         for (int i = 0; i < animals.size(); i++) {
             Animal cur_Monkey = animals.get(i);
             if (cur_Monkey.which_animal() == AnimalType.GOOSE)
@@ -316,23 +231,13 @@ public class Helper {
                 close_3 = close_2;
                 close_2 = dist_between;
             } else if (dist_between < close_3) {
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
                 close_3 = dist_between;
             }
         }
         double time_to_reach = close_3 - 5;
-<<<<<<< HEAD
-
         return time_to_reach;
     }
 
-
-
-=======
-        return time_to_reach;
-    }
-
->>>>>>> 25b21ef6f05ae051ceb6a358776928c9cf8c642c
     /**
      * Helper function: move a player to a new target position
      * returns the next position in the next second
