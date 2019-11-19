@@ -15,6 +15,9 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 	private String avatars;
 	private FoodType foodToTakeOut = null;
+	private final double eps = 10e-6;
+	private final double monkeyRange = 6.0;
+	private final double gooseRange = 3.0;
 
 	private boolean inPosition = false;
 
@@ -167,7 +170,7 @@ public class Player implements lunch.sim.Player
 			Point gooseLoc = g.get_location();
 			double dist = Point.dist(gooseLoc, playerLoc);
 			// TODO: consider busyEating
-			if (dist <= 3.0) {
+			if (dist <= gooseRange + eps) {
 				return true;
 			}
 		}
@@ -181,25 +184,11 @@ public class Player implements lunch.sim.Player
 			Point playerLoc = ps.get_location();
 			Point monkeyLoc = m.get_location();
 			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= 6.0) {
+			if (dist <= monkeyRange + eps) {
 				monkeyCount++;
 			}
-			if (dist <= 1.0) { // todo
-				return true;
-			}
 		}
-		if (monkeyCount < 3) {
-			return false;
-		}
-		for (Animal m: monkeys) {
-			Point playerLoc = ps.get_location();
-			Point monkeyLoc = m.get_location();
-			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= 3.1) { // todo
-				return true;
-			}
-		}
-		return false;
+		return monkeyCount >= 3;
 	}
 
 	// returns a valid move command from start to dest, if already in dest, return null
@@ -218,7 +207,7 @@ public class Player implements lunch.sim.Player
 	}
 
 	private boolean shouldPullFood(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
-		int distMonkeys = 10;
+		int distMonkeys = 20;
 		int distGeese = 30;
 		int numMonkeys = 0;
 		int numGeese = 0;
