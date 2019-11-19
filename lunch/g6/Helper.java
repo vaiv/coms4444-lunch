@@ -1,5 +1,6 @@
 package lunch.g6;
 
+import java.util.Arrays;
 import java.util.List;
 import java.lang.Double;
 import java.util.Collections;
@@ -363,6 +364,41 @@ public class Helper {
             }
         }
         return new Command(); 
+    }
+
+    /**
+     * 
+     * @param members
+     * @param ps
+     * @return
+     */
+    public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps){
+        ArrayList<Point> walls = new ArrayList<Point>(Arrays.asList(new Point(-50, 0), new Point(50, 0), new Point(0, 50), new Point(0, -50)));
+        HashMap<Point, ArrayList<Family>> wallMemberMap = new HashMap<>();
+        for(Family f: members){
+            Point curLoc = f.get_location();
+            Point closestWall = walls.get(0);
+            for(Point wall : walls){
+                if (Point.dist(curLoc, wall) < Point.dist(curLoc, closestWall)){
+                    closestWall = wall; 
+                }
+                if(!wallMemberMap.containsKey(wall)){
+                    wallMemberMap.put(wall, new ArrayList<Family>());
+                }
+            }
+            wallMemberMap.get(closestWall).add(f);
+            
+            
+        }
+        Point sparsestWall = null; 
+        int nearbyFamily = Integer.MAX_VALUE; 
+        for (Point wall: wallMemberMap.keySet()){
+            if (wallMemberMap.get(wall).size() < nearbyFamily || sparsestWall == null){
+                nearbyFamily = wallMemberMap.get(wall).size(); 
+                sparsestWall = wall; 
+            }
+        }
+        return sparsestWall; 
     }
 
     

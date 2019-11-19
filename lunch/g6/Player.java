@@ -31,8 +31,8 @@ public class Player implements lunch.sim.Player {
     private HashMap<Integer, Point> trajectories;
     private ArrayList<Animal> incomingMonkeys;
     private ArrayList<Animal> incomingGeese;
+    private Point wall; 
 
-    private Point corner;
 
     public Player() {
         turn = 0;
@@ -43,14 +43,6 @@ public class Player implements lunch.sim.Player {
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>();
-        // Define ideal locations
-        ArrayList<Point> corners = new ArrayList<>();
-        corners.add(new Point(-34, -34));
-        corners.add(new Point(-34, 34));
-        corners.add(new Point(34, -34));
-        corners.add(new Point(34, 34));
-        int corner_ind = Math.abs(random.nextInt()%4);
-        corner = corners.get(corner_ind);
         return avatars;
     }
 
@@ -64,23 +56,36 @@ public class Player implements lunch.sim.Player {
         
         // Update prev animals to be where animals were this time
         prev_animals = new ArrayList<>(animals);
-        // Not currently using, from random, could be helpful 
-        Double min_dist = Double.MAX_VALUE;
-        for (int i = 0; i < animals.size(); i++) {
-            min_dist = Math.min(min_dist, Point.dist(ps.get_location(), animals.get(i).get_location()));
-        }
 
-        // Step 1: Move to one of four corner locations
-        // If not at corner --> move towards it
-        if(!ps.get_location().equals(corner)){
-            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), corner));
+        // Step 1: wait and try to eat in the middle, both distracting and 
+        // getting a sense of layout 
+        if (++turn < 50) return tryToEat(animals, ps);
+        // Step 2: find the sparsest location on a wall to eat
+        if (turn == 50) wall = Helper.findSparseLoc(members, ps);
+        // Step 3: go to said location
+        if(!ps.get_location().equals(wall)){
+            // Need to put food away before we can move 
+            if (ps.get_held_item_type() != null ){
+                return new Command(CommandType.KEEP_BACK);
+            }
+            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), wall));
         }
+        // Step 4: continue trying to eat 
+        return tryToEat(animals, ps);
+    }
 
-        // based on incoming monkey / geese -- do we have time to eat?
-        // if yes: eat
-        // if no: no?
-        double geeseTime = Helper.getGeeseTime(animals, incomingGeese, ps);
-        double monkeyTime = Helper.getMonkeyTime(animals, incomingMonkeys, ps);
+
+    /**
+     * Function for main logic 
+     * @param animals
+     * @param ps
+     * @return
+     */
+    private static Command tryToEat(ArrayList<Animal> animals, PlayerState ps){
+        // Find time until geese / monkeys can snatch food 
+        // TODO: Right now based only on surround animals, include incoming 
+        double geeseTime = Helper.getGeeseTime(animals, animals, ps);
+        double monkeyTime = Helper.getMonkeyTime(animals, animals, ps);
 
         // No food in hand 
         // Case 1: Not searching
@@ -115,8 +120,7 @@ public class Player implements lunch.sim.Player {
             System.out.println("oops");
             return new Command();
         }
-
-        return new Command();
+        return new Command(); 
     }
 
 }
