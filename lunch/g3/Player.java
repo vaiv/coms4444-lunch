@@ -16,8 +16,8 @@ public class Player implements lunch.sim.Player {
     // members_count: Number of family members.
     // t: Time limit for simulation.
 
-    public void init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
-        return;
+    public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+        return new String("");
     };
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
