@@ -266,17 +266,17 @@ function drawStats(ctx)
 
         ctx.font = "30px Arial";
         var items_available = '';
-        var avatar = 'Ken Matilda';
+        var avatar = 'George Jetson';
 
         if(i%4==1)
-            avatar = 'Becky Matilda';
+            avatar = 'Jane Jetson';
         else if (i%4==2)
-            avatar = 'Vaiv Matilda';
+            avatar = 'Judy Jetson';
         else if (i%4==3)
-            avatar = 'Pat Matilda';
+            avatar = 'Elroy Jetson';
 
 
-        if(p.avatars!='matilda')
+        if(p.avatars!='jetson')
             avatar = p.avatars+'_'+i.toString();
 
 
