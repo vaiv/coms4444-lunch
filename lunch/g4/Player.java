@@ -117,7 +117,10 @@ public class Player implements lunch.sim.Player {
 						targetCorner = corner;
 					}
 				}
-				targetCornersChosen.put(id, targetCorner);
+				if(targetCorner.x != -1 && targetCorner.y != -1)
+					targetCornersChosen.put(id, targetCorner);
+				else
+					targetCornersChosen.put(id, targetCorners.get(random.nextInt(targetCorners.size())));
 				System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id) + ".");
 			}
 			else
