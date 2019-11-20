@@ -24,6 +24,9 @@ public class Player implements lunch.sim.Player
 	private Integer id;
 	private Integer turn;
 	private String avatars;
+	private ArrayList<HashMap<Integer, Double>> densityRecord;
+	private int currentTime;
+	private Point walkingTarget;
 
 	private boolean inPosition;  // indicates whether we are happy with our location
 
@@ -33,11 +36,13 @@ public class Player implements lunch.sim.Player
 		inPosition = false;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		avatars = "flintstone";
 		random = new Random(s);
+		this.densityRecord = new ArrayList<HashMap<Integer, Double>>();
+		this.currentTime = 0;
 		return avatars;
 	}
 
@@ -115,10 +120,25 @@ public class Player implements lunch.sim.Player
 		return ps.get_held_item_type() != null;
 	}
 
+
 	// to be completed
-	private Command walkToPosition(PlayerState ps, ArrayList<Family> members) {
-		inPosition = true;
-		return null;
+	private Command walkToPosition(PlayerState ps) {
+		Double cur_x = ps.get_location().x;
+		Double cur_y = ps.get_location().y;
+		Double target_x = this.walkingTarget.x;
+		Double target_y = this.walkingTarget.y;
+		Double delta_x = target_x - cur_x;
+		Double delta_y = target_y - cur_y;
+
+		Double bearing = Math.atan(delta_y / delta_x);
+		int fac = (delta_x < 0) ? -1: 1;
+		Point move = new Point(cur_x + fac * Math.cos(bearing), cur_y + fac * Math.sin(bearing));
+
+		if (Point.dist(ps.get_location(), this.walkingTarget) < 5) {
+			this.walkingTarget = null;
+		}
+		
+		return Command.createMoveCommand(move);
 	}
 
 	// to be completed
@@ -126,21 +146,134 @@ public class Player implements lunch.sim.Player
 		return null;
 	}
 
+	private Integer getRegion(Double x, Double y) {
+		if (x < 0 && y > 0) {
+			return 1;
+		}
+
+		if (x > 0 && y > 0) {
+			return 2;
+		}
+
+		if (x < 0 && y < 0) {
+			return 3;
+		}
+
+		if (x > 0 && y < 0) {
+			return 4;
+		}
+
+		return null;
+	}
+
+
+	private HashMap<Integer, Double> getDensities(ArrayList<Animal> animals) {
+		HashMap<Integer, Double> densities = new HashMap<Integer, Double>();
+		
+		for (Integer i=1; i<=4; i++) {
+			densities.put(i, 0.0);
+		}
+
+		Double x;
+		Double y;
+		Integer region;
+		Double current;
+		for (int i=0; i<animals.size(); i++) {
+			x = animals.get(i).get_location().x;
+			y = animals.get(i).get_location().y;
+			region = getRegion(x,y);
+			current = densities.get(region);
+			densities.put(region, current + 1);
+		}
+
+	return densities;
+	}
+
+
+	private Integer getMinRegion(int window) {
+		// initialize sum over past densities within the window
+		HashMap<Integer, Double> sum_densities = new HashMap<Integer, Double>();
+		for (Integer i=1; i<=4; i++) {
+			sum_densities.put(i, 0.0);
+		}
+ 
+ 		System.out.println("Got here 1");
+ 		// sum over past densities
+ 		Double density;
+ 		Double current;
+ 		HashMap<Integer, Double> densities;
+		for (int i=1; i<window + 1; i++) {
+			densities = this.densityRecord.get(this.densityRecord.size() - i);
+			for (Integer region=1; region<=4; region++) {
+				density = densities.get(region);
+				current = sum_densities.get(region);
+				sum_densities.put(region, current + density);
+			}
+		}
+
+		System.out.println("Got here 2");
+		// find min region
+		Integer minRegion = 0;
+		Double minDensity = 1000.0;
+		for (Integer i=1; i<=4; i++) {
+			if (sum_densities.get(i) < minDensity) {
+				minDensity = sum_densities.get(i);
+				minRegion = i;
+
+			}
+		}
+
+		return minRegion;
+	} 
+
+	private Point getWalkingTarget(int window) {
+		Integer minRegion = getMinRegion(window);
+
+		if (minRegion == 1) {
+			return new Point(-35, 35);
+		} 
+
+		if (minRegion == 2) {
+			return new Point(35,35);
+		}
+
+		if (minRegion == 3) {
+			return new Point(-35,-35);
+		}
+
+		if (minRegion == 4) {
+			return new Point(35,-35);
+		}
+
+		return null;
+	}
+
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
 		
+		this.currentTime += 1;
+		this.densityRecord.add(getDensities(animals));
+
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
 
-		// scaffolding for monday's submission ////////////////////////
+		// basic scaffolding ////////////////////////
 		///////////////////////////////////////////////////////////////
 
 
+		if (this.currentTime == 100 || this.currentTime % 300 == 0) {
+			this.walkingTarget = getWalkingTarget(3);
+			if (ps.is_player_searching()) {
+				return new Command(CommandType.ABORT);
+			}
+			if (holdingFood(ps)) {
+				return new Command(CommandType.KEEP_BACK);
+			}
+		}
 
-		// to be completed
-		if (!inPosition) {
-			return walkToPosition(ps, members);
+		if (this.walkingTarget != null) {
+			return walkToPosition(ps);
 		}
 
 		Command hideFood = respondToDanger(monkey_dists, goose_dists, ps);
