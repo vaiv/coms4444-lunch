@@ -28,12 +28,17 @@ public class Player implements lunch.sim.Player {
 	private Random random;
 	private Integer id;
 	private Integer turn;
+	private Double totalTime;
 	private String avatars;
 	private List<Animal> monkeys = new ArrayList<>();
 	private List<Animal> geese = new ArrayList<>();
 	private List<Point> targetCorners = Arrays.asList(new Point[]{
 			new Point(-50, -50), // Top-left corner
+			new Point(0, -50),	 // Top center
+			new Point(-50, 0),	 // Left center
 			new Point(-50, 50),  // Bottom-left corner
+			new Point(0, 50),	 // Bottom center
+			new Point(50, 0),	 // Right center
 			new Point(50, -50),  // Top-right corner
 			new Point(50, 50)    // Bottom-right corner
 			});
@@ -43,6 +48,7 @@ public class Player implements lunch.sim.Player {
 	private static final double MONKEY_VISION_THRESHOLD = 40.0 + 10e-6;
 	private static final double GOOSE_DISTANCE_THRESHOLD = 5.0 + 10e-6;
 	private static final double GOOSE_VISION_THRESHOLD = 20.0 + 10e-6;
+	private static final double TURN_THRESHOLD = 50;
 	private double bearing = -1;
 	
 	/**
@@ -69,6 +75,7 @@ public class Player implements lunch.sim.Player {
 	 */
 	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
 		this.id = id;
+		this.totalTime = t;
 		avatars = "flintstone";
 		random = new Random();
 		return avatars;
@@ -88,6 +95,64 @@ public class Player implements lunch.sim.Player {
 	 *
 	 */
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
+
+		// Assign a corner for the player to move to based on family members' locations
+		Point currPoint = ps.get_location();
+		Point targetCorner = new Point(-1, -1);
+		if(turn > TURN_THRESHOLD) {
+			if(!targetCornersChosen.containsKey(id)) {
+				double maxCornerDistFromFamilyMembers = Double.MIN_VALUE;
+				for(Point corner : targetCorners) {
+					double closestFamilyMemberDist = Double.MAX_VALUE;
+					for(int i = 0; i < members.size(); i++) {
+						if(i == id)
+							continue;
+						
+						double familyMemberDist = Point.dist(members.get(i).get_location(), corner);
+						if(familyMemberDist < closestFamilyMemberDist)
+							closestFamilyMemberDist = familyMemberDist;
+					}
+					if(closestFamilyMemberDist > maxCornerDistFromFamilyMembers) {
+						maxCornerDistFromFamilyMembers = closestFamilyMemberDist;
+						targetCorner = corner;
+					}
+				}
+				targetCornersChosen.put(id, targetCorner);
+				System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id) + ".");
+			}
+			else
+				targetCorner = targetCornersChosen.get(id);
+		
+			if(currPoint.x != targetCorner.x || currPoint.y != targetCorner.y) {
+				turn++;
+				if(ps.get_held_item_type() != null) {
+					foodCurrentlySearchingFor = null;
+					System.out.println("Player " + id + " is keeping back " + ps.get_held_item_type().name() + ".");
+					return new Command(CommandType.KEEP_BACK);
+				}
+				if(ps.is_player_searching()) {
+					System.out.println("Player " + id + " is aborting search.");
+					foodCurrentlySearchingFor = null;
+					return new Command(CommandType.ABORT);
+				}
+	
+				// The player reaches the corner if the distance is within (or exactly) 1 m
+				double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
+				if(distanceFromCorner <= 1.0) {
+					System.out.println("Player " + id + " is making its final move to the corner.");
+					return Command.createMoveCommand(targetCorner);
+				}
+				
+				// Move the player toward the corner
+				double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
+				double deltaX = (targetCorner.x > currPoint.x ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
+				double deltaY = Math.abs(slope) * (targetCorner.y > currPoint.y ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
+				System.out.println("Player " + id + " is moving to the corner.");
+				return Command.createMoveCommand(new Point(currPoint.x + deltaX, currPoint.y + deltaY));
+			}
+		}
+		turn++;
+		
 		// Determine animals sorted by closest distance to the player
 		ArrayList<Animal> clonedAnimals = new ArrayList<>(animals);
 		Collections.sort(clonedAnimals, new Comparator<Animal>() {
@@ -156,18 +221,17 @@ public class Player implements lunch.sim.Player {
 			return new Command(CommandType.KEEP_BACK);
 		}
 		
-		FoodType foodType = null;
-		// Take out a food item (or move player) if no animal is too close
+		FoodType foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE : 
+			ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
+			ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 : 
+			ps.check_availability_item(FoodType.EGG) ? FoodType.EGG :
+			ps.check_availability_item(FoodType.SANDWICH1) ? FoodType.SANDWICH1 :
+			ps.check_availability_item(FoodType.SANDWICH2) ? FoodType.SANDWICH2	: 
+			null;
+
+		// Take out a food item if no animal is too close
 		if (!ps.is_player_searching() && ps.get_held_item_type() == null && !monkeysTooClose) {
-			foodCurrentlySearchingFor = null;
-			foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE : 
-								ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
-								ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 : 
-								ps.check_availability_item(FoodType.EGG) ? FoodType.EGG :
-								ps.check_availability_item(FoodType.SANDWICH1) ? FoodType.SANDWICH1 :
-								ps.check_availability_item(FoodType.SANDWICH2) ? FoodType.SANDWICH2	: 
-								null;
-						
+			foodCurrentlySearchingFor = null;						
 			if(foodType != null) {
 				
 				double thirdClosestMonkeyDist = Double.MAX_VALUE;
@@ -176,67 +240,47 @@ public class Player implements lunch.sim.Player {
 				double closestGooseDist = Double.MAX_VALUE;
 				if(monkeys.size() > 0)
 					closestGooseDist = Point.dist(ps.get_location(), geese.get(0).get_location());
+				double thirdClosestMonkeyThreshold = (turn < TURN_THRESHOLD) ? MONKEY_VISION_THRESHOLD / 2 : MONKEY_VISION_THRESHOLD;
 				
-				// Assign the closest corner for the player to eat sandwiches
-				Point currPoint = ps.get_location();
-				Point targetCorner = new Point(-1, -1);
-				if(!targetCornersChosen.containsKey(id)) {
-					double minCornerDist = Double.MAX_VALUE;
-					for(Point corner : targetCorners) {
-						double cornerDist = Point.dist(currPoint, corner);
-						if(cornerDist < minCornerDist) {
-							minCornerDist = cornerDist;
-							targetCorner = corner;
-						}
+				// Take out the food item if it is not a sandwich and increase consumption time
+				if(foodType != FoodType.SANDWICH1 && foodType != FoodType.SANDWICH2) {
+					if(totalTime - turn < 500 || thirdClosestMonkeyDist > thirdClosestMonkeyThreshold) {
+						System.out.println("Player " + id + " is taking out " + foodType.name() + ".");
+						foodCurrentlySearchingFor = foodType;
+						return new Command(CommandType.TAKE_OUT, foodType);
 					}
-					targetCornersChosen.put(id, targetCorner);
-					System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id) + ".");
 				}
-				else
-					targetCorner = targetCornersChosen.get(id);
 
-				// Eat all food items only if the player is in the corne
-				if(currPoint.x == targetCorner.x && currPoint.y == targetCorner.y) {
+				// Take out the food item if it is a sandwich
+				if(!gooseTooClose) {
 					
-					// Take out the food item if it is not a sandwich and increase consumption time while distracting
-					if(foodType != FoodType.SANDWICH1 && foodType != FoodType.SANDWICH2) {
-						if(thirdClosestMonkeyDist > MONKEY_VISION_THRESHOLD) {
-							System.out.println("Player " + id + " is taking out " + foodType.name() + ".");
-							foodCurrentlySearchingFor = foodType;
-							return new Command(CommandType.TAKE_OUT, foodType);						
-						}				
-					}
-
-					// Take out the food item if it is a sandwich and increase consumption time					
-					if(!gooseTooClose && thirdClosestMonkeyDist > MONKEY_VISION_THRESHOLD) {
+					// Take out the sandwich as a distraction
+					if(totalTime - turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1) {
 						System.out.println("Player " + id + " is taking out a sandwich.");
 						foodCurrentlySearchingFor = FoodType.SANDWICH;
 						return new Command(CommandType.TAKE_OUT, foodType);
 					}
+					
+					// Take out the sandwich for eating
+					if(totalTime - turn < 500 || thirdClosestMonkeyDist > thirdClosestMonkeyThreshold) {
+						foodCurrentlySearchingFor = FoodType.SANDWICH;
+						return new Command(CommandType.TAKE_OUT, foodType);
+					}
+				}
 
-					System.out.println("Player " + id + " is not going to take out a sandwich because the goose is too close.");
-					return new Command();
-				}
-				
-				// The player reaches the corner if the distance is within (or exactly) 1 m
-				double distanceFromCorner = Math.sqrt(Math.pow(targetCorner.y - currPoint.y, 2) + Math.pow(targetCorner.x - currPoint.x, 2));
-				if(distanceFromCorner <= 1.0) {
-					System.out.println("Player " + id + " is making its final move to the corner.");
-					return Command.createMoveCommand(targetCorner);
-				}
-				
-				// Move the player toward the corner
-				double slope = ((double) (targetCorner.y - currPoint.y)) / ((double) (targetCorner.x - currPoint.x));
-				double deltaX = (targetCorner.x > currPoint.x ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
-				double deltaY = Math.abs(slope) * (targetCorner.y > currPoint.y ? 1.0 : -1.0) / Math.sqrt(Math.pow(slope, 2) + 1);
-				System.out.println("Player " + id + " is moving to the corner.");
-				return Command.createMoveCommand(new Point(currPoint.x + deltaX, currPoint.y + deltaY));					
+				System.out.println("Player " + id + " is not going to take out a sandwich because the goose is too close.");
+				return new Command();
 			}
 		}
 		
-		// Eat if no animal is too close
 		if(!ps.is_player_searching() && ps.get_held_item_type() != null) {
 			foodCurrentlySearchingFor = null;
+
+			// If there is enough time and there is little left of the last sandwich, use it as a distraction
+			if(!monkeysTooClose && !gooseTooClose && totalTime - turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1)
+				return new Command(CommandType.WAIT);
+
+			// Eat if no animal is too close
 			if((!monkeysTooClose && (ps.get_held_item_type() != FoodType.SANDWICH)) ||
 				(!monkeysTooClose && !gooseTooClose && (ps.get_held_item_type() == FoodType.SANDWICH))) {
 				System.out.println("Player " + id + " is going to eat " + ps.get_held_item_type().name() + ".");
