@@ -70,59 +70,26 @@ public class Player implements lunch.sim.Player
 	//if a third Monkey is coming near
 	public boolean checkMonkey(ArrayList<Animal> animals, PlayerState ps){
 		int num_monkey_close = 0;
-		HashMap<Integer,Boolean> monkey_status = new HashMap<>();
-		for(Integer i=0; i < animals.size();i++){
-			if (animals.get(i).which_animal() == AnimalType.MONKEY){
-
-				if (Point.dist(ps.get_location(),animals.get(i).get_location()) < 4.0){
-					monkey_status.put(i,true);
-					num_monkey_close += 1;
-				}
-				else{
-					monkey_status.put(i,false);
-				}
-
+		for (Animal animal: animals){
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 6.0 ){
+				num_monkey_close++;
 			}
 		}
-//		System.out.println(num_monkey_close);
-		//if three monkeys are around, immediately put back
-		if (num_monkey_close >= 3){
-//			System.out.println("three simultaneously come");
+		if (num_monkey_close>=3){
 			return true;}
-		//check if there is a third Monkey coming near
-		else if (num_monkey_close == 2){
-			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
-				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
-//					System.out.println("detect third monkey");
-					return true;
-				}
-			}
-		}
-		//two monkeys are coming near with 1 already within 2 meters
-		else if (num_monkey_close ==1){
-			int num_monkey_addition = 0;
-			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
-				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
-					num_monkey_addition += 1;
-				}
-
-			}
-			if (num_monkey_addition >= 2){
-//				System.out.println("detect additional monkeys");
-				return true;}
-		}
 		return false;
 	}
 
 	//if there is goose less than 3 meters away DANGER!
 	public boolean checkGeese(ArrayList<Animal> animals, PlayerState ps){
 		double dist;
-		for(Integer i=0;i<animals.size();i++){
+		for(Animal animal: animals){
 			//only matter if eating sandwich
-			if (animals.get(i).which_animal() == AnimalType.GOOSE &&
-					(ps.get_held_item_type() == FoodType.SANDWICH1 || ps.get_held_item_type() == FoodType.SANDWICH2 ) ){
-				dist = Point.dist(ps.get_location(),animals.get(i).get_location());
+			if (animal.which_animal() == AnimalType.GOOSE &&
+					ps.get_held_item_type() == FoodType.SANDWICH ){
+				dist = Point.dist(ps.get_location(),animal.get_location());
 				if (dist < 6.0){
+					System.out.println("goose detected");
 					return true;
 				}
 			}
@@ -184,7 +151,7 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.ABORT);
 		}
 		// keep food item back if animal is too close
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist < 2.0 &&
+		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist < 4.0 &&
 				(checkMonkey(animals, ps) || checkGeese(animals,ps)))
 		{
 			return new Command(CommandType.KEEP_BACK);
