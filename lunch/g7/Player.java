@@ -323,7 +323,7 @@ public class Player implements lunch.sim.Player
 				numGeese++;
 			}
 		}
-		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= Math.max(15, 30 - 3*numGeese)) && distMonkey >= Math.max(10, 40 - numMonkeys);
+		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= 15) && distMonkey >= 10;
 	}
 
 
