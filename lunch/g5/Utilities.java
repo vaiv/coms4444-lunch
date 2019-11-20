@@ -7,24 +7,25 @@ import lunch.sim.AnimalType;
 import lunch.sim.Point;
 
 public class Utilities {
-	// more than 3 monkeys within 6 meters
-	public static boolean monkey_surround(ArrayList<Animal> animals, Point p) {
-		int near_monkey = 0;
+	public static int count_close_animal(ArrayList<Animal> animals, AnimalType at, Point p, int range) {
+		int cnt = 0;
 		for(Animal animal: animals) {
-			if(animal.which_animal() == AnimalType.MONKEY && Point.dist(animal.get_location(), p) < 6) {
-				near_monkey++;
+			if(animal.which_animal() == at && Point.dist(animal.get_location(), p) < range) {
+				cnt++;
 			}
 		}
-		return near_monkey >= 3;
+		return cnt;
+	}
+
+	// more than 3 monkeys within 6 meters
+	public static boolean monkey_surround(ArrayList<Animal> animals, Point p) {
+		int near_monkeys = count_close_animal(animals, AnimalType.MONKEY, p, 6);
+		return near_monkeys >= 3;
 	}
 	
 	// has goose within 5 meters
 	public static boolean goose_close(ArrayList<Animal> animals, Point p) {
-		for(Animal animal: animals) {
-			if(animal.which_animal() == AnimalType.GOOSE && Point.dist(animal.get_location(), p) < 5) {
-				return true;
-			}
-		}
-		return false;
+		int near_geese = count_close_animal(animals, AnimalType.GOOSE, p, 5);
+		return near_geese > 0;
 	}
 }

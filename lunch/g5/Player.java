@@ -26,28 +26,28 @@ public class Player implements lunch.sim.Player {
     private Integer id;
     private Integer turn;
     private String avatars;
+    MatrixPredictor matrixPredictor;
     
     // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
     private ArrayList<Animal> previousAnimals;
     private GreedyEater greedyEater;
 
     public Player() {
-        turn = 0;
-        greedyEater = new GreedyEater();
+        turn = 0;   
+        matrixPredictor = new MatrixPredictor(5.0, 6.0, 0);
     }
 
     public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         this.id = id;
         avatars = "flintstone";
         random = new Random(s);
+        greedyEater = new GreedyEater();
         return avatars;
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command = greedyEater.getCommand(members, animals, ps, previousAnimals, turn);
-        // Store animals for the next turn
         previousAnimals = animals;
-        // Increase the turn counter
         turn++;
         return command;
     }
