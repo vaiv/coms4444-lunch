@@ -91,23 +91,22 @@ public class Player implements lunch.sim.Player
 
 		// if the player almost finished food
 		if (getUnfinishedFood(ps).size() == 1) {
-		    isDistractor = true;
             Point dest = new Point(0, 0);
             switch (this.id % 5) {
                 case 0:
                     dest = new Point(0,0);
                     break;
                 case 1:
-                    dest = new Point(20, 20);
+                    dest = new Point(10, 10);
                     break;
                 case 2:
-                    dest = new Point(-20, 20);
+                    dest = new Point(-10, 10);
                     break;
                 case 3:
-                    dest = new Point(20, -20);
+                    dest = new Point(10, -10);
                     break;
                 case 4:
-                    dest = new Point(-20, -20);
+                    dest = new Point(-10, -10);
                     break;
             }
             Command res = getMove(ps.get_location(), dest);
@@ -294,27 +293,36 @@ public class Player implements lunch.sim.Player
 	}
 
 	private boolean shouldPullFood(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
-		int distMonkeys = isDistractor ? 10 : 20;
-		int distGeese = isDistractor ? 15 : 30;
-		int numMonkeys = 0;
+		List<FoodType> foodType = getUnfinishedFood(ps);
+		if (foodType.isEmpty()) {
+			return false;
+		}
+		FoodType cur = foodType.get(0);
+		double distMonkey = Integer.MAX_VALUE;
+		double distGeese = Integer.MAX_VALUE;
 		int numGeese = 0;
-		for (Animal m: monkeys) {
+		int numMonkeys = 0;
+		if (monkeys.size() >= 3) {
+			distMonkey = Point.dist(monkeys.get(2).get_location(), ps.get_location());
+		}
+		if (!geese.isEmpty()) {
+			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
+		}
+		for (Animal m : monkeys) {
 			Point playerLoc = ps.get_location();
 			Point monkeyLoc = m.get_location();
-			double dist = Point.dist(monkeyLoc, playerLoc);
-			if (dist <= distMonkeys) {
+			if (Point.dist(playerLoc, monkeyLoc) <= 40) {
 				numMonkeys++;
 			}
 		}
-		for (Animal g: geese) {
+		for (Animal g : geese) {
 			Point playerLoc = ps.get_location();
-			Point geeseLoc = g.get_location();
-			double dist = Point.dist(geeseLoc, playerLoc);
-			if (dist <= distGeese) {
+			Point gooseLoc = g.get_location();
+			if (Point.dist(playerLoc, gooseLoc) <= 20) {
 				numGeese++;
 			}
 		}
-		return numGeese < 1 && numMonkeys < 3;
+		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= Math.max(15, 30 - 3*numGeese)) && distMonkey >= Math.max(10, 40 - numMonkeys);
 	}
 
 
