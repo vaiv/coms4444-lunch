@@ -27,7 +27,6 @@ public class Player implements lunch.sim.Player
 	private ArrayList<HashMap<Integer, Double>> densityRecord;
 	private int currentTime;
 	private Point walkingTarget;
-
 	private boolean inPosition;  // indicates whether we are happy with our location
 
 	public Player()
@@ -80,7 +79,7 @@ public class Player implements lunch.sim.Player
 	}
 
 	// indicates whether monkeys may be about to steal food
-	private boolean monkeyDanger(ArrayList<Double> monkey_dists, Double threshold) {
+	private boolean monkeysAreNear(ArrayList<Double> monkey_dists, Double threshold) {
 		// check if 3 closest monkeys are within a distance of threshold suggested to be 7
 		int num_close = 0;
 		for (int i=0; i<3; i++) {
@@ -90,25 +89,25 @@ public class Player implements lunch.sim.Player
 	}
 
 	// indicates whether geese are about to steal food
-	private boolean gooseDanger(ArrayList<Double> goose_dists, Double threshold) {
+	private boolean gooseIsNear(ArrayList<Double> goose_dists, Double threshold) {
 		// check if closest goose is within a distance of threshold suggested to be 6
 		return goose_dists.get(0) <= threshold;
 	}
 
 
-	// issues a response command if in danger and null otherwise
-	private Command respondToDanger(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
-		Double monkey_threshold = 7.0;
-		Double goose_threshold = 6.0;
-		boolean animalsTooClose = gooseDanger(goose_dists, goose_threshold) || monkeyDanger(monkey_dists, monkey_threshold);
-
-		if (animalsTooClose && holdingFood(ps)) {
+	// issues a response command if in danger
+	private Command respondIfDanger(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
+		Double monkey_threshold = 7.0;  // conservative
+		Double goose_threshold = 6.0;   // conservative
+		boolean gooseTooClose = gooseIsNear(goose_dists, goose_threshold);
+		boolean monkeysTooClose = monkeysAreNear(monkey_dists, monkey_threshold);
+		if ((monkeysTooClose && holdingFood(ps)) || (gooseTooClose && ps.get_held_item_type() == FoodType.SANDWICH)) {
 			// danger sensed, start putting food away
 			return new Command(CommandType.KEEP_BACK);
 		}
 
 		// actually we only want to abort if we're close to getting the food out
-		if (animalsTooClose && ps.is_player_searching()) {
+		if ((gooseTooClose || monkeysTooClose) && ps.is_player_searching() && ps.time_to_finish_search() < 2) {
 			// danger sensed, start putting food away
 			return new Command(CommandType.ABORT);
 		}
@@ -120,19 +119,13 @@ public class Player implements lunch.sim.Player
 		return ps.get_held_item_type() != null;
 	}
 
-
-	// to be completed
 	private Command walkToPosition(PlayerState ps) {
-		Double cur_x = ps.get_location().x;
-		Double cur_y = ps.get_location().y;
-		Double target_x = this.walkingTarget.x;
-		Double target_y = this.walkingTarget.y;
-		Double delta_x = target_x - cur_x;
-		Double delta_y = target_y - cur_y;
+		Double delta_x = this.walkingTarget.x - ps.get_location().x;
+		Double delta_y = this.walkingTarget.y - ps.get_location().y;
 
 		Double bearing = Math.atan(delta_y / delta_x);
 		int fac = (delta_x < 0) ? -1: 1;
-		Point move = new Point(cur_x + fac * Math.cos(bearing), cur_y + fac * Math.sin(bearing));
+		Point move = new Point(ps.get_location().x + fac * Math.cos(bearing), ps.get_location().y + fac * Math.sin(bearing));
 
 		if (Point.dist(ps.get_location(), this.walkingTarget) < 5) {
 			this.walkingTarget = null;
@@ -146,6 +139,7 @@ public class Player implements lunch.sim.Player
 		return null;
 	}
 
+	// regions are 1-4 corresponding to the 4 quadrants of the map.  We can go more fine grain later.
 	private Integer getRegion(Double x, Double y) {
 		if (x < 0 && y > 0) {
 			return 1;
@@ -167,6 +161,7 @@ public class Player implements lunch.sim.Player
 	}
 
 
+	// count the number of animals in each region of the map
 	private HashMap<Integer, Double> getDensities(ArrayList<Animal> animals) {
 		HashMap<Integer, Double> densities = new HashMap<Integer, Double>();
 		
@@ -190,6 +185,8 @@ public class Player implements lunch.sim.Player
 	}
 
 
+	// find the region of the map that has had the least number of animals
+	// averaged over the last window of seconds
 	private Integer getMinRegion(int window) {
 		// initialize sum over past densities within the window
 		HashMap<Integer, Double> sum_densities = new HashMap<Integer, Double>();
@@ -197,7 +194,6 @@ public class Player implements lunch.sim.Player
 			sum_densities.put(i, 0.0);
 		}
  
- 		System.out.println("Got here 1");
  		// sum over past densities
  		Double density;
  		Double current;
@@ -211,10 +207,9 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		System.out.println("Got here 2");
 		// find min region
 		Integer minRegion = 0;
-		Double minDensity = 1000.0;
+		Double minDensity = Double.POSITIVE_INFINITY;
 		for (Integer i=1; i<=4; i++) {
 			if (sum_densities.get(i) < minDensity) {
 				minDensity = sum_densities.get(i);
@@ -226,6 +221,7 @@ public class Player implements lunch.sim.Player
 		return minRegion;
 	} 
 
+	// specifies where to walk once we know the region of least density
 	private Point getWalkingTarget(int window) {
 		Integer minRegion = getMinRegion(window);
 
@@ -252,7 +248,7 @@ public class Player implements lunch.sim.Player
 	{
 		
 		this.currentTime += 1;
-		this.densityRecord.add(getDensities(animals));
+		this.densityRecord.add(getDensities(animals));  // keep a running record of animal densities
 
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
@@ -262,6 +258,7 @@ public class Player implements lunch.sim.Player
 		///////////////////////////////////////////////////////////////
 
 
+		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
 		if (this.currentTime == 100 || this.currentTime % 300 == 0) {
 			this.walkingTarget = getWalkingTarget(3);
 			if (ps.is_player_searching()) {
@@ -273,10 +270,10 @@ public class Player implements lunch.sim.Player
 		}
 
 		if (this.walkingTarget != null) {
-			return walkToPosition(ps);
+			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 		}
 
-		Command hideFood = respondToDanger(monkey_dists, goose_dists, ps);
+		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
 		if (hideFood != null) {
 			return hideFood;
 		}
