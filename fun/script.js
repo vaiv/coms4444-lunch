@@ -53,8 +53,7 @@ function init(monkeys,geese,family,food) {
     {
         var member = family[i];
         var member_img = new Image();
-	var j = i%4;
-        member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+        member_img.src = family[i].avatars+ '_'+(i+1).toString() + '.png';
         family_imgs.push(member_img);
     }
 
@@ -267,17 +266,17 @@ function drawStats(ctx)
 
         ctx.font = "30px Arial";
         var items_available = '';
-        var avatar = 'George Jetson';
+        var avatar = 'Ken Matilda';
 
         if(i%4==1)
-            avatar = 'Jane Jetson';
+            avatar = 'Becky Matilda';
         else if (i%4==2)
-            avatar = 'Judy Jetson';
+            avatar = 'Vaiv Matilda';
         else if (i%4==3)
-            avatar = 'Elroy Jetson';
+            avatar = 'Pat Matilda';
 
 
-        if(p.avatars!='jetson')
+        if(p.avatars!='matilda')
             avatar = p.avatars+'_'+i.toString();
 
 

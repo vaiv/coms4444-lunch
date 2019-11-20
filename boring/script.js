@@ -53,8 +53,7 @@ function init(monkeys,geese,family,food) {
     {
         var member = family[i];
         var member_img = new Image();
-	var j = i%4;
-        member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+        member_img.src = family[i].avatars+ '_'+(i+1).toString() + '.png';
         family_imgs.push(member_img);
     }
 
