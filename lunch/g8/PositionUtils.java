@@ -1,5 +1,6 @@
 package lunch.g8;
 
+import java.util.Collection;
 import lunch.sim.Point;
 
 /**
@@ -9,6 +10,11 @@ import lunch.sim.Point;
 public class PositionUtils {
 
     public static final Double MIN_X = -50.0, MAX_X = 50.0, MIN_Y = -50.0, MAX_Y = 50.0;
+    public static final Point CENTER;
+
+    static {
+        CENTER = new Point(0, 0);
+    }
 
     public static Point moveTowards(Point currentPos, Point destPos) {
         Double angle = getDirection(currentPos, destPos);
@@ -42,5 +48,14 @@ public class PositionUtils {
 
     public static double distance(Point p1, Point p2) {
         return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    public static Point centerOfGravity(Collection<Point> points) {
+        double x = 0, y = 0;
+        for (Point point : points) {
+            x += point.x;
+            y += point.y;
+        }
+        return new Point(x / points.size(), y / points.size());
     }
 }
