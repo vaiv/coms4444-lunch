@@ -83,7 +83,7 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		if (Double.compare(currentRatio, 0.9) == 0) {
+		if (Double.compare(currentRatio, 0.9) >= 0) {
 			//TODO: Put back and move the current player to the middle
 		}
 		else if (areMembersMove(members) && ps.get_location().equals(new Point(0, 0))) {
