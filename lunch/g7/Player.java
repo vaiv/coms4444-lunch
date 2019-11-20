@@ -1,5 +1,6 @@
 package lunch.g7;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.List;
 
@@ -22,9 +23,10 @@ public class Player implements lunch.sim.Player
 	private double currentRatio = 0;
 	private double ratioToGo;
 	private int roundToGo= 1;
-	private final int totalFood = (3*2 + 2*3 + 1)*60;
+	private final int totalFoodTime = (3*2 + 2*3 + 1)*60;
 
 	private boolean inPosition = false;
+	private boolean isDistractor = false;
 
 	public Player()
 	{
@@ -57,11 +59,13 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
+		// go to corresponding
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
 			switch (this.id % 4) {
 				case 0:
 					dest = new Point(0,0);
+					isDistractor = true;
 					break;
 				case 1:
 					dest = new Point(-50, 50);
@@ -83,10 +87,14 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
+		if (getUnfinishedFood(ps).size() == 1) {
+
+		}
+
 		if (Double.compare(currentRatio, 0.9) == 0) {
 			//TODO: Put back and move the current player to the middle
 		}
-		else if (areMembersMove(members) && ps.get_location().equals(new Point(0, 0))) {
+		else if (areMembersMoving(members) && ps.get_location().equals(new Point(0, 0))) {
 			//TODO: Put back and move to that player's location
 		}
 
@@ -163,7 +171,7 @@ public class Player implements lunch.sim.Player
 		// if no animal in vicinity then take a bite
 		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
-			currentRatio += 1.0 / totalFood;
+			currentRatio += 1.0 / totalFoodTime;
 			return new Command(CommandType.EAT);
 		}
 
@@ -172,7 +180,7 @@ public class Player implements lunch.sim.Player
 
 	}
 
-	private boolean areMembersMove(ArrayList<Family> members) {
+	private boolean areMembersMoving(ArrayList<Family> members) {
 		Point point1 = new Point(0, 0);
 		Point point2 = new Point(50, -50);
 		Point point3 = new Point(-50, 50);
@@ -188,12 +196,23 @@ public class Player implements lunch.sim.Player
 		return false;
 	}
 
-	// get all food type, sorted by values
+	// get all food type, sorted by scores, from high to low
 	private ArrayList<FoodType> getAllFood() {
 		ArrayList<FoodType> result = new ArrayList<>(Arrays.asList(
 				FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
 				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2
 		));
+		return result;
+	}
+
+	private ArrayList<FoodType> getUnfinishedFood(PlayerState ps) {
+		ArrayList<FoodType> allFood = getAllFood();
+		ArrayList<FoodType> result = new ArrayList<>();
+		for(FoodType food_type: allFood) { // FoodType.values()
+			if(ps.check_availability_item(food_type)) {
+				result.add(food_type);
+			}
+		}
 		return result;
 	}
 
