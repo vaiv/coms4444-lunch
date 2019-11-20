@@ -34,11 +34,11 @@ public class Player implements lunch.sim.Player {
 	private List<Animal> geese = new ArrayList<>();
 	private List<Point> targetCorners = Arrays.asList(new Point[]{
 			new Point(-50, -50), // Top-left corner
-			new Point(0, -50),	 // Top center
-			new Point(-50, 0),	 // Left center
+			new Point(1, -50),	 // Top center
+			new Point(-50, 1),	 // Left center
 			new Point(-50, 50),  // Bottom-left corner
-			new Point(0, 50),	 // Bottom center
-			new Point(50, 0),	 // Right center
+			new Point(1, 50),	 // Bottom center
+			new Point(50, 1),	 // Right center
 			new Point(50, -50),  // Top-right corner
 			new Point(50, 50)    // Bottom-right corner
 			});
@@ -120,7 +120,7 @@ public class Player implements lunch.sim.Player {
 				if(targetCorner.x != -1 && targetCorner.y != -1)
 					targetCornersChosen.put(id, targetCorner);
 				else
-					targetCornersChosen.put(id, targetCorners.get(random.nextInt(targetCorners.size())));
+					targetCornersChosen.put(id, targetCorners.get(id % targetCorners.size()));
 				System.out.println("Player " + id + " will go to corner " + targetCornersChosen.get(id) + ".");
 			}
 			else
