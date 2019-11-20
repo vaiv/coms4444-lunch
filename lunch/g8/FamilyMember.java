@@ -10,8 +10,21 @@ import lunch.sim.Point;
  */
 public class FamilyMember extends Agent<Family> {
 
-    public FamilyMember(Family original) {
+    private final int id;
+    private final boolean isOneSelf;
+
+    public FamilyMember(Family original, boolean isPlayer, int id) {
         super(original);
+        this.isOneSelf = isPlayer;
+        this.id = id;
+    }
+
+    public boolean isIsOneSelf() {
+        return isOneSelf;
+    }
+
+    public int getId() {
+        return id;
     }
 
     @Override
