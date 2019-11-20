@@ -91,22 +91,23 @@ public class Player implements lunch.sim.Player
 
 		// if the player almost finished food
 		if (getUnfinishedFood(ps).size() == 1) {
+		    isDistractor = true;
             Point dest = new Point(0, 0);
             switch (this.id % 5) {
                 case 0:
                     dest = new Point(0,0);
                     break;
                 case 1:
-                    dest = new Point(10, 10);
+                    dest = new Point(20, 20);
                     break;
                 case 2:
-                    dest = new Point(-10, 10);
+                    dest = new Point(-20, 20);
                     break;
                 case 3:
-                    dest = new Point(10, -10);
+                    dest = new Point(20, -20);
                     break;
                 case 4:
-                    dest = new Point(-10, -10);
+                    dest = new Point(-20, -20);
                     break;
             }
             Command res = getMove(ps.get_location(), dest);
@@ -293,8 +294,8 @@ public class Player implements lunch.sim.Player
 	}
 
 	private boolean shouldPullFood(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
-		int distMonkeys = 20;
-		int distGeese = 30;
+		int distMonkeys = isDistractor ? 10 : 20;
+		int distGeese = isDistractor ? 15 : 30;
 		int numMonkeys = 0;
 		int numGeese = 0;
 		for (Animal m: monkeys) {
