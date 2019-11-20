@@ -61,20 +61,23 @@ public class Player implements lunch.sim.Player
 		// go to corresponding
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
-			switch (this.id % 4) {
+			switch (this.id % 5) {
 				case 0:
 					dest = new Point(0,0);
 					isDistractor = true;
 					break;
 				case 1:
-					dest = new Point(-50, 50);
+					dest = new Point(50, 50);
 					break;
 				case 2:
-					dest = new Point(50, -50);
+					dest = new Point(-50, 50);
 					break;
 				case 3:
-					dest = new Point(-50, -50);
+					dest = new Point(50, -50);
 					break;
+                case 4:
+                    dest = new Point(-50, -50);
+                    break;
 			}
 			Point start = new Point(ps.get_location());
 			Command res = getMove(start, dest);
@@ -86,8 +89,30 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
+		// if the player almost finished food
 		if (getUnfinishedFood(ps).size() == 1) {
-
+            Point dest = new Point(0, 0);
+            switch (this.id % 5) {
+                case 0:
+                    dest = new Point(0,0);
+                    break;
+                case 1:
+                    dest = new Point(10, 10);
+                    break;
+                case 2:
+                    dest = new Point(-10, 10);
+                    break;
+                case 3:
+                    dest = new Point(10, -10);
+                    break;
+                case 4:
+                    dest = new Point(-10, -10);
+                    break;
+            }
+            Command res = getMove(ps.get_location(), dest);
+            if (res != null) {
+                return res;
+            }
 		}
 
 		if (Double.compare(currentRatio, 0.9) == 0) {
