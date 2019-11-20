@@ -247,9 +247,9 @@ public class Helper {
             } else {
                 // The goose has not yet hit the wall
                 Point toPlayer = new Point(ps.get_location().x - newLoc.x, ps.get_location().y - newLoc.y);
+                double new_d = Point.dist(ps.get_location(), newLoc);
                 double dotProduct = dot(traj, toPlayer);
-                if (dotProduct > 0) {
-                    double new_d = Point.dist(ps.get_location(), newLoc);
+                if ((new_d <= 20.0) || (dotProduct > 0)) {
                     t = (new_d - 2.0) / goose.get_max_speed();
                     return t;
                 } else {
@@ -405,7 +405,7 @@ public class Helper {
     public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps) {
         ArrayList<Point> walls = new ArrayList<Point>(Arrays.asList(new Point(-50, 0), new Point(50, 0), new Point(0, 50), new Point(0, -50)));
         HashMap<Point, ArrayList<Family>> wallMemberMap = new HashMap<>();
-        for (Family f: members){
+        for (Family f: members) {
             Point curLoc = f.get_location();
             Point closestWall = walls.get(0);
             for (Point wall: walls){
