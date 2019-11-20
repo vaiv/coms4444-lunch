@@ -149,7 +149,8 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() && ps.get_held_item_type()==null && shouldPullFood(ps, monkeys, geese))
 		{
-			for(FoodType food_type: FoodType.values())
+			List<FoodType> allFood = getAllFood();
+			for(FoodType food_type: allFood) // FoodType.values()
 			{
 				if(ps.check_availability_item(food_type))
 				{
@@ -185,6 +186,15 @@ public class Player implements lunch.sim.Player
 			}
 		}
 		return false;
+	}
+
+	// get all food type, sorted by values
+	private ArrayList<FoodType> getAllFood() {
+		ArrayList<FoodType> result = new ArrayList<>(Arrays.asList(
+				FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
+				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2
+		));
+		return result;
 	}
 
 	private boolean isDangerours(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
