@@ -28,9 +28,13 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 	private String avatars;
 
-    Double min_dist = Double.MAX_VALUE;
+	Double eps = 10e-7;
 
     List<Point> animalLocations;
+    List<Boolean> animalMovement;
+	List<Double> animalDirections;
+
+	List<FoodType> priorityList;
 
     private Point corner_direction = new Point(0, 0);
 	
@@ -42,11 +46,14 @@ public class Player implements lunch.sim.Player
 	{
 		this.id = id;
 		this.animalLocations = new ArrayList<>();
+		this.animalMovement = new ArrayList<>();
+		this.animalDirections = new ArrayList<>();
 		for(Animal animal : animals){
-			if(animal.which_animal() == AnimalType.MONKEY){
-				animalLocations.add(animal.get_location());
-			}
+			animalLocations.add(animal.get_location());
+			animalMovement.add(false);
+			animalDirections.add(0.0);
 		}
+		this.priorityList = getPriority();
 		avatars = "flintstone";
 		random = new Random(s);
 		return avatars;
@@ -80,6 +87,26 @@ public class Player implements lunch.sim.Player
 		return false;
 	}
 
+	public boolean checkMonkeyAway(ArrayList<Animal> animals, PlayerState ps){
+		int num_monkey_away = 0;
+		for (int i = 0; i < animals.size(); i++){
+			Animal animal = animals.get(i);
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 31.0 ){
+				System.out.print("check monkey away ");
+				System.out.println(animalMovement);
+				if(animalMovement.get(i)){
+					num_monkey_away += 1;
+					System.out.println(num_monkey_away);
+				}
+			}
+		}
+		if (num_monkey_away>=3){
+			return true;}
+		return false;
+	}
+
+
+
 	//if there is goose less than 3 meters away DANGER!
 	public boolean checkGeese(ArrayList<Animal> animals, PlayerState ps){
 		double dist;
@@ -99,7 +126,7 @@ public class Player implements lunch.sim.Player
 
 	public Command getCommand( ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps ) {
         turn++;
-		this.getAnimalMovement(animals);
+		this.getAnimalMovement(animals, ps);
         // make one random move (to get away from initial point 0,0)
         if (turn == 1) {
             Point next_move = getRandomMove(ps);
@@ -107,7 +134,7 @@ public class Player implements lunch.sim.Player
         }
         
         // move towards corner
-        if (turn < 70) {
+        if (turn < 70 && id != members.size() - 1) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
             
@@ -125,7 +152,7 @@ public class Player implements lunch.sim.Player
 			min_dist = Math.min(min_dist,Point.dist(ps.get_location(),animals.get(i).get_location()));
 		}
 
-
+		System.out.println(min_dist);
 /*
 		if(turn<100)
 		{
@@ -175,7 +202,7 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
-			ArrayList<FoodType> priorityList = getPriority();
+			if(checkMonkeyAway(animals, ps) && priorityList.size() > 2) return new Command(CommandType.KEEP_BACK);
 			for(FoodType food_type: priorityList)
 			{
 				if(ps.check_availability_item(food_type))
@@ -183,6 +210,7 @@ public class Player implements lunch.sim.Player
 					Command c = new Command(CommandType.TAKE_OUT, food_type);
 					return c;
 				}
+				priorityList.remove(food_type);
 			}
 		}
 		// if no animal in vicinity then take a bite
@@ -222,7 +250,7 @@ public class Player implements lunch.sim.Player
         boolean[] isUnassigned = new boolean[members.size()];
         for (int i = 0; i < isUnassigned.length; i++) isUnassigned[i] = true;
 
-        // all players accept for last (-1) will move to a corner
+        // all players except for last (-1) will move to a corner
         for (int i = 0; i < members.size() -1; i++) {
             // cycle through corners for all family members
             Point corner = corners[i % 4];
@@ -272,19 +300,17 @@ public class Player implements lunch.sim.Player
 		return next_move;
     }
 
-    private double getAngle(Point newPoint, Point oldPoint){
+	private double getAngle(Point oldPoint, Point newPoint){
 		double xDelt = newPoint.x - oldPoint.x;
 		double yDelt = -1 * (newPoint.y - oldPoint.y);
-		double theta = 0;
-		if(yDelt == 0 && xDelt > 0) theta = 0;
+		double theta;
+		if( yDelt == 0 && xDelt == 0) theta = 42;
+		else if(yDelt == 0 && xDelt > 0) theta = 0;
 		else if(yDelt == 0 && xDelt < 0) theta = Math.PI;
 		else if(yDelt > 0 && xDelt == 0) theta = Math.PI / 2;
 		else if(yDelt < 0 && xDelt == 0) theta = - Math.PI / 2;
 		else{
 			theta = Math.atan(yDelt / xDelt);
-//			System.out.println("yDelt " + yDelt);
-//			System.out.println("xDelt " + xDelt);
-//			System.out.println(theta);
 			if(yDelt > 0.0 && xDelt < 0.0) theta = Math.PI + theta;
 			else if(yDelt < 0.0 && xDelt < 0.0) theta = -Math.PI + theta;
 		}
@@ -292,19 +318,21 @@ public class Player implements lunch.sim.Player
 		return theta;
 	}
 
-    private HashMap<Integer, Double> getAnimalMovement( ArrayList<Animal> animals ){
-		HashMap<Integer, Double> movementMap = new HashMap<>();
+	private void getAnimalMovement( ArrayList<Animal> animals, PlayerState ps){
 		int ind = 0;
 		for(Animal animal : animals){
-			if(animal.which_animal() == AnimalType.MONKEY){
-				Point oldPoint = animalLocations.get(ind);
-				Point newPoint = animal.get_location();
-				animalLocations.add(ind, newPoint);
-				double theta = getAngle(newPoint, oldPoint);
-				movementMap.put(ind, theta);
-				ind++;
-			}
+			Point oldPoint = animalLocations.get(ind);
+			Point newPoint = animal.get_location();
+			double oldDist = Point.dist(oldPoint, ps.get_location());
+			double newDist = Point.dist(newPoint, ps.get_location());
+			animalMovement.set(ind, newDist > oldDist);
+			animalLocations.set(ind, newPoint);
+			double theta = getAngle(oldPoint, newPoint);
+			//System.out.println(theta);
+			animalDirections.set(ind, theta);
+			ind++;
 		}
-		return movementMap;
+		System.out.print("get movement ");
+		System.out.println(animalMovement);
 	}
 }
