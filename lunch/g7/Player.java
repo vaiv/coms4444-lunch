@@ -18,6 +18,11 @@ public class Player implements lunch.sim.Player
 	private final double eps = 10e-6;
 	private final double monkeyRange = 6.0;
 	private final double gooseRange = 3.0;
+	private int size;
+	private double currentRatio = 0;
+	private double ratioToGo;
+	private int roundToGo= 1;
+	private final int totalFood = (3*2 + 2*3 + 1)*60;
 
 	private boolean inPosition = false;
 
@@ -31,6 +36,8 @@ public class Player implements lunch.sim.Player
 		this.id = id;
 		avatars = "flintstone";
 		random = new Random(s);
+		size = members.size();
+		ratioToGo = 1.0 / size;
 		return avatars;
 	}
 
@@ -49,21 +56,6 @@ public class Player implements lunch.sim.Player
 				geese.add(animal);
 			}
 		}
-
-//		if(turn<300)
-//		{
-//			boolean found_valid_move= false;
-//			Point next_move = new Point(-1,-1);
-//			while(!found_valid_move)
-//			{
-//				Double bearing = random.nextDouble()*2*Math.PI;
-//				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-//				found_valid_move = Point.within_bounds(next_move);
-//			}
-//			// System.out.println("move command issued");
-//			turn++;
-//			return Command.createMoveCommand(next_move);
-//		}
 
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
@@ -90,6 +82,30 @@ public class Player implements lunch.sim.Player
 				return res;
 			}
 		}
+
+		if (Double.compare(currentRatio, 0.9) == 0) {
+			//TODO: Put back and move the current player to the middle
+		}
+		else if (areMembersMove(members) && ps.get_location().equals(new Point(0, 0))) {
+			//TODO: Put back and move to that player's location
+		}
+
+
+//		if (Double.compare(currentRatio, ratioToGo*roundToGo) == 0) {
+//			if (toGo) {
+//				//TODO: Move the current player to the middle
+//			}
+//			else {
+//				//TODO: Move a small step to show the person has finished and then put back and go.
+//			}
+//			roundToGo++;
+//		}
+//		else if (areMembersMove(members)) {
+//			roundToGo++;
+//			if (ps.get_location().equals(new Point(0, 0))) {
+//				//TODO: Move the current middle player to that player's location.
+//			}
+//		}
 
 		monkeys.sort(Comparator.comparingDouble(a -> Point.dist(a.get_location(), ps.get_location())));
 		geese.sort(Comparator.comparingDouble(a -> Point.dist(a.get_location(), ps.get_location())));
@@ -146,12 +162,29 @@ public class Player implements lunch.sim.Player
 		// if no animal in vicinity then take a bite
 		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
+			currentRatio += 1.0 / totalFood;
 			return new Command(CommandType.EAT);
 		}
 
 		// System.out.println("player is searching");
 		return new Command();
 
+	}
+
+	private boolean areMembersMove(ArrayList<Family> members) {
+		Point point1 = new Point(0, 0);
+		Point point2 = new Point(50, -50);
+		Point point3 = new Point(-50, 50);
+		Point point4 = new Point(50, 50);
+		Point point5 = new Point(-50, -50);
+		for (Family member : members) {
+			Point cur = member.get_location();
+			if (!cur.equals(point1) && !cur.equals(point2) && !cur.equals(point3) && !cur.equals(point4) &&
+			!cur.equals(point5)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isDangerours(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
