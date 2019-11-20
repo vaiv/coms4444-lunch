@@ -222,7 +222,8 @@ public class Player implements lunch.sim.Player
         boolean[] isUnassigned = new boolean[members.size()];
         for (int i = 0; i < isUnassigned.length; i++) isUnassigned[i] = true;
 
-        for (int i = 0; i < members.size(); i++) {
+        // all players accept for last (-1) will move to a corner
+        for (int i = 0; i < members.size() -1; i++) {
             // cycle through corners for all family members
             Point corner = corners[i % 4];
 
