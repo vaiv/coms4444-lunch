@@ -131,11 +131,60 @@ public class Player implements lunch.sim.Player
 			this.walkingTarget = null;
 		}
 		
+		boolean found_valid_move = Point.within_bounds(move);
+		if (found_valid_move) {
+			System.out.println("WALKING MOVE VALID");
+		}
 		return Command.createMoveCommand(move);
 	}
 
 	// to be completed
 	private Command makeEatingProgress(PlayerState ps) {
+		//if holding something, eat it
+		if(holdingFood(ps))
+		{
+			System.out.println("Asking player to eat");
+			return new Command(CommandType.EAT);
+		}
+
+		//else pull out in order if not already pulling out
+		else if(!ps.is_player_searching())
+		{
+			FoodType f;
+			if(ps.check_availability_item(FoodType.COOKIE))
+			{
+				f = FoodType.COOKIE;
+			}
+
+			else if(ps.check_availability_item(FoodType.EGG))
+			{
+				f = FoodType.EGG;
+			}
+
+			else if(ps.check_availability_item(FoodType.FRUIT1))
+			{
+				f = FoodType.FRUIT1;
+			}
+			else if(ps.check_availability_item(FoodType.FRUIT2))
+			{
+				f = FoodType.FRUIT2;
+			}
+			else if(ps.check_availability_item(FoodType.SANDWICH1))
+			{
+				f = FoodType.SANDWICH1;
+			}
+			else 
+			{
+				f = FoodType.SANDWICH2;
+			}
+			
+			Command c = new Command(CommandType.TAKE_OUT, f);
+			System.out.println("Sending food to take out");
+			return c;
+
+
+		}
+
 		return null;
 	}
 
@@ -259,17 +308,14 @@ public class Player implements lunch.sim.Player
 
 
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 100 || this.currentTime % 300 == 0) {
+		if (this.currentTime == 50 || this.currentTime % 300 == 0) {
 			this.walkingTarget = getWalkingTarget(3);
-			if (ps.is_player_searching()) {
-				return new Command(CommandType.ABORT);
-			}
-			if (holdingFood(ps)) {
-				return new Command(CommandType.KEEP_BACK);
-			}
 		}
 
 		if (this.walkingTarget != null) {
+			if (ps.is_player_searching()) {
+				return new Command(CommandType.ABORT);
+			}
 			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 		}
 
@@ -278,7 +324,6 @@ public class Player implements lunch.sim.Player
 			return hideFood;
 		}
 
-		// to be completed
 		Command progress = makeEatingProgress(ps);
 		if (progress != null) {
 			return progress;
