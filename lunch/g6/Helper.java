@@ -155,7 +155,7 @@ public class Helper {
     //        Point prev_loc = prev_animals.get(i).get_location();
     //        double delta_x = curr_loc.x - prev_loc.x;
     //        double delta_y = curr_loc.y - prev_loc.y;
-	//        double animal_slope = delta_y / delta_x;
+    //        double animal_slope = delta_y / delta_x;
     //        Point my_loc = ps.get_location();
     //        double an_human_dx = my_loc.x - prev_loc.x;
     //        double an_human_dy = my_loc.y - prev_loc.y;
@@ -240,6 +240,9 @@ public class Helper {
         if (ps.get_held_item_type() != FoodType.SANDWICH) {
             double timeToStart = ps.is_player_searching() ? ps.time_to_finish_search() : 10.0;
             Point newLoc = newLocation(goose, prevGoose, timeToStart);
+            if ((curr_d <= 5.0) && (ps.time_to_finish_search() <= 1)) {
+                return 0.0;
+            }
             if (timeToWall <= timeToStart) {
                 // The goose hits the wall and then comes towards the player
                 t = timeToWall + timeToPlayer;
@@ -342,6 +345,9 @@ public class Helper {
         Point prevPos = prevAnimal.get_location();  // previous location
         double delta_x = currPos.x - prevPos.x;  // movement on the x-direction
         double delta_y = currPos.y - prevPos.y;  // movement on the y-direction
+        double norm = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
+        delta_x = delta_x * animal.get_max_speed() / norm;
+        delta_y = delta_y * animal.get_max_speed() / norm;
         Point displacement = new Point(delta_x, delta_y);
         return displacement;
     }
@@ -403,7 +409,7 @@ public class Helper {
      * @return
      */
     public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps) {
-        ArrayList<Point> walls = new ArrayList<Point>(Arrays.asList(new Point(-50, 0), new Point(50, 0), new Point(0, 50), new Point(0, -50)));
+        ArrayList<Point> walls = new ArrayList<Point>(Arrays.asList(new Point(-45, 0), new Point(45, 0), new Point(0, 45), new Point(0, -45)));
         HashMap<Point, ArrayList<Family>> wallMemberMap = new HashMap<>();
         for (Family f: members) {
             Point curLoc = f.get_location();

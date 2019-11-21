@@ -42,7 +42,7 @@ public class Player implements lunch.sim.Player {
         this.id = id;
         avatars = "flintstone";
         random = new Random(s);
-        prev_animals = new ArrayList<>();
+        prev_animals = new ArrayList<>(animals);
         return avatars;
     }
 
@@ -53,9 +53,6 @@ public class Player implements lunch.sim.Player {
         // // determine which monkeys and birds are heading towards us.
         // incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
         // incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
-        
-        // Update prev animals to be where animals were this time
-        prev_animals = new ArrayList<>(animals);
 
         // Step 1: wait and try to eat in the middle, both distracting and 
         // getting a sense of layout 
@@ -68,8 +65,10 @@ public class Player implements lunch.sim.Player {
         if (!ps.get_location().equals(wall)) {
             // Need to put food away before we can move 
             if (ps.get_held_item_type() != null) {
+                prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
+            prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), wall));
         }
         // Step 4: continue trying to eat 
@@ -88,6 +87,7 @@ public class Player implements lunch.sim.Player {
         // TODO: Right now based only on surround animals, include incoming 
         double geeseTime = Helper.getGeeseTime(animals, prev_animals, ps);
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
+        prev_animals = new ArrayList<>(animals);
         // No food in hand 
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
@@ -97,11 +97,13 @@ public class Player implements lunch.sim.Player {
                     return Helper.takeOutFood(ps);
                 } else {
                     // Deal with what we do in case where don't have enough time to eat
+                    return new Command(CommandType.ABORT);
                 }
             } else if (monkeyTime > minTime) {
                 return Helper.takeOutFood(ps);
             } else {
                 // Deal with what we do in case where don't have enough time to eat
+                return new Command(CommandType.ABORT);
             }
         }
         
@@ -120,7 +122,7 @@ public class Player implements lunch.sim.Player {
             System.out.println("oops");
             return new Command();
         }
-        return new Command();
+        //return new Command();
     }
 
 }
