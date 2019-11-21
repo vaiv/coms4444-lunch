@@ -242,9 +242,6 @@ public class Helper {
         if (ps.get_held_item_type() != FoodType.SANDWICH) {
             double timeToStart = ps.is_player_searching() ? ps.time_to_finish_search() : 10.0;
             Point newLoc = newLocation(goose, prevGoose, timeToStart);
-            if ((curr_d <= 5.0) && (ps.time_to_finish_search() <= 1)) {
-                return 0.0;
-            }
             if (timeToWall <= timeToStart) {
                 // The goose hits the wall and then comes towards the player
                 t = timeToWall + timeToPlayer;
@@ -396,7 +393,8 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            if(!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <=30) continue; 
+            if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 30)
+                continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
@@ -410,7 +408,8 @@ public class Helper {
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         boolean distract = true; 
         for (FoodType food_type: ordered) {
-            if (food_type != FoodType.FRUIT2 && ps.check_availability_item(food_type)) distract = false; 
+            if (food_type != FoodType.FRUIT2 && ps.check_availability_item(food_type))
+                distract = false; 
         }
         return distract; 
     }
@@ -437,7 +436,6 @@ public class Helper {
             }
             cornerMemberMap.get(closestCorner).add(f);
         }
-        
         Point sparsestCorner = null; 
         int nearbyFamily = Integer.MAX_VALUE; 
         // Find sparseness of sparsest corner 
@@ -454,11 +452,10 @@ public class Helper {
                 sparsest.add(corner);
             }
         }
-        if (sparsest.size() > 1){
+        if (sparsest.size() > 1) {
             int test = Math.abs(r.nextInt()%sparsest.size());
             sparsestCorner = sparsest.get(test); 
         }
-
         return sparsestCorner; 
     }
     

@@ -62,7 +62,7 @@ public class Player implements lunch.sim.Player {
         if (turn == 50)
             corner = Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress 
-        Point location = !Helper.shouldDistract(ps) ? corner : new Point(0,0);
+        Point location = !Helper.shouldDistract(ps) ? corner : new Point(0, 0);
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move 
             if (ps.get_held_item_type() != null) {
@@ -73,8 +73,6 @@ public class Player implements lunch.sim.Player {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
         return tryToEat(animals, prev_animals, ps);
-           
-        
     }
 
 
@@ -99,19 +97,25 @@ public class Player implements lunch.sim.Player {
                     return Helper.takeOutFood(ps);
                 } else {
                     // Deal with what we do in case where don't have enough time to eat
-                    return new Command(CommandType.ABORT);
+                    //return new Command(CommandType.ABORT);
                 }
             } else if (monkeyTime > minTime) {
                 return Helper.takeOutFood(ps);
             } else {
                 // Deal with what we do in case where don't have enough time to eat
-                return new Command(CommandType.ABORT);
+                //return new Command(CommandType.ABORT);
             }
         }
         
         // With food in hand 
         else if (ps.get_held_item_type() != null) {
-            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0) || monkeyTime <= 1.0 || (!Helper.shouldDistract(ps) && ps.get_held_item_type() == FoodType.FRUIT && ps.get_time_for_item(FoodType.FRUIT2) <=30)) {
+            boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
+            boolean cond2 = (monkeyTime <= 1.0);
+            boolean cond3a = !Helper.shouldDistract(ps);
+            boolean cond3b = (ps.get_held_item_type() == FoodType.FRUIT);
+            boolean cond3c = (ps.get_time_for_item(FoodType.FRUIT2) <= 30);
+            boolean cond3 = cond3a && cond3b && cond3c;
+            if (cond1 || cond2 || cond3) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return new Command(CommandType.EAT);
@@ -123,6 +127,7 @@ public class Player implements lunch.sim.Player {
             System.out.println("oops");
             return new Command();
         }
+        return new Command();
     }
 
 }
