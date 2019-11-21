@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.HashMap;
+
+import javafx.scene.effect.Light.Distant;
 import javafx.util.Pair; 
 import java.util.ArrayList;
 
@@ -325,8 +327,8 @@ public class Helper {
             return targetPos;
         }
         double dist = Point.dist(currPos, targetPos);  // distance to target position
-        double disp_x = (targetPos.x - currPos.x) * 1.0 / dist;  // movement on the x-direction
-        double disp_y = (targetPos.y - currPos.y) * 1.0 / dist;  // movement on the y-direction
+        double disp_x = (targetPos.x - currPos.x) * .99 / dist;  // movement on the x-direction
+        double disp_y = (targetPos.y - currPos.y) * .99 / dist;  // movement on the y-direction
         double next_x = currPos.x + disp_x;  // next position (x-coord)
         double next_y = currPos.y + disp_y;  // next position (y-coord)
         Point nextPos = new Point(next_x, next_y);
@@ -394,6 +396,7 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
+            if(!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <=30) continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
@@ -402,37 +405,61 @@ public class Helper {
         return new Command(); 
     }
 
+    public static boolean shouldDistract(PlayerState ps) {
+        // Implement priority: cookie --> non sandwich --> sandwich 
+        FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
+        boolean distract = true; 
+        for (FoodType food_type: ordered) {
+            if (food_type != FoodType.FRUIT2 && ps.check_availability_item(food_type)) distract = false; 
+        }
+        return distract; 
+    }
+
     /**
      * 
      * @param members
      * @param ps
      * @return
      */
-    public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps) {
-        ArrayList<Point> walls = new ArrayList<Point>(Arrays.asList(new Point(-45, 0), new Point(45, 0), new Point(0, 45), new Point(0, -45)));
-        HashMap<Point, ArrayList<Family>> wallMemberMap = new HashMap<>();
+    public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps, Random r) {
+        ArrayList<Point> corners = new ArrayList<Point>(Arrays.asList(new Point(-50, -50), new Point(-50, 50), new Point(-50, 50), new Point(50, 50)));
+        HashMap<Point, ArrayList<Family>> cornerMemberMap = new HashMap<>();
         for (Family f: members) {
             Point curLoc = f.get_location();
-            Point closestWall = walls.get(0);
-            for (Point wall: walls){
-                if (Point.dist(curLoc, wall) < Point.dist(curLoc, closestWall)) {
-                    closestWall = wall; 
+            Point closestCorner = corners.get(0);
+            for (Point corner: corners){
+                if (Point.dist(curLoc, corner) < Point.dist(curLoc, closestCorner)) {
+                    closestCorner = corner; 
                 }
-                if (!wallMemberMap.containsKey(wall)) {
-                    wallMemberMap.put(wall, new ArrayList<Family>());
+                if (!cornerMemberMap.containsKey(corner)) {
+                    cornerMemberMap.put(corner, new ArrayList<Family>());
                 }
             }
-            wallMemberMap.get(closestWall).add(f);
+            cornerMemberMap.get(closestCorner).add(f);
         }
-        Point sparsestWall = null; 
+        
+        Point sparsestCorner = null; 
         int nearbyFamily = Integer.MAX_VALUE; 
-        for (Point wall: wallMemberMap.keySet()) {
-            if (wallMemberMap.get(wall).size() < nearbyFamily || sparsestWall == null) {
-                nearbyFamily = wallMemberMap.get(wall).size(); 
-                sparsestWall = wall; 
+        // Find sparseness of sparsest corner 
+        for (Point corner: cornerMemberMap.keySet()) {
+            if (cornerMemberMap.get(corner).size() < nearbyFamily || sparsestCorner == null) {
+                nearbyFamily = cornerMemberMap.get(corner).size(); 
+                sparsestCorner = corner; 
             }
         }
-        return sparsestWall; 
+        // If multiple corners equally sparse, choose one at random 
+        ArrayList<Point> sparsest = new ArrayList<>(); 
+        for (Point corner: cornerMemberMap.keySet()) {
+            if (cornerMemberMap.get(corner).size() == nearbyFamily || sparsestCorner == null) {
+                sparsest.add(corner);
+            }
+        }
+        if (sparsest.size() > 1){
+            int test = Math.abs(r.nextInt()%sparsest.size());
+            sparsestCorner = sparsest.get(test); 
+        }
+
+        return sparsestCorner; 
     }
     
 }

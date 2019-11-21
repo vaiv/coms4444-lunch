@@ -31,7 +31,7 @@ public class Player implements lunch.sim.Player {
     private HashMap<Integer, Point> trajectories;
     private ArrayList<Animal> incomingMonkeys;
     private ArrayList<Animal> incomingGeese;
-    private Point wall; 
+    private Point corner; 
 
 
     public Player() {
@@ -60,19 +60,21 @@ public class Player implements lunch.sim.Player {
             return tryToEat(animals, prev_animals, ps);
         // Step 2: find the sparsest location on a wall to eat
         if (turn == 50)
-            wall = Helper.findSparseLoc(members, ps);
-        // Step 3: go to said location
-        if (!ps.get_location().equals(wall)) {
+            corner = Helper.findSparseLoc(members, ps, random);
+        // Step 3: go to corner and eat or go to center and distract depending on progress 
+        Point location = !Helper.shouldDistract(ps) ? corner : new Point(0,0);
+        if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move 
             if (ps.get_held_item_type() != null) {
                 prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
             prev_animals = new ArrayList<>(animals);
-            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), wall));
+            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
-        // Step 4: continue trying to eat 
         return tryToEat(animals, prev_animals, ps);
+           
+        
     }
 
 
@@ -109,8 +111,7 @@ public class Player implements lunch.sim.Player {
         
         // With food in hand 
         else if (ps.get_held_item_type() != null) {
-            // TODO: Check to make sure this is generic sandwich (checked: yes)
-            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0) || monkeyTime <= 1.0) {
+            if ((ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0) || monkeyTime <= 1.0 || (!Helper.shouldDistract(ps) && ps.get_held_item_type() == FoodType.FRUIT && ps.get_time_for_item(FoodType.FRUIT2) <=30)) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return new Command(CommandType.EAT);
@@ -122,7 +123,6 @@ public class Player implements lunch.sim.Player {
             System.out.println("oops");
             return new Command();
         }
-        //return new Command();
     }
 
 }
