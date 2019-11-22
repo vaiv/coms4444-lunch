@@ -49,32 +49,25 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
-       
-        // // determine which monkeys and birds are heading towards us.
-        // incomingMonkeys = Helper.findIncomingMonkeys(animals, prev_animals, ps);
-        // incomingGeese = Helper.findIncomingGeese(animals, prev_animals, ps);
-
         // Step 1: wait and try to eat in the middle, both distracting and 
-        // getting a sense of layout 
+        // getting a sense of layout
         if (++turn < 50)
             return tryToEat(animals, prev_animals, ps);
         // Step 2: find the sparsest location on a wall to eat
         if (turn == 50)
             corner = Helper.findSparseLoc(members, ps, random);
-        // Step 3: go to corner and eat or go to center and distract depending on progress 
+        // Step 3: go to corner and eat or go to center and distract depending on progress
         Point location = !Helper.shouldDistract(ps) ? corner : new Point(0, 0);
         if (!ps.get_location().equals(location)) {
-            // Need to put food away before we can move 
-            if (ps.get_held_item_type() != null) {
+            // Need to put food away before we can move
+            if (ps.get_held_item_type() != null || ps.is_player_searching()) {
                 prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
-            prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
         return tryToEat(animals, prev_animals, ps);
     }
-
 
     /**
      * Function for main logic 
@@ -83,12 +76,11 @@ public class Player implements lunch.sim.Player {
      * @return
      */
     private static Command tryToEat(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
-        // Find time until geese / monkeys can snatch food 
-        // TODO: Right now based only on surround animals, include incoming 
+        // Find time until geese / monkeys can snatch food
         double geeseTime = Helper.getGeeseTime(animals, prev_animals, ps);
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
         prev_animals = new ArrayList<>(animals);
-        // No food in hand 
+        // No food in hand
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
             if ((!ps.check_availability_item(FoodType.EGG))) {
@@ -110,7 +102,7 @@ public class Player implements lunch.sim.Player {
             }
         }
         
-        // With food in hand 
+        // With food in hand
         else if (ps.get_held_item_type() != null) {
             boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
             boolean cond2 = (monkeyTime <= 1.0);
@@ -125,11 +117,12 @@ public class Player implements lunch.sim.Player {
             }
         }
         
-        // Missed case 
+        // Missed case
         else {
             System.out.println("oops");
             return new Command();
         }
+        
         return new Command();
     }
 

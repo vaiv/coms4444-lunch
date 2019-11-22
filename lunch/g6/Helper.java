@@ -136,61 +136,9 @@ public class Helper {
             double delta_y = curr_loc.y - prev_loc.y;
             Point end_loc = find_boundary(curr_loc, delta_x, delta_y);
             result.put(i, end_loc);
-            // double slope = delta_y/delta_x;
-            // System.out.println("-----------------------");
-            // System.out.println(curr_loc + " vs " + prev_loc  + " slope " + slope);
-            // System.out.println(find_boundary(curr_loc, delta_x, delta_y));
-            // Double dist = Math.sqrt(Math.pow(curr_loc.x - prev_loc.x, 2) + Math.pow(curr_loc.y-prev_loc.y,2));
-            // System.out.println("dist: "+ dist);
         }
         return result;
     }
-
-    // Get the list of incoming monkeys
-    //public static ArrayList<Animal> findIncomingMonkeys(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
-    //    ArrayList<Animal> incomingMonkeys = new ArrayList<Animal>();
-    //    for (int i = 0; i < animals.size(); i++) {
-    //        if (animals.get(i).which_animal() == AnimalType.GOOSE) {
-    //            continue;
-    //        }
-    //        Point curr_loc = animals.get(i).get_location();
-    //        Point prev_loc = prev_animals.get(i).get_location();
-    //        double delta_x = curr_loc.x - prev_loc.x;
-    //        double delta_y = curr_loc.y - prev_loc.y;
-    //        double animal_slope = delta_y / delta_x;
-    //        Point my_loc = ps.get_location();
-    //        double an_human_dx = my_loc.x - prev_loc.x;
-    //        double an_human_dy = my_loc.y - prev_loc.y;
-    //        double human_slope = an_human_dy / an_human_dx;
-    //        if ((animal_slope >= human_slope - 1) && (animal_slope <= human_slope + 1)) {
-    //            incomingMonkeys.add(animals.get(i));
-    //        }
-    //    }
-    //    return incomingMonkeys;
-    //}
-
-    // Get the list of incoming geese
-    //public static ArrayList<Animal> findIncomingGeese(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
-    //    ArrayList<Animal> incomingGeese = new ArrayList<Animal>();
-    //    for(int i = 0; i < animals.size(); i++){
-    //        if (animals.get(i).which_animal() == AnimalType.MONKEY){
-    //            continue;
-    //        }
-    //        Point curr_loc = animals.get(i).get_location();
-    //        Point prev_loc = prev_animals.get(i).get_location();
-    //        double delta_x = curr_loc.x - prev_loc.x;
-    //        double delta_y = curr_loc.y - prev_loc.y;
-    //        double animal_slope = delta_y / delta_x;
-    //        Point my_loc = ps.get_location();
-    //        double an_human_dx = my_loc.x - prev_loc.x;
-    //        double an_human_dy = my_loc.y - prev_loc.y;
-    //        double human_slope = an_human_dy / an_human_dx;
-    //        if ((animal_slope >= human_slope - 1) && (animal_slope <= human_slope + 1)) {
-    //            incomingGeese.add(animals.get(i));
-    //        }
-    //    }
-    //    return incomingGeese;
-    //}
     
     // Get the dot product of two vectors (given as Points)
     public static double dot(Point p1, Point p2) {
@@ -291,8 +239,7 @@ public class Helper {
 
     // Get the time remaining before monkeys can steal the food
     public static double getMonkeyTime(ArrayList<Animal> animals, PlayerState ps) {
-        // Problem with this code: only considers monkeys that are headed in your direction. Must fix later.
-        // 1. Find three closest Monkeys. How much time will it take 3rd closest monkey to get to you?
+        // Find three closest Monkeys. How much time will it take 3rd closest monkey to get to you?
         double close_1 = Double.MAX_VALUE;
         double close_2 = Double.MAX_VALUE;
         double close_3 = Double.MAX_VALUE;
@@ -332,8 +279,8 @@ public class Helper {
             return targetPos;
         }
         double dist = Point.dist(currPos, targetPos);  // distance to target position
-        double disp_x = (targetPos.x - currPos.x) * .99 / dist;  // movement on the x-direction
-        double disp_y = (targetPos.y - currPos.y) * .99 / dist;  // movement on the y-direction
+        double disp_x = (targetPos.x - currPos.x) * 1.0 / dist;  // movement on the x-direction
+        double disp_y = (targetPos.y - currPos.y) * 1.0 / dist;  // movement on the y-direction
         double next_x = currPos.x + disp_x;  // next position (x-coord)
         double next_y = currPos.y + disp_y;  // next position (y-coord)
         Point nextPos = new Point(next_x, next_y);
@@ -401,10 +348,6 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            //if (shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.check_availability_item(food_type)) {
-            //    Command c = new Command(CommandType.TAKE_OUT, food_type);
-            //    return c;
-            //}
             if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 30)
                 continue; 
             if (ps.check_availability_item(food_type)) {
