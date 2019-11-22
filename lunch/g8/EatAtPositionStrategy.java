@@ -17,9 +17,11 @@ import lunch.sim.Point;
 public abstract class EatAtPositionStrategy extends Strategy {
 
     private Point position;
+    protected double monkeyMargin;
 
     public EatAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
         super(family, animals, state);
+        monkeyMargin = 40.0;
     }
 
     @Override
@@ -30,17 +32,19 @@ public abstract class EatAtPositionStrategy extends Strategy {
         if (position == null) {
             position = pickAPosition();
         }
-        if (distance(state.getLocation(), position) > 1) {
-            return Command.createMoveCommand(moveTowards(state.getLocation(), position));
+        if (state.isSearching()) {
+            if (dangerAnimal()) {
+                return new Command(CommandType.ABORT);
+            }
+        } else if (isFarFromPosition()) {
+            if (!state.isSearching()) {
+                return Command.createMoveCommand(moveTowards(state.getLocation(), position));
+            }
         } else if (state.isHoldingItem()) {
             if (dangerAnimal()) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return new Command(CommandType.EAT);
-            }
-        } else if (state.isSearching()) {
-            if (dangerAnimal()) {
-                return new Command(CommandType.ABORT);
             }
         } else {
             if (shouldTakeFoodOut()) {
@@ -113,11 +117,22 @@ public abstract class EatAtPositionStrategy extends Strategy {
     }
 
     protected boolean shouldTakeFoodOut() {
-        return countAnimalsWithIn(AnimalType.MONKEY, 40) < 3;
+        return countAnimalsWithIn(AnimalType.MONKEY, monkeyMargin) < 3;
     }
-    
+
+    /**
+     * Determines if the agent is too far from the intended position and
+     * henceforth should move towards it
+     *
+     * @return true if the agent is too far
+     */
+    protected boolean isFarFromPosition() {
+        return distance(state.getLocation(), position) > 1;
+    }
+
     /**
      * Chooses the position to eat
+     *
      * @return the chosen position
      */
     protected abstract Point pickAPosition();
