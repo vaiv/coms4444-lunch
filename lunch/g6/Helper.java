@@ -234,18 +234,25 @@ public class Helper {
                 return t;
             } else {
                 // The goose is not coming towards the player
-                t = timeToWall + timeToPlayer;
-                return t;
+                //t = timeToWall + timeToPlayer;
+                //return t;
+                return Double.MAX_VALUE;
             }
         }
-        // Case 4: The player is not holding a sandwich
+        // Case 4: The player is one second away from taking out a sandwich, and a goose is within 5m
+        if (curr_d <= 5.0 && ps.time_to_finish_search() <= 1) {
+            // Enter panic mode, abort taking out sandwich
+            return -1.0;
+        }
+        // Case 5: The player is not holding a sandwich
         if (ps.get_held_item_type() != FoodType.SANDWICH) {
             double timeToStart = ps.is_player_searching() ? ps.time_to_finish_search() : 10.0;
             Point newLoc = newLocation(goose, prevGoose, timeToStart);
             if (timeToWall <= timeToStart) {
-                // The goose hits the wall and then comes towards the player
-                t = timeToWall + timeToPlayer;
-                return t;
+                // The goose hits the wall
+                //t = timeToWall + timeToPlayer;
+                //return t;
+                return Double.MAX_VALUE;
             } else {
                 // The goose has not yet hit the wall
                 Point toPlayer = new Point(ps.get_location().x - newLoc.x, ps.get_location().y - newLoc.y);
@@ -255,8 +262,9 @@ public class Helper {
                     t = (new_d - 2.0) / goose.get_max_speed();
                     return t;
                 } else {
-                    t = timeToWall + timeToPlayer;
-                    return t;
+                    //t = timeToWall + timeToPlayer;
+                    //return t;
+                    return Double.MAX_VALUE;
                 }
             }
         }
@@ -393,6 +401,10 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
+            //if (shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.check_availability_item(food_type)) {
+            //    Command c = new Command(CommandType.TAKE_OUT, food_type);
+            //    return c;
+            //}
             if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 30)
                 continue; 
             if (ps.check_availability_item(food_type)) {

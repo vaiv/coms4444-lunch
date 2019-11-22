@@ -95,6 +95,9 @@ public class Player implements lunch.sim.Player {
                 // Due to ordering, this check implies eating a sandwich
                 if ((geeseTime > minTime) && (monkeyTime > minTime)) {
                     return Helper.takeOutFood(ps);
+                } else if (geeseTime < 0) {
+                    // Panic mode
+                    return new Command(CommandType.ABORT);
                 } else {
                     // Deal with what we do in case where don't have enough time to eat
                     //return new Command(CommandType.ABORT);
