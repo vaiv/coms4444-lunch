@@ -64,6 +64,7 @@ public class Player implements lunch.sim.Player {
                 prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
+            prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
         return tryToEat(animals, prev_animals, ps);
