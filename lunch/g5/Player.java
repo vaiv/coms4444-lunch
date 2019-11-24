@@ -1,22 +1,12 @@
 package lunch.g5;
 
-import java.util.List;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
-import java.util.HashMap;
-
-import javafx.util.Pair;
 
 import java.util.ArrayList;
 
-import lunch.sim.Point;
 import lunch.sim.Command;
-import lunch.sim.CommandType;
 import lunch.sim.Animal;
-import lunch.sim.AnimalType;
 import lunch.sim.Family;
-import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 
 public class Player implements lunch.sim.Player {
@@ -46,7 +36,8 @@ public class Player implements lunch.sim.Player {
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        Command command = greedyEater.getCommand(members, animals, ps, previousAnimals, turn);
+    		Command command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
+        System.out.println(command.get_type());
         previousAnimals = animals;
         turn++;
         return command;
