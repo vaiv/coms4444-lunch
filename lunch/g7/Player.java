@@ -14,6 +14,8 @@ public class Player implements lunch.sim.Player
 	private Integer id;
 	private Integer turn;
 	private String avatars;
+	private int time;
+	private int timeLimit;
 	private FoodType foodToTakeOut = null;
 	private final double eps = 10e-6;
 	private final double monkeyRange = 6.0;
@@ -32,18 +34,20 @@ public class Player implements lunch.sim.Player
 		turn = 0;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		avatars = "flintstone";
 		random = new Random(s);
 		size = members.size();
+		timeLimit = (int)t;
 		ratioToGo = 1.0 / size;
 		return avatars;
 	}
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
+		++time;
 
 		Double min_dist = Double.MAX_VALUE;
 		List<Animal> monkeys = new ArrayList<>();
@@ -89,8 +93,18 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		// if the player almost finished food
-		if (getUnfinishedFood(ps).size() == 1) {
+		// if there is not enough time for distractor to finish food, go to corner
+		if (isDistractor && getUnfinishedFood(ps).size() >= 3 && time >= timeLimit / 2) {
+			Point dest = new Point(50, 50);
+			Command res = getMove(ps.get_location(), dest);
+			if (res != null) {
+				return res;
+			}
+			isDistractor = false;
+		}
+
+		// if the player almost finished food, and there is sufficient time to distract
+		if (getUnfinishedFood(ps).size() == 1 && timeLimit - time >= 300) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             switch (this.id % 5) {
@@ -224,8 +238,8 @@ public class Player implements lunch.sim.Player
 	// get all food type, sorted by scores, from high to low
 	private ArrayList<FoodType> getAllFood() {
 		ArrayList<FoodType> result = new ArrayList<>(Arrays.asList(
-				FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
-				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2
+				FoodType.COOKIE, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
+				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2, FoodType.EGG
 		));
 		return result;
 	}
