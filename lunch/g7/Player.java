@@ -94,7 +94,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if there is not enough time for distractor to finish food, go to corner
-		if (isDistractor && currentRatio <= 0.8 && time >= timeLimit / 2) {
+		if (isDistractor && currentRatio <= 0.4 && time >= timeLimit / 2) {
 			Point dest = new Point(50, 50);
 			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
