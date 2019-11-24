@@ -53,7 +53,11 @@ public class PositionPredictor {
             Point nextLocation = currentLocation;
             for (int j = 0; j < nTimesteps; j++) {
                 ArrayList<Point> timestep = animalTimesteps.get(j);
-                timestep.add(new Point(nextLocation));
+                if(!Point.within_bounds(nextLocation)) {
+                    timestep.add(null);
+                } else {
+                    timestep.add(new Point(nextLocation));
+                }
                 // Make a step after each timestep
                 nextLocation = PointUtilities.add(nextLocation, directionVector);
             }
