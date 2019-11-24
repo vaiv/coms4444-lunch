@@ -20,6 +20,7 @@ public class Player implements lunch.sim.Player
     MatrixPredictor matrixPredictor;
     PositionPredictor positionPredictor;
     EatingStatus eatingStatus;
+    FamilyBehaviorPredictor familyBehaviorPredictor;
 
     // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
     private ArrayList<Animal> previousAnimals;
@@ -45,6 +46,7 @@ public class Player implements lunch.sim.Player
 
         this.greedyEater  = new GreedyEater();
 		this.mDistraction = new DistractionStrategy();
+		this.familyBehaviorPredictor = new FamilyBehaviorPredictor(f, m);
 
 		mDistraction.init(members, id, f, animals, m, g, t, s);
 		return "guardians";
