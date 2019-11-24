@@ -348,7 +348,7 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 30)
+            if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
                 continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
@@ -361,11 +361,19 @@ public class Helper {
     public static boolean shouldDistract(PlayerState ps) {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
-        boolean distract = true; 
+        boolean fruitAvailable = false; 
+        boolean eggAvailable = false; 
         for (FoodType food_type: ordered) {
-            if (food_type != FoodType.FRUIT2 && ps.check_availability_item(food_type))
-                distract = false; 
+            if (food_type == FoodType.FRUIT2)
+                fruitAvailable = ps.check_availability_item(food_type);
+            if (food_type == FoodType.EGG)
+                eggAvailable =ps.check_availability_item(food_type);
         }
+        boolean distract = false; 
+        
+        if (!eggAvailable && fruitAvailable)
+            distract = true; 
+    
         return distract; 
     }
 
