@@ -31,19 +31,16 @@ public class PositionPredictor {
      * @return An array of matrices, where each matrix under index j is predicted state of the board after
      *         j timesteps.
      */
-    public ArrayList<ArrayList<Pair<AnimalType, Point>>> predict(
-            ArrayList<Animal> previousAnimals, ArrayList<Animal> animals, PlayerState ps, int nTimesteps
+    public static ArrayList<ArrayList<Point>> predict(
+            ArrayList<Animal> previousAnimals, ArrayList<Animal> animals, int nTimesteps
     ) {
         if (previousAnimals == null) {
             throw new RuntimeException("No previous animals saved => cannot calculate the animal directions");
         }
-        ArrayList<ArrayList<Pair<AnimalType, Point>>> animalTimesteps = new ArrayList<>();
+        ArrayList<ArrayList<Point>> animalTimesteps = new ArrayList<>();
         // Initiate empty arrays for each timestep
-        Point ourLocation = ps.get_location();
-        int ourLocationX = (int)Math.round(ourLocation.x);
-        int ourLocationY = (int)Math.round(ourLocation.y);
         for (int i = 0; i < nTimesteps; i++) {
-            animalTimesteps.add(new ArrayList<Pair<AnimalType, Point>>());
+            animalTimesteps.add(new ArrayList<Point>());
         }
         // Go through each animal and 'draw' it's path
         for (int i = 0; i < animals.size(); i++) {
@@ -56,8 +53,8 @@ public class PositionPredictor {
             // We start with timestep 0, which is the current timestep
             Point nextLocation = currentLocation;
             for (int j = 0; j < nTimesteps; j++) {
-                ArrayList<Pair<AnimalType, Point>> timestep = animalTimesteps.get(j);
-                timestep.add(new Pair(animal.which_animal(), nextLocation));
+                ArrayList<Point> timestep = animalTimesteps.get(j);
+                timestep.add(new Point(nextLocation));
                 // Make a step after each timestep
                 nextLocation = PointUtilities.add(nextLocation, directionVector);
             }

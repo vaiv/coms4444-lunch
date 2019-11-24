@@ -18,7 +18,6 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 
     MatrixPredictor matrixPredictor;
-    PositionPredictor positionPredictor;
     EatingStatus eatingStatus;
     FamilyBehaviorPredictor familyBehaviorPredictor;
 
@@ -32,7 +31,6 @@ public class Player implements lunch.sim.Player
     public Player() {
         turn = 0;
         matrixPredictor = new MatrixPredictor(5.0, 6.0, 0);
-        positionPredictor = new PositionPredictor();
         eatingStatus = new EatingStatus();
     }
 
