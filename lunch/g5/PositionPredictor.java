@@ -15,20 +15,19 @@ public class PositionPredictor {
     public PositionPredictor() { }
 
     /**
-     * A function that calculates board matrices in the future.
-     *
-     * IMPORTANT: The matrices it returns have a diferent indexing method. The indices correspond to coordinates on the
-     * board. So m.get(0, 0) will always get the value at Point(0, 0) and not the point of the player.
+     * A function that predicts the future positions of animals.
      *
      * Example usage:
      *
-     * ArrayList<Matrix> matrices = getFutureMatrices(animals);
-     * matrices.get(9).show(); // Prints a matrix at timestep 9 to System.out
-     * System.print(matrices.get(9).get(10, 10); // Prints what will happen at point (10, 10) at timestep 9
+     * if(turn > 1) {
+     *     ArrayList<ArrayList<Point>> futurePositions = PositionPredictor.predict(previousAnimals, animals, 10);
+     *     System.out.println(futurePositions.get(9));
+     * }
      *
-     * @param animals: An array of current elements on the board
-     * @param ps: Current player state object
-     * @return An array of matrices, where each matrix under index j is predicted state of the board after
+     * @param previousAnimals: An array of previous animals in the field
+     * @param animals: An array of current animals in the field
+     * @param nTimesteps: Number of timesteps to predict
+     * @return An array of arrays, where each inner array under index j is predicted animal positions in the field after
      *         j timesteps.
      */
     public static ArrayList<ArrayList<Point>> predict(
