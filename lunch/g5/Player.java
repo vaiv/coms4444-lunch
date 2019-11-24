@@ -18,9 +18,12 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 
     MatrixPredictor matrixPredictor;
-    
+    PositionPredictor positionPredictor;
+    EatingStatus eatingStatus;
+
     // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
     private ArrayList<Animal> previousAnimals;
+    private ArrayList<Family> previousMembers;
     private GreedyEater greedyEater;
 
 	private DistractionStrategy mDistraction;
@@ -28,7 +31,9 @@ public class Player implements lunch.sim.Player
     public Player() {
         turn = 0;
         matrixPredictor = new MatrixPredictor(5.0, 6.0, 0);
-	}
+        positionPredictor = new PositionPredictor();
+        eatingStatus = new EatingStatus();
+    }
 
 	public String init(
 		ArrayList<Family> members, Integer id, int f,
@@ -52,6 +57,7 @@ public class Player implements lunch.sim.Player
             members, animals, ps, previousAnimals, turn);
         System.out.println(command.get_type());
         previousAnimals = animals;
+        previousMembers = members;
         turn++;
         return command;
 
