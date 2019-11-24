@@ -27,11 +27,12 @@ public class FamilyBehaviorPredictor {
     /**
      * Returns behaviour type for each family member.
      *
-     * @param animals: An array of current elements on the board
+     * @param members: An array of current famile members in the field
+     * @param animals: An array of current animals in the field
      */
     public ArrayList<BehaviorType> predict(ArrayList<Family> members, ArrayList<Animal> animals) {
         ArrayList<BehaviorType> familyBehavior = new ArrayList<>();
-        // Go through each family member and predict the command
+        // Go through each family member and predict their behavior
         for (Family member : members) {
             int nAnimalsInRadius = 0;
             for (Animal animal : animals) {

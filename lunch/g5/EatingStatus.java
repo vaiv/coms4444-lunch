@@ -18,9 +18,10 @@ public class EatingStatus {
     public EatingStatus() { }
 
     /**
-     * A function that calculates board matrices in the future.
+     * A function that calculates the eating status of each player.
      *
-     * @param animals: An array of current elements on the board
+     * @param previousMembers: An array of previous family members in the field
+     * @param members: An array of current family members in the field
      */
     public ArrayList<HashMap<FoodType, Integer>> get(ArrayList<Family> previousMembers, ArrayList<Family> members) {
         if (previousMembers == null) {

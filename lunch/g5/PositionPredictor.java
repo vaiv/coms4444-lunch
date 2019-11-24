@@ -15,7 +15,8 @@ public class PositionPredictor {
     public PositionPredictor() { }
 
     /**
-     * A function that predicts the future positions of animals.
+     * A function that predicts the future positions of animals. If the future position is out of bounds of the field
+     * than instead of the Point the field will have null.
      *
      * Example usage:
      *
