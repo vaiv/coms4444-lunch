@@ -656,7 +656,7 @@ private static void parseArgs(String[] args)
                     getStandardFileManager(null, null, null);
 //            long files = player_files.size();
             Log.log("Compiling for player " + name);
-            if (!compiler.getTask(null, manager, null, Arrays.asList("-g"), null,
+            if (!compiler.getTask(null, manager, null, null, null,
                     manager.getJavaFileObjectsFromFiles(player_files)).call())
                 throw new IOException("Compilation failed");
             class_file = new File(root + sep + name + sep + "Player.class");
@@ -937,8 +937,3 @@ private static void parseArgs(String[] args)
 
 
 }
-
-
-
-
-
