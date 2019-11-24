@@ -84,7 +84,7 @@ public class Player implements lunch.sim.Player
                     break;
 			}
 			Point start = new Point(ps.get_location());
-			Command res = getMove(start, dest);
+			Command res = getMove(start, dest, ps);
 			if (res == null) {
 				inPosition = true;
 			}
@@ -96,7 +96,7 @@ public class Player implements lunch.sim.Player
 		// if there is not enough time for distractor to finish food, go to corner
 		if (isDistractor && getUnfinishedFood(ps).size() >= 3 && time >= timeLimit / 2) {
 			Point dest = new Point(50, 50);
-			Command res = getMove(ps.get_location(), dest);
+			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
 				return res;
 			}
@@ -124,7 +124,7 @@ public class Player implements lunch.sim.Player
                     dest = new Point(-20, -20);
                     break;
             }
-            Command res = getMove(ps.get_location(), dest);
+            Command res = getMove(ps.get_location(), dest, ps);
             if (res != null) {
                 return res;
             }
@@ -293,9 +293,12 @@ public class Player implements lunch.sim.Player
 	}
 
 	// returns a valid move command from start to dest, if already in dest, return null
-	public Command getMove(Point start, Point dest) {
+	public Command getMove(Point start, Point dest, PlayerState ps) {
 		if (Math.abs(Point.dist(start, dest)) <= 0.00001) {
 			return null;
+		}
+		if (ps.get_held_item_type() != null) {
+			return new Command(CommandType.KEEP_BACK);
 		}
 		double dist = Math.sqrt(Math.pow(dest.x - start.x, 2) + Math.pow(dest.y - start.y, 2));
 		if (dist <= 1.0)
