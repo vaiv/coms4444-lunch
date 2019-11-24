@@ -301,29 +301,15 @@ public class Player implements lunch.sim.Player
 		FoodType cur = foodType.get(0);
 		double distMonkey = Integer.MAX_VALUE;
 		double distGeese = Integer.MAX_VALUE;
-		int numGeese = 0;
-		int numMonkeys = 0;
+		int rangeGeese = isDistractor ? 0 : 25;
+		int rangeMonkeys = isDistractor ? 3 : 30;
 		if (monkeys.size() >= 3) {
 			distMonkey = Point.dist(monkeys.get(2).get_location(), ps.get_location());
 		}
 		if (!geese.isEmpty()) {
 			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
 		}
-		for (Animal m : monkeys) {
-			Point playerLoc = ps.get_location();
-			Point monkeyLoc = m.get_location();
-			if (Point.dist(playerLoc, monkeyLoc) <= 40) {
-				numMonkeys++;
-			}
-		}
-		for (Animal g : geese) {
-			Point playerLoc = ps.get_location();
-			Point gooseLoc = g.get_location();
-			if (Point.dist(playerLoc, gooseLoc) <= 20) {
-				numGeese++;
-			}
-		}
-		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= 15) && distMonkey >= 10;
+		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
 
