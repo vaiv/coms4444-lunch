@@ -9,7 +9,6 @@ var geese;
 var family;
 var food;
 var first = true;
-var total_score = 0;
 
 var sandwich_imgs = [];
 var eaten_sandwich_imgs = [];
@@ -54,12 +53,11 @@ function init(monkeys,geese,family,food) {
     {
         var member = family[i];
         var member_img = new Image();
-	var j = i%4;
-        member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+        member_img.src = family[i].avatars+ '_'+(i+1).toString() + '.png';
         family_imgs.push(member_img);
     }
 
-    for(var i=0;i<100;i++)
+    for(var i=0;i<50;i++)
     {
         var sandwich_img = new Image();
         var eaten_sandwich_img = new Image();
@@ -261,26 +259,24 @@ function drawFamily(ctx, family) {
 function drawStats(ctx)
 {
     var colors = ["blue", "darkblue", "darkgreen", "darkmagenta", "salmon", "gold", "deeppink"]
-    total_score = 0;
     for (var i = 0; i < family.length; i++)
     {
-        var j = i%4;
         var p = family[i];
-        ctx.fillStyle=colors[j];
+        ctx.fillStyle=colors[i];
 
-        ctx.font = "20px Arial";
+        ctx.font = "30px Arial";
         var items_available = '';
-        var avatar = 'George Jetson';
+        var avatar = 'Ken Matilda';
 
         if(i%4==1)
-            avatar = 'Jane Jetson';
+            avatar = 'Becky Matilda';
         else if (i%4==2)
-            avatar = 'Judy Jetson';
+            avatar = 'Vaiv Matilda';
         else if (i%4==3)
-            avatar = 'Elroy Jetson';
+            avatar = 'Pat Matilda';
 
 
-        if(p.avatars!='jetson')
+        if(p.avatars!='matilda')
             avatar = p.avatars+'_'+i.toString();
 
 
@@ -297,19 +293,14 @@ function drawStats(ctx)
         if(p.c)
             items_available+= 'cookie, ';
 
-        ctx.fillText(p.name + ': ' +  avatar,1280,150*i + 15);
+        ctx.fillText(p.name + ': ' +  avatar,1280,180*i + 30);
         var percent_rem = 100 - parseFloat(p.rem_time).toFixed(2);
         percent_rem = percent_rem.toFixed(2);
         if(percent_rem>100)
             percent_rem = NaN;
-
-        if(!isNaN(p.score) && p.score>0)
-            total_score+= p.score
-        ctx.fillText('score: ' + p.score + ' eating: ' + p.eating + ' (' + percent_rem + '%) ',1280, 150*i + 50);
-        ctx.fillText('items in bag: ' + items_available ,1280,150*i + 100);
+        ctx.fillText('score: ' + p.score + ' eating: ' + p.eating + ' (' + percent_rem + '%) ',1280, 180*i + 80);
+        ctx.fillText('items in bag: ' + items_available ,1280,180*i + 130);
     }
-    ctx.fillStyle=colors[2];
-    ctx.fillText('total_score: ' + total_score, 1350, 1280);
 }
 
 function drawLine(ctx, x_start, y_start, x_end, y_end) {
