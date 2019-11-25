@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.HashMap;
-import javafx.util.Pair; 
 import java.util.ArrayList;
 
 import lunch.sim.Point;
@@ -110,6 +109,4 @@ public class Player implements lunch.sim.Player
 		return new Command();
 
 	}
-
-
 }
