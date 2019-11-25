@@ -28,11 +28,33 @@ public class Player implements lunch.sim.Player
 	private int currentTime;
 	private Point walkingTarget;
 	private boolean inPosition;  // indicates whether we are happy with our location
+	private String descriptiveState;
+	private String playerRole; // "distract" or "eat"
+	private boolean fanningOut; // when distracting are we currently going toward dense region or bringing
+	// animals back to center
 
 	public Player()
 	{
 		turn = 0;
 		inPosition = false;
+		descriptiveState = "initial";
+		playerRole = "distract";
+		fanningOut = true;
+	}
+
+	public void updateState(PlayerState ps) {
+		String newState = "";
+		if (! ps.is_player_searching() && ps.time_to_eat_remaining() == -1) {
+			 newState = "initial";
+		} else if (ps.is_player_searching() && ps.time_to_eat_remaining() == -1) {
+			newState =  "taking_out";
+		} else if (!ps.is_player_searching() && ps.time_to_eat_remaining() > -1) {
+			newState = "food_out";
+		} else {
+			newState = "putting_back";
+		}
+
+		this.descriptiveState = newState;
 	}
 
 	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
@@ -42,6 +64,9 @@ public class Player implements lunch.sim.Player
 		random = new Random(s);
 		this.densityRecord = new ArrayList<HashMap<Integer, Double>>();
 		this.currentTime = 0;
+		this.descriptiveState = "initial";
+		this.playerRole = "distract";
+		fanningOut = true;
 		return avatars;
 	}
 
@@ -132,9 +157,6 @@ public class Player implements lunch.sim.Player
 		}
 		
 		boolean found_valid_move = Point.within_bounds(move);
-		if (found_valid_move) {
-			System.out.println("WALKING MOVE VALID");
-		}
 		return Command.createMoveCommand(move);
 	}
 
@@ -190,11 +212,11 @@ public class Player implements lunch.sim.Player
 
 	// regions are 1-4 corresponding to the 4 quadrants of the map.  We can go more fine grain later.
 	private Integer getRegion(Double x, Double y) {
-		if (x < 0 && y > 0) {
+		if (x < 0 && y >= 0) {
 			return 1;
 		}
 
-		if (x > 0 && y > 0) {
+		if (x >= 0 && y >= 0) {
 			return 2;
 		}
 
@@ -202,7 +224,7 @@ public class Player implements lunch.sim.Player
 			return 3;
 		}
 
-		if (x > 0 && y < 0) {
+		if (x >= 0 && y < 0) {
 			return 4;
 		}
 
@@ -231,6 +253,38 @@ public class Player implements lunch.sim.Player
 		}
 
 	return densities;
+	}
+
+	public FoodType pickDistractorFood(PlayerState ps) {
+		FoodType f;
+		if(ps.check_availability_item(FoodType.SANDWICH1))
+		{
+			f = FoodType.SANDWICH1;
+		}
+
+		else if(ps.check_availability_item(FoodType.SANDWICH2))
+		{
+			f = FoodType.SANDWICH2;
+		}
+
+		else if(ps.check_availability_item(FoodType.FRUIT1))
+		{
+			f = FoodType.FRUIT1;
+		}
+		else if(ps.check_availability_item(FoodType.FRUIT2))
+		{
+			f = FoodType.FRUIT2;
+		}
+		else if(ps.check_availability_item(FoodType.EGG))
+		{
+			f = FoodType.EGG;
+		}
+		else
+		{
+			f = FoodType.COOKIE;
+		}
+
+		return f;
 	}
 
 
@@ -268,48 +322,130 @@ public class Player implements lunch.sim.Player
 		}
 
 		return minRegion;
-	} 
+	}
+
+	private Integer getMaxRegion(int window) {
+		// initialize sum over past densities within the window
+		HashMap<Integer, Double> sum_densities = new HashMap<Integer, Double>();
+		for (Integer i=1; i<=4; i++) {
+			sum_densities.put(i, 0.0);
+		}
+
+		// sum over past densities
+		Double density;
+		Double current;
+		HashMap<Integer, Double> densities;
+		for (int i=1; i<window + 1; i++) {
+			densities = this.densityRecord.get(this.densityRecord.size() - i);
+			for (Integer region=1; region<=4; region++) {
+				density = densities.get(region);
+				current = sum_densities.get(region);
+				sum_densities.put(region, current + density);
+			}
+		}
+
+		// find max region
+		Integer maxRegion = 0;
+		Double maxDensity = Double.NEGATIVE_INFINITY;
+		for (Integer i=1; i<=4; i++) {
+			if (sum_densities.get(i) >= maxDensity) {
+				maxDensity = sum_densities.get(i);
+				maxRegion = i;
+			}
+		}
+
+		return maxRegion;
+	}
+
+	private Point getWalkingTargetToDenseRegion(int window) {
+		return this.getWalkingTarget(window, false);
+	}
+
+	private Point getWalkingTargetToEmptyRegion(int window) {
+		return this.getWalkingTarget(window, true);
+	}
 
 	// specifies where to walk once we know the region of least density
-	private Point getWalkingTarget(int window) {
-		Integer minRegion = getMinRegion(window);
+	private Point getWalkingTarget(int window, boolean useMinRegion) {
+		Integer minRegion = useMinRegion ? getMinRegion(window) : getMaxRegion(window);
+		int distFromOrigin = 20;
 
 		if (minRegion == 1) {
-			return new Point(-35, 35);
+			return new Point(-distFromOrigin, distFromOrigin);
 		} 
 
 		if (minRegion == 2) {
-			return new Point(35,35);
+			return new Point(distFromOrigin, distFromOrigin);
 		}
 
 		if (minRegion == 3) {
-			return new Point(-35,-35);
+			return new Point(-distFromOrigin, -distFromOrigin);
 		}
 
 		if (minRegion == 4) {
-			return new Point(35,-35);
+			return new Point(distFromOrigin, -distFromOrigin);
 		}
 
 		return null;
 	}
 
+	public Command distract(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
+		// don't let food get taken
+		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
+		if (hideFood != null) {
+			return hideFood;
+		}
+
+		if(this.descriptiveState.equals("food_out")) {
+			Point targetDest;
+			if(this.fanningOut) {
+				targetDest = this.getWalkingTargetToDenseRegion(5);
+			} else {
+				targetDest = new Point(0, 0);
+			}
+
+			Double delta_x = targetDest.x - ps.get_location().x;
+			Double delta_y = targetDest.y - ps.get_location().y;
+			double distance = Math.sqrt(Math.pow(delta_x, 2) + Math.pow(delta_y, 2));
+			if(distance < 1) {
+				this.fanningOut = ! this.fanningOut;
+				if(this.fanningOut) {
+					targetDest = this.getWalkingTargetToDenseRegion(5);
+				} else {
+					targetDest = new Point(0, 0);
+				}
+			}
+			this.walkingTarget = targetDest;
+			return this.walkToPosition(ps);
+		} else if(this.descriptiveState.equals("initial")) {
+			FoodType f = this.pickDistractorFood(ps);
+			return new Command(CommandType.TAKE_OUT, f);
+		}
+
+		return new Command(CommandType.WAIT);
+	};
+
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
-		
 		this.currentTime += 1;
 		this.densityRecord.add(getDensities(animals));  // keep a running record of animal densities
+		this.updateState(ps); // descriptive state - one of "taking_out", "initial", "food_out", "putting_back"
+		System.out.println(this.descriptiveState);
 
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
 
+		if(this.playerRole.equals("distract")) {
+			return this.distract(monkey_dists, goose_dists, ps);
+		}
+
 		// basic scaffolding ////////////////////////
 		///////////////////////////////////////////////////////////////
 
-
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
 		if (this.currentTime == 50 || this.currentTime % 300 == 0) {
-			this.walkingTarget = getWalkingTarget(3);
+			this.walkingTarget = getWalkingTargetToEmptyRegion(3);
 		}
 
 		if (this.walkingTarget != null) {
@@ -331,12 +467,6 @@ public class Player implements lunch.sim.Player
 
 		//////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////
-
-
-		
-
-
-
 
 		// TA code
 		Double monkey_min = monkey_dists.get(0);
