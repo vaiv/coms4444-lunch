@@ -1,4 +1,4 @@
-package lunch.g6;
+package lunch.g6Old;
 
 import java.util.List;
 import java.util.Collections;
@@ -18,7 +18,7 @@ import lunch.sim.Family;
 import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 
-import lunch.g6.Helper.*;
+import lunch.g6Old.Helper.*;
 
 public class Player implements lunch.sim.Player {
     private int seed;
@@ -31,7 +31,7 @@ public class Player implements lunch.sim.Player {
     private HashMap<Integer, Point> trajectories;
     private ArrayList<Animal> incomingMonkeys;
     private ArrayList<Animal> incomingGeese;
-    private Point corner; 
+    private Point corner;
 
 
     public Player() {
@@ -49,7 +49,7 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
-        // Step 1: wait and try to eat in the middle, both distracting and 
+        // Step 1: wait and try to eat in the middle, both distracting and
         // getting a sense of layout
         if (++turn < 50)
             return tryToEat(animals, prev_animals, ps);
@@ -71,7 +71,7 @@ public class Player implements lunch.sim.Player {
     }
 
     /**
-     * Function for main logic 
+     * Function for main logic
      * @param animals
      * @param ps
      * @return
