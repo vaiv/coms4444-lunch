@@ -367,18 +367,16 @@ public class Helper {
             if (food_type == FoodType.FRUIT2)
                 fruitAvailable = ps.check_availability_item(food_type);
             if (food_type == FoodType.EGG)
-                eggAvailable =ps.check_availability_item(food_type);
+                eggAvailable = ps.check_availability_item(food_type);
         }
-        boolean distract = false; 
-        
+        boolean distract = false;
         if (!eggAvailable && fruitAvailable)
-            distract = true; 
-    
-        return distract; 
+            distract = true;
+        return distract;
     }
 
     /**
-     * 
+     *
      * @param members
      * @param ps
      * @return
