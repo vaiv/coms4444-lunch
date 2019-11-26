@@ -13,9 +13,40 @@ import lunch.sim.PlayerState;
 
 public class EatingStatus {
 
+    private HashMap<FoodType, Integer> foodTimeConstants;
+
     private ArrayList<HashMap<FoodType, Integer>> previousEatingStatus;
 
-    public EatingStatus() { }
+    public EatingStatus() {
+        this.foodTimeConstants = new HashMap<FoodType, Integer>();
+        this.foodTimeConstants.put(FoodType.SANDWICH, 360);
+        this.foodTimeConstants.put(FoodType.FRUIT, 240);
+        this.foodTimeConstants.put(FoodType.EGG, 120);
+        this.foodTimeConstants.put(FoodType.COOKIE, 60);
+    }
+
+    /**
+     * A function that calculates the eating status of each player in percentages.
+     *
+     * @param previousMembers: An array of previous family members in the field
+     * @param members: An array of current family members in the field
+     */
+    public ArrayList<HashMap<FoodType, Double>> getPercentages(ArrayList<Family> previousMembers, ArrayList<Family> members) {
+        ArrayList<HashMap<FoodType, Integer>> es = get(previousMembers, members);
+        ArrayList<HashMap<FoodType, Double>> eatingStatus = new ArrayList<>();
+        for(HashMap<FoodType, Integer> dict: es) {
+            HashMap<FoodType, Double> memberStatus = new HashMap<>();
+            for (FoodType food: dict.keySet()) {
+                Integer seconds = dict.get(food);
+                Integer maxSeconds = foodTimeConstants.get(food);
+                Double percentage = seconds * 1.0 / maxSeconds;
+//                percentage = Math.min(percentage, 1.0);
+                memberStatus.put(food, percentage);
+            }
+            eatingStatus.add(memberStatus);
+        }
+        return eatingStatus;
+    }
 
     /**
      * A function that calculates the eating status of each player.
