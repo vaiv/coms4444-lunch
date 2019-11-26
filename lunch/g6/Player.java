@@ -40,7 +40,7 @@ public class Player implements lunch.sim.Player {
     
     public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         this.id = id;
-        avatars = "flintstone";
+        avatars = "guardians";
         random = new Random(s);
         prev_animals = new ArrayList<>(animals);
         return avatars;
