@@ -46,6 +46,10 @@ public Point get_location()
 	return location;
 }
 
+public Integer get_id(){
+	return this.ID; 
+}
+
 // public void update_location(Point p)
 // {
 // 	location.x = p.x;

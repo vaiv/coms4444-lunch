@@ -348,8 +348,8 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
-                continue; 
+            // if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
+            //     continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
@@ -358,20 +358,34 @@ public class Helper {
         return new Command(); 
     }
 
-    public static boolean shouldDistract(PlayerState ps) {
-        // Implement priority: cookie --> non sandwich --> sandwich 
-        FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
-        boolean fruitAvailable = false; 
-        boolean eggAvailable = false; 
-        for (FoodType food_type: ordered) {
-            if (food_type == FoodType.FRUIT2)
-                fruitAvailable = ps.check_availability_item(food_type);
-            if (food_type == FoodType.EGG)
-                eggAvailable = ps.check_availability_item(food_type);
-        }
+    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id) {
         boolean distract = false;
-        if (!eggAvailable && fruitAvailable)
-            distract = true;
+        Point distractingCorner = new Point(50,50);
+        Double minDist = Double.MAX_VALUE;
+        Family closest = null; 
+        for (Family f: members) {
+            Point curLoc = f.get_location();
+            Double distance = Point.dist(curLoc, distractingCorner);
+            if (distance < minDist) {
+                minDist = distance; 
+                closest = f;
+            }
+        }
+        if (closest.get_id() == id) return true; 
+        // OLD version, not dynamic 
+        // // Implement priority: cookie --> non sandwich --> sandwich 
+        // FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
+        // boolean fruitAvailable = false; 
+        // boolean eggAvailable = false; 
+        // for (FoodType food_type: ordered) {
+        //     if (food_type == FoodType.FRUIT2)
+        //         fruitAvailable = ps.check_availability_item(food_type);
+        //     if (food_type == FoodType.EGG)
+        //         eggAvailable = ps.check_availability_item(food_type);
+        // }
+        // boolean distract = false;
+        // if (!eggAvailable && fruitAvailable)
+        //     distract = true;
         return distract;
     }
 

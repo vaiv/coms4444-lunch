@@ -32,6 +32,7 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Animal> incomingMonkeys;
     private ArrayList<Animal> incomingGeese;
     private Point corner; 
+    private static boolean shouldDistract; 
 
 
     public Player() {
@@ -43,10 +44,13 @@ public class Player implements lunch.sim.Player {
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>(animals);
+        shouldDistract = false; 
         return avatars;
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
+        shouldDistract = !Helper.shouldDistract(members, ps, random, this.id);
+        
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -55,9 +59,10 @@ public class Player implements lunch.sim.Player {
             return tryToEat(animals, prev_animals, ps);
         // Step 2: find the sparsest location on a wall to eat
         if (turn == 50)
-            corner = Helper.findSparseLoc(members, ps, random);
+            corner = new Point(-50, -50); //Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress
-        Point location = !Helper.shouldDistract(ps) ? corner : new Point(0, 0);
+
+        Point location = shouldDistract ? corner : new Point(50, 50);
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
@@ -107,7 +112,7 @@ public class Player implements lunch.sim.Player {
         else if (ps.get_held_item_type() != null) {
             boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
             boolean cond2 = (monkeyTime <= 1.0);
-            boolean cond3a = !Helper.shouldDistract(ps);
+            boolean cond3a = !shouldDistract;
             boolean cond3b = (ps.get_held_item_type() == FoodType.FRUIT);
             boolean cond3c = (ps.get_time_for_item(FoodType.FRUIT2) <= 115);
             boolean cond3 = cond3a && cond3b && cond3c;
