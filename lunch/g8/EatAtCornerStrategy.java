@@ -1,6 +1,7 @@
 package lunch.g8;
 
 import java.util.List;
+import java.util.Random;
 import static lunch.g8.PositionUtils.*;
 import lunch.sim.Point;
 
@@ -10,8 +11,8 @@ import lunch.sim.Point;
  */
 public class EatAtCornerStrategy extends EatAtPositionStrategy {
 
-    public EatAtCornerStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
-        super(family, animals, state);
+    public EatAtCornerStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
+        super(family, animals, state, random);
     }
 
     @Override

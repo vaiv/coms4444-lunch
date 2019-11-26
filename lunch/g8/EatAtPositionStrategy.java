@@ -3,6 +3,7 @@ package lunch.g8;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import static lunch.g8.PositionUtils.*;
 import lunch.sim.AnimalType;
 import lunch.sim.Command;
@@ -17,10 +18,15 @@ import lunch.sim.Point;
 public abstract class EatAtPositionStrategy extends Strategy {
 
     private Point position;
+    private boolean canFinishEating = true;
     protected double monkeyMargin;
 
-    public EatAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
-        super(family, animals, state);
+    public EatAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
+        super(family, animals, state, random);
+    }
+
+    public EatAtPositionStrategy(Point position, List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
+        super(family, animals, state, random);
         monkeyMargin = 40.0;
     }
 
@@ -36,15 +42,17 @@ public abstract class EatAtPositionStrategy extends Strategy {
             if (dangerAnimal()) {
                 return new Command(CommandType.ABORT);
             }
-        } else if (isFarFromPosition()) {
+        } else if (isFarFromPosition() && !state.isHoldingItem()) {
             if (!state.isSearching()) {
                 return Command.createMoveCommand(moveTowards(state.getLocation(), position));
             }
         } else if (state.isHoldingItem()) {
             if (dangerAnimal()) {
                 return new Command(CommandType.KEEP_BACK);
-            } else {
+            } else if (canFinishEating || state.getTimeToFinish() > 1) {
                 return new Command(CommandType.EAT);
+            } else {
+                return new Command();
             }
         } else {
             if (shouldTakeFoodOut()) {
@@ -131,10 +139,34 @@ public abstract class EatAtPositionStrategy extends Strategy {
     }
 
     /**
-     * Chooses the position to eat
+     * If a position has not been determined when initializing this class this
+     * method is called to choose the position to eat
      *
      * @return the chosen position
      */
     protected abstract Point pickAPosition();
 
+    public Point getPosition() {
+        return position;
+    }
+
+    public void setPosition(Point position) {
+        this.position = position;
+    }
+
+    public double getMonkeyMargin() {
+        return monkeyMargin;
+    }
+
+    public void setMonkeyMargin(double monkeyMargin) {
+        this.monkeyMargin = monkeyMargin;
+    }
+
+    public boolean canFinishEating() {
+        return canFinishEating;
+    }
+
+    public void setCanFinishEating(boolean canFinishEating) {
+        this.canFinishEating = canFinishEating;
+    }
 }

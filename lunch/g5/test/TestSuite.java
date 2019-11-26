@@ -15,7 +15,7 @@ public class TestSuite {
 	private static String PLAYER = "g5";
 	private static int TIME = 3600;
 	private static int NUM_MONKEYS = 10;
-	private static int NUM_GEESE = 4;
+	private static int NUM_GEESE = 30;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -26,7 +26,7 @@ public class TestSuite {
 		String currentDirectory = System.getProperty("user.dir");
 		File currDir = new File(currentDirectory);
 		
-		// Getting all files inthe players directory
+		// Getting all files in the players directory
 		File[] playersDirs = new File(currDir.getAbsoluteFile() + File.separator + "lunch").listFiles();
 		List<String> players = new ArrayList<String>();
 		
