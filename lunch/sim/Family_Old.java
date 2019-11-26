@@ -5,7 +5,7 @@ import lunch.sim.FoodType;
 import lunch.sim.Agent;
 import lunch.sim.Food;
 
-public class Family{
+public class Family_Old{
 
 protected Point location;
 protected FoodType item;
