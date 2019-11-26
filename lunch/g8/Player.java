@@ -5,6 +5,7 @@ import java.util.Random;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import java.util.List;
+import lunch.sim.AnimalType;
 
 /**
  *
@@ -121,11 +122,21 @@ public class Player implements lunch.sim.Player {
      * @return
      */
     private Strategy selectStrategy() {
-        return new LureRotationStrategy(family, animals, state);
+        return new DistractIfNeededStrategy(family, animals, state, random);
     }
 
     private String describe(Command command) {
         return "P" + state.getId() + command.get_type();
+    }
+
+    private int getMonkeyDensity() {
+        int numMonkeys = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.MONKEY) {
+                numMonkeys++;
+            }
+        }
+        return numMonkeys / family.size();
     }
 
 }

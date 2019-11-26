@@ -1,6 +1,7 @@
 package lunch.g8;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import static lunch.g8.PositionUtils.*;
 import lunch.sim.AnimalType;
@@ -11,12 +12,12 @@ import lunch.sim.Point;
  *
  * @author group8
  */
-public class CenterLureStrategy extends EatAtPositionStrategy {
+public class LureAtPositionStrategy extends EatAtPositionStrategy {
 
     public boolean reCentering = true;
 
-    public CenterLureStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
-        super(family, animals, state);
+    public LureAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
+        super(CENTER, family, animals, state, random);
         monkeyMargin = 6;
     }
 
@@ -32,11 +33,9 @@ public class CenterLureStrategy extends EatAtPositionStrategy {
         return Command.createMoveCommand(moveInDirection(state.getLocation(), direction));
     }
 
-    
-
     @Override
     protected boolean isFarFromPosition() {
-        final double distToCenter = distance(state.getLocation(), CENTER);
+        final double distToCenter = distance(state.getLocation(), getPosition());
         if (distToCenter < 1) {
             reCentering = false;
         }

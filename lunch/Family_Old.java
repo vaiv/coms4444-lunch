@@ -56,11 +56,6 @@ public boolean check_visible_item()
 	return item_visible;
 }
 
-public Integer get_id()
-{
-	return this.ID;
-}
-
 // public void update_location(Point p)
 // {
 // 	location.x = p.x;

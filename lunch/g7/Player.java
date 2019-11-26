@@ -14,6 +14,8 @@ public class Player implements lunch.sim.Player
 	private Integer id;
 	private Integer turn;
 	private String avatars;
+	private int time;
+	private int timeLimit;
 	private FoodType foodToTakeOut = null;
 	private final double eps = 10e-6;
 	private final double monkeyRange = 6.0;
@@ -32,18 +34,20 @@ public class Player implements lunch.sim.Player
 		turn = 0;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		avatars = "jetson";
 		random = new Random(s);
 		size = members.size();
+		timeLimit = (int)t;
 		ratioToGo = 1.0 / size;
 		return avatars;
 	}
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
+		++time;
 
 		Double min_dist = Double.MAX_VALUE;
 		List<Animal> monkeys = new ArrayList<>();
@@ -80,7 +84,7 @@ public class Player implements lunch.sim.Player
                     break;
 			}
 			Point start = new Point(ps.get_location());
-			Command res = getMove(start, dest);
+			Command res = getMove(start, dest, ps);
 			if (res == null) {
 				inPosition = true;
 			}
@@ -89,8 +93,18 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		// if the player almost finished food
-		if (getUnfinishedFood(ps).size() == 1) {
+		// if there is not enough time for distractor to finish food, go to corner
+		if (isDistractor && currentRatio <= 0.4 && time >= 1.2*timeLimit / 3) {
+			Point dest = new Point(50, 50);
+			Command res = getMove(ps.get_location(), dest, ps);
+			if (res != null) {
+				return res;
+			}
+			isDistractor = false;
+		}
+
+		// if the player almost finished food, and there is sufficient time to distract
+		if (currentRatio >= 0.8 && timeLimit - time >= 500) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             switch (this.id % 5) {
@@ -110,7 +124,7 @@ public class Player implements lunch.sim.Player
                     dest = new Point(-20, -20);
                     break;
             }
-            Command res = getMove(ps.get_location(), dest);
+            Command res = getMove(ps.get_location(), dest, ps);
             if (res != null) {
                 return res;
             }
@@ -224,8 +238,8 @@ public class Player implements lunch.sim.Player
 	// get all food type, sorted by scores, from high to low
 	private ArrayList<FoodType> getAllFood() {
 		ArrayList<FoodType> result = new ArrayList<>(Arrays.asList(
-				FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
-				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2
+				FoodType.COOKIE, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
+				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2, FoodType.EGG
 		));
 		return result;
 	}
@@ -279,9 +293,12 @@ public class Player implements lunch.sim.Player
 	}
 
 	// returns a valid move command from start to dest, if already in dest, return null
-	public Command getMove(Point start, Point dest) {
+	public Command getMove(Point start, Point dest, PlayerState ps) {
 		if (Math.abs(Point.dist(start, dest)) <= 0.00001) {
 			return null;
+		}
+		if (ps.get_held_item_type() != null) {
+			return new Command(CommandType.KEEP_BACK);
 		}
 		double dist = Math.sqrt(Math.pow(dest.x - start.x, 2) + Math.pow(dest.y - start.y, 2));
 		if (dist <= 1.0)
@@ -301,29 +318,15 @@ public class Player implements lunch.sim.Player
 		FoodType cur = foodType.get(0);
 		double distMonkey = Integer.MAX_VALUE;
 		double distGeese = Integer.MAX_VALUE;
-		int numGeese = 0;
-		int numMonkeys = 0;
+		int rangeGeese = isDistractor ? 0 : 25;
+		int rangeMonkeys = isDistractor ? 3 : 30;
 		if (monkeys.size() >= 3) {
 			distMonkey = Point.dist(monkeys.get(2).get_location(), ps.get_location());
 		}
 		if (!geese.isEmpty()) {
 			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
 		}
-		for (Animal m : monkeys) {
-			Point playerLoc = ps.get_location();
-			Point monkeyLoc = m.get_location();
-			if (Point.dist(playerLoc, monkeyLoc) <= 40) {
-				numMonkeys++;
-			}
-		}
-		for (Animal g : geese) {
-			Point playerLoc = ps.get_location();
-			Point gooseLoc = g.get_location();
-			if (Point.dist(playerLoc, gooseLoc) <= 20) {
-				numGeese++;
-			}
-		}
-		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= 15) && distMonkey >= 10;
+		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
 

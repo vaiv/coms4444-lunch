@@ -15,7 +15,8 @@ public class Player implements lunch.sim.Player {
     // members: other family members collborating with your player.
     // members_count: Number of family members.
     // t: Time limit for simulation.
-
+    private FoodType foodToPull;
+    private double THRESHOLD = 6.5;
     public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         return new String("");
     };
@@ -37,12 +38,13 @@ public class Player implements lunch.sim.Player {
                 if (shouldFinishRemoving(animals, ps)) {
                     return new Command(CommandType.WAIT);
                 } else {
-                    return new Command(CommandType.KEEP_BACK);
+                    return new Command(CommandType.ABORT);
                 }
             } else {
                 // Are we in a corner? Yes -> select food
-                if (inCorner(ps)) {
-                    return Command.createRetrieveCommand(selectFood(ps));
+                if (inCorner(ps) && startPullOut(animals, ps)) {
+                    this.foodToPull = selectFood(ps);
+                    return Command.createRetrieveCommand(this.foodToPull);
                 } else {
                     return Command.createMoveCommand(getNextMoveToCorner(ps));
                 }
@@ -59,19 +61,32 @@ public class Player implements lunch.sim.Player {
         else if (ps.check_availability_item(FoodType.SANDWICH1)) return FoodType.SANDWICH1;
         else return null;
     }
-
+    public boolean startPullOut(ArrayList<Animal> animals, PlayerState ps) {
+        int monkeysNear = 0;
+        for(Animal animal : animals) {
+            if(animal.which_animal() == AnimalType.MONKEY) {
+                if(dist(animal.get_location(), ps.get_location()) < 35) {
+                    monkeysNear++;
+                    if(monkeysNear > 2) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
     public boolean shouldStopEating(ArrayList<Animal> animals, PlayerState ps) {
         int dangerMonkeys = 0;
         for (Animal animal : animals) {
             if(animal.which_animal() == AnimalType.GOOSE) {
-                if(ps.get_held_item_type() == FoodType.SANDWICH && distToAnimal(animal, ps) <= 6) {
+                if(ps.get_held_item_type() == FoodType.SANDWICH && dist(animal.get_location(), ps.get_location()) <= THRESHOLD) {
                     return true;
                 }
             } else {
                 //monkey
-                if(distToAnimal(animal, ps) <= 6) {
+                if(dist(animal.get_location(), ps.get_location()) <= THRESHOLD) {
                     dangerMonkeys++;
-                    if(dangerMonkeys == 3) {
+                    if(dangerMonkeys >= 3) {
                         return true;
                     }
                 }
@@ -84,22 +99,27 @@ public class Player implements lunch.sim.Player {
         int secondsRemaining = ps.time_to_finish_search(); //Will be used later
         int dangerMonkeys = 0;
         for (Animal animal : animals) {
-            if(animal.which_animal() == AnimalType.GOOSE) {
+            if(animal.which_animal() == AnimalType.GOOSE && this.foodToPull == FoodType.SANDWICH) {
                 //TODO: check if we're pulling out a sandwich
-                if(distToAnimal(animal, ps) <= 6) {
+                if(dist(animal.get_location(), ps.get_location()) <= THRESHOLD) {
                     return false;
                 }
             } else {
                 //monkey
-                if(distToAnimal(animal, ps) <= 6) {
+                if(dist(animal.get_location(), ps.get_location()) <= THRESHOLD) {
                     dangerMonkeys++;
-                    if(dangerMonkeys == 3) {
+                    if(dangerMonkeys >= 3) {
                         return false;
                     }
                 }
             }
         }
         return true;
+    }
+
+    public static double dist(Point a, Point b)
+    {
+        return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
     }
 
     public double distToAnimal(Animal animal, PlayerState ps) {
