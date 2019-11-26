@@ -82,6 +82,7 @@ public class Player implements lunch.sim.Player {
      * @return
      */
     private static Command tryToEat(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
+        
         // Find time until geese / monkeys can snatch food
         double geeseTime = Helper.getGeeseTime(animals, prev_animals, ps);
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
@@ -114,7 +115,7 @@ public class Player implements lunch.sim.Player {
             boolean cond2 = (monkeyTime <= 1.0);
             boolean cond3a = !shouldDistract;
             boolean cond3b = (ps.get_held_item_type() == FoodType.FRUIT);
-            boolean cond3c = (ps.get_time_for_item(FoodType.FRUIT2) <= 115);
+            boolean cond3c = false; //(ps.get_time_for_item(FoodType.FRUIT2) <= 115);
             boolean cond3 = cond3a && cond3b && cond3c;
             if (cond1 || cond2 || cond3) {
                 return new Command(CommandType.KEEP_BACK);
