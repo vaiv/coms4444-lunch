@@ -16,13 +16,14 @@ public class EatingStatus {
     private HashMap<FoodType, Integer> foodTimeConstants;
 
     private ArrayList<HashMap<FoodType, Integer>> previousEatingStatus;
+    private ArrayList<FoodType> previousVisibilities = new ArrayList<>();
 
     public EatingStatus() {
         this.foodTimeConstants = new HashMap<FoodType, Integer>();
-        this.foodTimeConstants.put(FoodType.SANDWICH, 360);
-        this.foodTimeConstants.put(FoodType.FRUIT, 240);
-        this.foodTimeConstants.put(FoodType.EGG, 120);
-        this.foodTimeConstants.put(FoodType.COOKIE, 60);
+        this.foodTimeConstants.put(FoodType.SANDWICH, 360-2);
+        this.foodTimeConstants.put(FoodType.FRUIT, 240-2);
+        this.foodTimeConstants.put(FoodType.EGG, 120-1);
+        this.foodTimeConstants.put(FoodType.COOKIE, 60-1);
     }
 
     /**
@@ -40,7 +41,6 @@ public class EatingStatus {
                 Integer seconds = dict.get(food);
                 Integer maxSeconds = foodTimeConstants.get(food);
                 Double percentage = seconds * 1.0 / maxSeconds;
-//                percentage = Math.min(percentage, 1.0);
                 memberStatus.put(food, percentage);
             }
             eatingStatus.add(memberStatus);
@@ -62,6 +62,12 @@ public class EatingStatus {
         // Go through each family member and predict the command
         for (int i = 0; i < members.size(); i++) {
             HashMap<FoodType, Integer> memberStatus;
+            FoodType previousVisibility = null;
+            if(previousVisibilities != null && i < previousVisibilities.size()) {
+                previousVisibility = previousVisibilities.get(i);
+            } else {
+                previousVisibilities.add(null);
+            }
             if(previousEatingStatus != null && members.size() == previousEatingStatus.size()) {
                 HashMap<FoodType, Integer> previousMemberStatus = previousEatingStatus.get(i);
                 memberStatus = new HashMap<>(previousMemberStatus);
@@ -78,7 +84,12 @@ public class EatingStatus {
             Point previousLocation = previousMember.get_location();
             if(Point.dist(currentLocation, previousLocation) < 0.01) {
                 FoodType heldFoodType = member.get_held_item_type();
-                if(heldFoodType != null) {
+                Boolean previousStatus = false;
+                if(previousVisibility != null) {
+                    previousStatus = previousVisibility == heldFoodType;
+                }
+                previousVisibilities.set(i, heldFoodType);
+                if(previousStatus && heldFoodType != null && member.check_visible_item()) {
                     memberStatus.put(heldFoodType, memberStatus.get(heldFoodType) + 1);
                 }
             }
