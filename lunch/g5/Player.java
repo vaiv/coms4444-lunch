@@ -25,6 +25,7 @@ public class Player implements lunch.sim.Player
     private ArrayList<Animal> previousAnimals;
     private ArrayList<Family> previousMembers;
     private GreedyEater greedyEater;
+    private GeeseShield geeseShield;
 
 	private DistractionStrategy mDistraction;
 
@@ -55,6 +56,8 @@ public class Player implements lunch.sim.Player
     {
         Command command = greedyEater.getCommandCornerEating(
             members, animals, ps, previousAnimals, turn);
+//        Command command = geeseShield.getCommandGeeseShield(
+//                members, animals, previousAnimals, ps, turn);
         System.out.println(command.get_type());
         previousAnimals = animals;
         previousMembers = members;

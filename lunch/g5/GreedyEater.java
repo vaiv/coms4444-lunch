@@ -38,8 +38,10 @@ public class GreedyEater {
 	public GreedyEater() {
 		super();
 		// choose a corner randomly
-		this.cornerX = Math.random() > 0.5 ? 1 : -1;
-		this.cornerY = Math.random() > 0.5 ? 1 : -1;
+		do {
+			this.cornerX = Math.random() > 0.5 ? 1 : -1;
+			this.cornerY = Math.random() > 0.5 ? 1 : -1;
+		} while(cornerX == 1 && cornerY == 1);
 		moving = false;
 		this.matrixPredictor = new MatrixPredictor(monkeyDangerDistance, geeseDangerDistance, bufferLookahead);
 		this.eatingOrder = new FoodType[] { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2,
@@ -52,9 +54,6 @@ public class GreedyEater {
 	public Command getCommandCornerEating(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps,
 			ArrayList<Animal> previousAnimals, int totalTurn) {
 		turn++;
-//		System.out.println(coolingTime);
-//		System.out.println(ps.get_location().x);
-//		System.out.println(ps.get_location().y);
 		// move to the corner
 		if (turn <= 70) {
 //			System.out.println("moving to corner");
@@ -75,9 +74,7 @@ public class GreedyEater {
 		// danger
 		// [surrounded by monkey] or [has close goose while holding or searching
 		// sandwich]
-		if (Utilities.monkey_surround(animals, ps.get_location()) || (Utilities.goose_close(animals, ps.get_location())
-				&& (ps.get_held_item_type() == FoodType.SANDWICH || (ps.is_player_searching()
-						&& (searching == FoodType.SANDWICH1 || searching == FoodType.SANDWICH2))))) {
+		if (Utilities.dangerous(ps, animals, searching)) {
 			if(Utilities.monkey_surround(animals, ps.get_location()))
 				coolingTime = 35;
 			// abort if searching
@@ -122,7 +119,7 @@ public class GreedyEater {
 		int x = (int) ps.get_location().x;
 		int y = (int) ps.get_location().y;
 		if (turn == 71) {
-			// Go to an integer position in the first turn
+			// Go to an integer position
 			Point p = new Point(x, y);
 			return Command.createMoveCommand(p);
 		}
