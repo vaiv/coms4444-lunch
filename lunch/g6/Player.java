@@ -154,7 +154,7 @@ public class Player implements lunch.sim.Player {
         // No food in hand
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
-            minTime += 10; 
+           // minTime += 10; 
             if ((!ps.check_availability_item(FoodType.EGG))) {
                 // Due to ordering, this check implies eating a sandwich
                 if ((geeseTime > minTime) && (monkeyTime > minTime)) {
