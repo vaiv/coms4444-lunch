@@ -24,7 +24,7 @@ import lunch.sim.PlayerState;
  * Represents a COMS 4444 player that is having lunch
  *
  */
-public class Player implements lunch.sim.Player {
+public class Player4 implements lunch.sim.Player {
 	private Random random;
 	private Integer id;
 	private Integer turn;
@@ -32,8 +32,6 @@ public class Player implements lunch.sim.Player {
 	private String avatars;
 	private List<Animal> monkeys = new ArrayList<>();
 	private List<Animal> geese = new ArrayList<>();
-	private List<Trajectory> monkeyTrajectories = new ArrayList<>();
-	private List<Trajectory> geeseTrajectories = new ArrayList<>();
 	private List<Point> targetCorners = Arrays.asList(new Point[]{
 			new Point(-50, -50), // Top-left corner
 			new Point(1, -50),	 // Top center
@@ -56,7 +54,7 @@ public class Player implements lunch.sim.Player {
 	/**
 	 * Player constructor
 	 */
-	public Player() {
+	public Player4() {
 		turn = 0;
 	}
 
@@ -80,18 +78,6 @@ public class Player implements lunch.sim.Player {
 		this.totalTime = t;
 		avatars = "flintstone";
 		random = new Random();
-		
-		monkeyTrajectories = new ArrayList<>();
-		geeseTrajectories = new ArrayList<>();
-
-		for(Animal animal : animals) {
-			if(animal.which_animal() == AnimalType.MONKEY) {
-				monkeyTrajectories.add(new Trajectory(animal.get_location(), true));
-			}
-			else if(animal.which_animal() == AnimalType.GOOSE)
-				geeseTrajectories.add(new Trajectory(animal.get_location(), false));
-		}
-		
 		return avatars;
 	}
 	
@@ -110,25 +96,6 @@ public class Player implements lunch.sim.Player {
 	 */
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
 
-		int monkeyIndex = 0;
-		int gooseIndex = 0;
-		int monkeyInRange = 0;
-		int geeseInRange = 0;
-		for(Animal animal : animals) {
-			if(animal.which_animal() == AnimalType.MONKEY) {
-				monkeyTrajectories.get(monkeyIndex).update(animal.get_location());
-				if(!monkeyTrajectories.get(monkeyIndex).isFar(ps.get_location()))
-					monkeyInRange++;
-				monkeyIndex++;
-			}
-			else if(animal.which_animal() == AnimalType.GOOSE) {
-				geeseTrajectories.get(gooseIndex).update(animal.get_location());
-				if(!geeseTrajectories.get(gooseIndex).isFar(ps.get_location()))
-					geeseInRange++;
-				gooseIndex++;
-			}
-		}
-		
 		// Assign a corner for the player to move to based on family members' locations
 		Point currPoint = ps.get_location();
 		Point targetCorner = new Point(-1, -1);
@@ -270,10 +237,6 @@ public class Player implements lunch.sim.Player {
 			foodCurrentlySearchingFor = null;						
 			if(foodType != null) {
 				
-				boolean usePrediction = true;
-				if(monkeyInRange > 2)
-					usePrediction = false;
-				
 				double thirdClosestMonkeyDist = Double.MAX_VALUE;
 				if(monkeys.size() > 0)
 					thirdClosestMonkeyDist = Point.dist(ps.get_location(), monkeys.get((int) Math.min(monkeys.size() - 1, 2)).get_location());
@@ -284,7 +247,7 @@ public class Player implements lunch.sim.Player {
 				
 				// Take out the food item if it is not a sandwich and increase consumption time
 				if(foodType != FoodType.SANDWICH1 && foodType != FoodType.SANDWICH2) {
-					if(totalTime - turn < 500 || usePrediction) {
+					if(totalTime - turn < 500 || thirdClosestMonkeyDist > thirdClosestMonkeyThreshold) {
 						System.out.println("Player " + id + " is taking out " + foodType.name() + ".");
 						foodCurrentlySearchingFor = foodType;
 						return new Command(CommandType.TAKE_OUT, foodType);
@@ -302,7 +265,7 @@ public class Player implements lunch.sim.Player {
 					}
 					
 					// Take out the sandwich for eating
-					if(totalTime - turn < 500 || usePrediction) {
+					if(totalTime - turn < 500 || thirdClosestMonkeyDist > thirdClosestMonkeyThreshold) {
 						foodCurrentlySearchingFor = FoodType.SANDWICH;
 						return new Command(CommandType.TAKE_OUT, foodType);
 					}
@@ -346,53 +309,5 @@ public class Player implements lunch.sim.Player {
 		System.out.println("Egg is available: " + ps.check_availability_item(FoodType.EGG)); 
 		System.out.println("Sandwich 1 is available: " + ps.check_availability_item(FoodType.SANDWICH1)); 
 		System.out.println("Sandwich 2 is available: " + ps.check_availability_item(FoodType.SANDWICH2)); 
-	}
-	
-	public class Trajectory {
-		private Point location;
-		private Point v;
-		private boolean isMonkey;
-
-		public Trajectory(Point l, boolean isMonkey) {
-			this.location = l;
-			this.v = new Point(0.0, 0.0);
-			this.isMonkey = isMonkey;
-		}
-
-		public void update(Point l) {
-			Point temp = this.location;
-			this.location = l;
-			this.v.x = l.x - temp.x;
-			this.v.y = l.y - temp.y;
-		}
-
-		public Point getNext10() {
-			Point temp = new Point(0,0);
-			temp.x = location.x + v.x * 4.5;
-			temp.y = location.y + v.y * 4.5;
-
-			return temp;
-		}
-
-		// Assume that the player is in the corner for animals bouncing off the corner
-		public boolean isFar(Point l) {
-			Point temp = this.getNext10();
-
-			if(isMonkey && Point.dist(l, location) < 10.) {
-				if(temp.x > 50. || temp.x < -50. || temp.y > 50. || temp.y < -50.) {
-					return false;
-				}
-			}
-
-			double distance = Point.dist(l, temp);
-			if(this.isMonkey) {
-				if(distance > 40.) return true;
-				else return false;
-			}
-			else {
-				if(distance > 20.) return true;
-				else return false;
-			}
-		}
 	}
 }

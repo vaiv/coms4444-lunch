@@ -62,12 +62,22 @@ public class Player implements lunch.sim.Player
 
 	public ArrayList<FoodType> getPriority(){
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
+		   /* time left: 1552
 		   priorityList.add(FoodType.COOKIE);
 		   priorityList.add(FoodType.FRUIT1);
 		   priorityList.add(FoodType.FRUIT2);
-		   priorityList.add(FoodType.EGG);
 		   priorityList.add(FoodType.SANDWICH1);
 		   priorityList.add(FoodType.SANDWICH2);
+		   priorityList.add(FoodType.EGG);
+		   */
+		   
+		   // time left: 1656
+		   priorityList.add(FoodType.COOKIE);
+		   priorityList.add(FoodType.SANDWICH1);
+		   priorityList.add(FoodType.SANDWICH2);
+		   priorityList.add(FoodType.FRUIT1);
+		   priorityList.add(FoodType.FRUIT2);
+		   priorityList.add(FoodType.EGG);
 
 		   return priorityList;
 
@@ -134,7 +144,8 @@ public class Player implements lunch.sim.Player
         }
         
         // move towards corner
-        if (turn < 70 && id != members.size() - 1) {
+        //if (turn < 70 && id != members.size() - 1) {
+        if (turn < 70) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
             
@@ -250,8 +261,8 @@ public class Player implements lunch.sim.Player
         boolean[] isUnassigned = new boolean[members.size()];
         for (int i = 0; i < isUnassigned.length; i++) isUnassigned[i] = true;
 
-        // all players except for last (-1) will move to a corner
-        for (int i = 0; i < members.size() -1; i++) {
+        // all players (except for last (-1)) will move to a corner
+        for (int i = 0; i < members.size(); i++) {
             // cycle through corners for all family members
             Point corner = corners[i % 4];
 

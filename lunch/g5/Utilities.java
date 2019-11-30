@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import lunch.sim.Animal;
 import lunch.sim.AnimalType;
+import lunch.sim.FoodType;
+import lunch.sim.PlayerState;
 import lunch.sim.Point;
 
 public class Utilities {
@@ -27,5 +29,28 @@ public class Utilities {
 	public static boolean goose_close(ArrayList<Animal> animals, Point p) {
 		int near_geese = count_close_animal(animals, AnimalType.GOOSE, p, 5);
 		return near_geese > 0;
+	}
+	
+	// [surrounded by monkey] or [has close goose while holding or searching sandwich]
+	public static boolean dangerous(PlayerState ps, ArrayList<Animal> animals, FoodType searching) {
+		if(monkey_surround(animals, ps.get_location()) || (goose_close(animals, ps.get_location())
+				&& (ps.get_held_item_type() == FoodType.SANDWICH || (ps.is_player_searching()
+						&& (searching == FoodType.SANDWICH1 || searching == FoodType.SANDWICH2)))))
+				return true;
+		return false;
+	}
+	
+	// how many geese in the corner that closer to the geese shield than the player being protected
+	public static int countCornerGeese(ArrayList<Point> geese, Point corner, Point geeseShield) {
+		int cnt = 0;
+		for(Point goose: geese) {
+			if(goose == null)
+				continue;
+			if (Point.dist(corner, goose) <= 20 && Point.dist(corner, goose) > Point.dist(geeseShield, goose)) {
+				cnt++;
+			}
+		}
+		
+		return cnt;
 	}
 }

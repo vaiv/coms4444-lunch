@@ -1,4 +1,4 @@
-package lunch.g6;
+package lunch.g6Old;
 
 import java.util.Arrays;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.Random;
 import java.util.HashMap;
 
 import javafx.scene.effect.Light.Distant;
-import javafx.util.Pair; 
+import javafx.util.Pair;
 import java.util.ArrayList;
 
 import lunch.sim.Point;
@@ -345,33 +345,27 @@ public class Helper {
     }
     
     public static Command takeOutFood(PlayerState ps) {
-        // Implement priority: cookie --> non sandwich --> sandwich 
+        // Implement priority: cookie --> non sandwich --> sandwich
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
             if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
-                continue; 
+                continue;
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
             }
         }
-        return new Command(); 
+        return new Command();
     }
 
     public static boolean shouldDistract(PlayerState ps) {
-        // Implement priority: cookie --> non sandwich --> sandwich 
+        // Implement priority: cookie --> non sandwich --> sandwich
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
-        boolean fruitAvailable = false; 
-        boolean eggAvailable = false; 
+        boolean distract = true;
         for (FoodType food_type: ordered) {
-            if (food_type == FoodType.FRUIT2)
-                fruitAvailable = ps.check_availability_item(food_type);
-            if (food_type == FoodType.EGG)
-                eggAvailable = ps.check_availability_item(food_type);
+            if (food_type != FoodType.FRUIT2 && ps.check_availability_item(food_type))
+                distract = false;
         }
-        boolean distract = false;
-        if (!eggAvailable && fruitAvailable)
-            distract = true;
         return distract;
     }
 
@@ -389,7 +383,7 @@ public class Helper {
             Point closestCorner = corners.get(0);
             for (Point corner: corners){
                 if (Point.dist(curLoc, corner) < Point.dist(curLoc, closestCorner)) {
-                    closestCorner = corner; 
+                    closestCorner = corner;
                 }
                 if (!cornerMemberMap.containsKey(corner)) {
                     cornerMemberMap.put(corner, new ArrayList<Family>());
@@ -397,17 +391,17 @@ public class Helper {
             }
             cornerMemberMap.get(closestCorner).add(f);
         }
-        Point sparsestCorner = null; 
-        int nearbyFamily = Integer.MAX_VALUE; 
-        // Find sparseness of sparsest corner 
+        Point sparsestCorner = null;
+        int nearbyFamily = Integer.MAX_VALUE;
+        // Find sparseness of sparsest corner
         for (Point corner: cornerMemberMap.keySet()) {
             if (cornerMemberMap.get(corner).size() < nearbyFamily || sparsestCorner == null) {
-                nearbyFamily = cornerMemberMap.get(corner).size(); 
-                sparsestCorner = corner; 
+                nearbyFamily = cornerMemberMap.get(corner).size();
+                sparsestCorner = corner;
             }
         }
-        // If multiple corners equally sparse, choose one at random 
-        ArrayList<Point> sparsest = new ArrayList<>(); 
+        // If multiple corners equally sparse, choose one at random
+        ArrayList<Point> sparsest = new ArrayList<>();
         for (Point corner: cornerMemberMap.keySet()) {
             if (cornerMemberMap.get(corner).size() == nearbyFamily || sparsestCorner == null) {
                 sparsest.add(corner);
@@ -415,9 +409,9 @@ public class Helper {
         }
         if (sparsest.size() > 1) {
             int test = Math.abs(r.nextInt()%sparsest.size());
-            sparsestCorner = sparsest.get(test); 
+            sparsestCorner = sparsest.get(test);
         }
-        return sparsestCorner; 
+        return sparsestCorner;
     }
     
 }
