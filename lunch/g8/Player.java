@@ -139,4 +139,14 @@ public class Player implements lunch.sim.Player {
         return numMonkeys / family.size();
     }
 
+    private int getGeeseDensity() {
+        int numGeese = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.GOOSE) {
+                numGeese++;
+            }
+        }
+        return numGeese / family.size();
+    }
+
 }
