@@ -46,6 +46,8 @@ public class Player implements lunch.sim.Player {
         this.nFamily = f;
         this.random = new Random(this.seed);
 
+        this.previousAnimals = animals;
+        this.previousMembers = members;
         this.greedyEater = new GreedyEater();
         this.mDistraction = new DistractionStrategy();
         this.familyBehaviorPredictor = new FamilyBehaviorPredictor(f, m);
@@ -173,7 +175,7 @@ public class Player implements lunch.sim.Player {
         // Depending on the type generate the appropriate command
         switch (type) {
             case DISTRACTION:
-                command = mDistraction.getCommand(members, animals, ps);
+                command = mDistraction.getCommand(members, animals, previousAnimals, ps);
                 break;
             case GEESE_SHIELD:
                 command = geeseShield.getCommandGeeseShield(members, animals, previousAnimals, ps, turn);
