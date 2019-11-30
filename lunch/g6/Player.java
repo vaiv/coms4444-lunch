@@ -50,7 +50,7 @@ public class Player implements lunch.sim.Player {
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
-        
+        // shouldDistract = False
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
