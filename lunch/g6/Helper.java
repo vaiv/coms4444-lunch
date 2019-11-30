@@ -371,21 +371,16 @@ public class Helper {
                 closest = f;
             }
         }
-        if (closest.get_id() == id) return true; 
-        // OLD version, not dynamic 
-        // // Implement priority: cookie --> non sandwich --> sandwich 
-        // FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
-        // boolean fruitAvailable = false; 
-        // boolean eggAvailable = false; 
-        // for (FoodType food_type: ordered) {
-        //     if (food_type == FoodType.FRUIT2)
-        //         fruitAvailable = ps.check_availability_item(food_type);
-        //     if (food_type == FoodType.EGG)
-        //         eggAvailable = ps.check_availability_item(food_type);
-        // }
-        // boolean distract = false;
-        // if (!eggAvailable && fruitAvailable)
-        //     distract = true;
+        if (closest.get_id() == id) distract = true; 
+        // Check if someone is there to relieve you
+        for (Family f: members){
+            if (f.get_id() == id) continue; 
+            Point curLoc = f.get_location();
+            if (curLoc.x > 10 && curLoc.y > 10){
+                distract = false;
+            }
+        }
+        
         return distract;
     }
 

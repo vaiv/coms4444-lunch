@@ -49,8 +49,7 @@ public class Player implements lunch.sim.Player {
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        shouldDistract = !Helper.shouldDistract(members, ps, random, this.id);
-        
+        shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -62,7 +61,7 @@ public class Player implements lunch.sim.Player {
             corner = new Point(-50, -50); //Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress
 
-        Point location = shouldDistract ? corner : new Point(50, 50);
+        Point location = !shouldDistract ? corner : new Point(50, 50);
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
@@ -90,6 +89,7 @@ public class Player implements lunch.sim.Player {
         // No food in hand
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
+            minTime += 10; 
             if ((!ps.check_availability_item(FoodType.EGG))) {
                 // Due to ordering, this check implies eating a sandwich
                 if ((geeseTime > minTime) && (monkeyTime > minTime)) {
@@ -113,11 +113,7 @@ public class Player implements lunch.sim.Player {
         else if (ps.get_held_item_type() != null) {
             boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
             boolean cond2 = (monkeyTime <= 1.0);
-            boolean cond3a = !shouldDistract;
-            boolean cond3b = (ps.get_held_item_type() == FoodType.FRUIT);
-            boolean cond3c = false; //(ps.get_time_for_item(FoodType.FRUIT2) <= 115);
-            boolean cond3 = cond3a && cond3b && cond3c;
-            if (cond1 || cond2 || cond3) {
+            if (cond1 || cond2) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return new Command(CommandType.EAT);
