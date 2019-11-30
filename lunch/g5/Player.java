@@ -28,6 +28,7 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Family> previousMembers;
     private GreedyEater greedyEater;
     private GeeseShield geeseShield;
+    private SandwichFlasher sandwichFlasher;
 
     private DistractionStrategy mDistraction;
 
@@ -51,6 +52,7 @@ public class Player implements lunch.sim.Player {
         this.greedyEater = new GreedyEater();
         this.mDistraction = new DistractionStrategy();
         this.familyBehaviorPredictor = new FamilyBehaviorPredictor(f, m);
+        this.sandwichFlasher = new SandwichFlasher();
 
         mDistraction.init(members, id, f, animals, m, g, t, s);
         return "guardians";
@@ -178,8 +180,11 @@ public class Player implements lunch.sim.Player {
                 command = mDistraction.getCommand(members, animals, previousAnimals, ps);
                 break;
             case GEESE_SHIELD:
-                command = geeseShield.getCommandGeeseShield(members, animals, previousAnimals, ps, turn);
+                command = geeseShield.getCommandGeeseShield(members, animals, ps, previousAnimals, turn);
                 break;
+            case SANDWICH_FLASHING:
+            		command = sandwichFlasher.getCommandSandwichFlasher(members, animals, ps);
+            		break;
             default:
             case AGGRESSIVE:
                 command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
