@@ -58,7 +58,7 @@ public boolean check_visible_item()
 
 public Integer get_id()
 {
-	return this.ID;
+	return ID;
 }
 
 // public void update_location(Point p)
