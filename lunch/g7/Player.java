@@ -92,9 +92,12 @@ public class Player implements lunch.sim.Player
 				return res;
 			}
 		}
-
+        double ratioForTime = monkeys.size() >= 100 ? 0.8 : 0.5;
 		// if there is not enough time for distractor to finish food, go to corner
-		if (isDistractor && currentRatio <= 0.4 && time >= 0.5 * timeLimit) {
+		if (isDistractor && currentRatio <= 0.4 && time >= ratioForTime * timeLimit) {
+		    if (ps.is_player_searching() && ps.get_held_item_type() == null) {
+		        return new Command(CommandType.ABORT);
+            }
 			Point dest = new Point(50, -50);
 			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
