@@ -91,7 +91,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if there is not enough time for distractor to finish food, go to corner
-		if (isDistractor && currentRatio <= 0.4 && time >= 0.4 * timeLimit) {
+		if (isDistractor && currentRatio <= 0.4 && time >= 0.5 * timeLimit) {
 			Point dest = new Point(50, -50);
 			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
@@ -101,7 +101,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if the player almost finished food, and there is sufficient time to distract
-		if (currentRatio >= 0.8 && timeLimit - time >= 500) {
+		if (currentRatio >= 0.95 && timeLimit - time >= 500) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             switch (this.id % 4) {
@@ -204,6 +204,10 @@ public class Player implements lunch.sim.Player
 		// if no animal in vicinity then take a bite
 		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
+			// if almost finished food, flash it to distract until the last seconds
+			if (currentRatio >= 0.995 && timeLimit - time > 200) {
+				return new Command();
+			}
 			currentRatio += 1.0 / totalFoodTime;
 			return new Command(CommandType.EAT);
 		}
@@ -232,8 +236,8 @@ public class Player implements lunch.sim.Player
 	// get all food type, sorted by scores, from high to low
 	private ArrayList<FoodType> getAllFood() {
 		ArrayList<FoodType> result = new ArrayList<>(Arrays.asList(
-				FoodType.COOKIE, FoodType.FRUIT, FoodType.FRUIT1, FoodType.FRUIT2,
-				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2, FoodType.EGG
+				FoodType.COOKIE, FoodType.FRUIT, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2,
+				FoodType.SANDWICH, FoodType.SANDWICH1, FoodType.SANDWICH2
 		));
 		return result;
 	}
