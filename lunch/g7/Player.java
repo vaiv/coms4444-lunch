@@ -93,10 +93,10 @@ public class Player implements lunch.sim.Player
 			}
 		}
         double ratioForTime = 0.65;
-		if (monkeys.size() < 50)
+		if (monkeys.size() <= 50)
 			ratioForTime = 0.5;
-		else if (monkeys.size() < 100)
-			ratioForTime = 0.65;
+		else if (monkeys.size() <= 100)
+			ratioForTime = 0.60;
 		else
 			ratioForTime = 0.75;
 		// if there is not enough time for distractor to finish food, go to corner
