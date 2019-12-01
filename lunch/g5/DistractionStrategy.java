@@ -35,8 +35,7 @@ public class DistractionStrategy {
     }
 
     public Command executeStrategy(PlayerState ps) {
-        return this.status.executeStrategy(ps);
-
+        return (this.status==null)? new Command() : this.status.executeStrategy(ps);
     }
 
     public boolean validateStrategy(ArrayList<Animal> animals, Point src) {
@@ -85,27 +84,9 @@ public class DistractionStrategy {
         return true;
     }
 
-    public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> prevanimals,
-            PlayerState ps) {
-
-        // if (this.status != null)
-        // Log.log(this.status.toString());
-        // else
-        // Log.log("Null status " + this.validateStrategy());
-        if (this.validateStrategy(animals, ps.get_location())) {
-            Command command = this.executeStrategy(ps);
-            return command;
-        }
-
-        Point playerPos = ps.get_location();
-
-        // If Player has non-integer co-ordinates, move to integer location
-        if (playerPos.x - Math.round(playerPos.x) > 1e-5 || playerPos.y - Math.round(playerPos.y) > 1e-5) {
-            return Command.createMoveCommand(new Point(Math.round(playerPos.x), Math.round(playerPos.y)));
-        }
-
-        long time1 = System.nanoTime();
-
+    public DistractionStatus generateDistractionStrategy(ArrayList<Family> members, ArrayList<Animal> animals,
+            ArrayList<Animal> prevanimals, Point playerPos, Boolean eatFood) {
+        
         // Get current player position in integers
         Integer x = (int) (Math.round(playerPos.x));
         Integer y = (int) (Math.round(playerPos.y));
@@ -117,16 +98,6 @@ public class DistractionStrategy {
         // Get positions and directions of monkeys
         ArrayList<ArrayList<Point>> posEstimate = DistractionUtilities.predictNotNull(prevanimals, animals, playerPos,
                 20);
-
-        // Log.log("posEstimate size = " + posEstimate.size());
-        // for (int t = 0; t < posEstimate.size(); t++) {
-        // String tmp = "";
-        // for (Point p : posEstimate.get(t))
-        // tmp += String.format("(%.1f, %.1f), ", p.x, p.y);
-        // Log.log(String.format("T = %d\n[%s]", t, tmp));
-        // }
-
-        long time2 = System.nanoTime();
 
         // Only consider a few starting positions to avoid timeout
         int consideredCount = 0;
@@ -152,7 +123,6 @@ public class DistractionStrategy {
         for (int t = 0; t < posEstimate.size() - 10; t++) {
             ArrayList<Point> monkeyPositions = posEstimate.get(t + 10);
 
-            // TODO: Sort by eating time
             for (int i = -t; i <= t; i++) {
                 if (x + i < 0 || x + i > 50)
                     continue;
@@ -173,8 +143,6 @@ public class DistractionStrategy {
         }
 
         startingPositions.sort((o1, o2) -> o1.buffer - o2.buffer);
-
-        // Log.log("Starting Position Size : " + startingPositions.toString());
 
         for (Temporary positionPair : startingPositions) {
             consideredCount++;
@@ -201,18 +169,61 @@ public class DistractionStrategy {
                 break;
         }
 
-        long time3 = System.nanoTime();
+        return bestStrategy;
+    }
 
-        this.status = bestStrategy;
+    /**
+     * Reset pre-calculated distraction strategy
+     */
+    public void resetDistractionStrategy(){
+        this.status = null;
+    }
+
+    /**
+     * Redirect food to player
+     * @param playerLoc
+     * @param ps
+     * @return number of steps required to redirect monkeys to the player
+     */
+    public Integer redirectToPlayer(Point playerLoc, PlayerState ps){
+
+        return 0;
+    }
+
+    /**
+     * 
+     * @param members
+     * @param animals
+     * @param prevanimals
+     * @param ps
+     * @param eatFood Boolean on whether to eat or not
+     * @return
+     */
+    public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> prevanimals,
+            PlayerState ps, Boolean eatFood) {
+
+        // Reset to bottom right integer co-ordinate
+        Point playerPos = ps.get_location();
+
+        // If Player has non-integer co-ordinates, move to integer location
+        if (playerPos.x - Math.round(playerPos.x) > 1e-5 || playerPos.y - Math.round(playerPos.y) > 1e-5) {
+            return Command.createMoveCommand(new Point(Math.round(playerPos.x), Math.round(playerPos.y)));
+        }
+
+        if (playerPos.x < 0 || playerPos.y < 0){
+            Double newX = playerPos.x + (playerPos.x < playerPos.y ? 1.0 : 0.0);
+            Double newY = playerPos.y + (playerPos.x >= playerPos.y ? 1.0 : 0.0);
+            return Command.createMoveCommand(new Point(newX, newY));
+        }
+        
+        if (!this.validateStrategy(animals, playerPos))
+            this.generateDistractionStrategy(members, animals, prevanimals, playerPos, eatFood);
 
         // Log.log("DEBUG : Timed predictNotNull(" + (double) (time2 - time1) / 1e9 + ")
         // simulateWalk("
         // + (double) (time3 - time2) / 1e9 + ") consideredCount(" +
         // startingPositions.size() + ")");
-        if (this.validateStrategy(animals, ps.get_location())) {
-            // Log.log("Strategy discovered : " + this.status.toString());
-            return this.executeStrategy(ps);
-        }
-        return new Command();
+
+        return this.executeStrategy(ps);
     }
 }
