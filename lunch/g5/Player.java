@@ -18,6 +18,8 @@ public class Player implements lunch.sim.Player {
     private Integer id;
     private Integer turn;
     private Integer nFamily;
+    private Integer nMonkeys;
+    private Integer overallTime;
 
     MatrixPredictor matrixPredictor;
     EatingStatus eatingStatus;
@@ -29,6 +31,10 @@ public class Player implements lunch.sim.Player {
     private GreedyEater greedyEater;
     private GeeseShield geeseShield;
     private SandwichFlasher sandwichFlasher;
+
+    private BehaviorType previousBehaviourType = BehaviorType.AGGRESSIVE;
+    private boolean beAggressiveTillTheEnd = false;
+    private int nTimestepsWithNoDistractor = 0;
 
     private DistractionStrategy mDistraction;
 
@@ -45,6 +51,8 @@ public class Player implements lunch.sim.Player {
         this.seed = s;
 
         this.nFamily = f;
+        this.overallTime = (int)Math.round(t);
+        this.nMonkeys = m;
         this.random = new Random(this.seed);
 
         this.previousAnimals = animals;
@@ -67,10 +75,10 @@ public class Player implements lunch.sim.Player {
             }
             BehaviorType behaviorType = familyBehavior.get(i);
             if (behaviorType == BehaviorType.DISTRACTION) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private boolean didEveryoneEat(ArrayList<Family> members, PlayerState ps) {
@@ -91,13 +99,26 @@ public class Player implements lunch.sim.Player {
     }
 
     private boolean weHaveEatenOurFood(PlayerState ps) {
-        // TODO: Get this state from aggressive player.
-        return false;
+        HashMap<FoodType, Integer> es = EatingStatus.getEatingStatusLeft(ps);
+        for (FoodType food : es.keySet()) {
+            if (es.get(food) > 1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean weHaveOnlySandwiches(PlayerState ps) {
-        // TODO: Get this state from aggressive player.
-        return false;
+        HashMap<FoodType, Integer> es = EatingStatus.getEatingStatusLeft(ps);
+        for (FoodType food : es.keySet()) {
+            if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
+                continue;
+            }
+            if (es.get(food) > 1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean everyoneHasOnlySandwiches(ArrayList<Family> members) {
@@ -113,43 +134,71 @@ public class Player implements lunch.sim.Player {
         return true;
     }
 
-    private boolean someoneIsInTheCornerEatingSandwich(ArrayList<Family> members, PlayerState ps) {
-        // TODO: Implement
-        return false;
-    }
-
     private boolean weWillBeAbleToFinishSandwich(PlayerState ps) {
         // TODO: Implement
         return true;
     }
 
+    private boolean weAreDistracting() {
+        return previousBehaviourType == BehaviorType.DISTRACTION;
+    }
+
+    private int timeLeft() {
+        return overallTime - turn;
+    }
+
     public BehaviorType getNextBehaviorType(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        // If this is first turn => just go aggresive
-        if (turn == 1) {
+        // Zero it down if we are distracting
+        if(weAreDistracting()) {
+            nTimestepsWithNoDistractor = 0;
+        }
+        // Remember the number of steps with no distractor
+        if (!weAreDistracting() && noDistractor(members, animals, ps)) {
+            nTimestepsWithNoDistractor += 1;
+        }
+        // Check if we have decided to be aggressive till the end
+        if (beAggressiveTillTheEnd) {
             return BehaviorType.AGGRESSIVE;
         }
         // If we are alone => go aggressive
         if (nFamily == 1) {
             return BehaviorType.AGGRESSIVE;
         }
+        // Check if overall time is small
+        if (overallTime <= 1200) {
+            // If there are not too many monkeys => go aggresive
+            if (nMonkeys < 100 || nFamily <= 4) {
+                return BehaviorType.AGGRESSIVE;
+            } else {
+                return BehaviorType.DISTRACTION;
+            }
+        }
+        // If we have little food that needs to be eaten (1 seconds) && there is less than 100 seconds left?
+        if (weHaveEatenOurFood(ps) && timeLeft() < 200) {
+            beAggressiveTillTheEnd = true;
+            return BehaviorType.AGGRESSIVE;
+        }
         // If everyone ate => go aggressive
         if (didEveryoneEat(members, ps)) {
             return BehaviorType.AGGRESSIVE;
         }
+        // Check if we are distacting
+        if (weAreDistracting()) {
+            if (!weHaveOnlySandwiches(ps)) {
+                if (timeLeft() < 900) {
+                    beAggressiveTillTheEnd = true;
+                    return BehaviorType.DUMP_MONKEYS;
+                }
+            }
+        }
         // Is there is no other distractor => go be one
-        if (noDistractor(members, animals, ps)) {
+        if(weAreDistracting() || nTimestepsWithNoDistractor >= 10) {
             return BehaviorType.DISTRACTION;
         }
         // Check if we have eaten our food
         if (weHaveEatenOurFood(ps)) {
             if (everyoneHasOnlySandwiches(members)) {
-                // If someone is eating a sandwich in the corner => geese shild
-                if (someoneIsInTheCornerEatingSandwich(members, ps)) {
-                    return BehaviorType.GEESE_SHIELD;
-                } else {
-                    // If there are uneaten sandwiches, but noone is in the corner => we can't help from geese => monkey distraction
-                    return BehaviorType.DISTRACTION;
-                }
+                return BehaviorType.SANDWICH_FLASHING;
             }
         } else {
             // We have not eaten our food
@@ -160,7 +209,7 @@ public class Player implements lunch.sim.Player {
                     return BehaviorType.AGGRESSIVE;
                 } else {
                     // If we know we can't finish our sandwich => help other's => geese shield
-                    return BehaviorType.GEESE_SHIELD;
+                    return BehaviorType.SANDWICH_FLASHING;
                 }
             } else {
                 // If we still have food that is not sandwiches left => aggresive
@@ -179,18 +228,16 @@ public class Player implements lunch.sim.Player {
             case DISTRACTION:
                 command = mDistraction.getCommand(members, animals, previousAnimals, ps);
                 break;
-            case GEESE_SHIELD:
-                command = geeseShield.getCommandGeeseShield(members, animals, ps, previousAnimals, turn);
-                break;
             case SANDWICH_FLASHING:
-            		command = sandwichFlasher.getCommandSandwichFlasher(members, animals, ps);
-            		break;
+                command = sandwichFlasher.getCommandSandwichFlasher(members, animals, ps);
+                break;
             default:
             case AGGRESSIVE:
                 command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
                 break;
         }
         // Record things for the next turn
+        previousBehaviourType = type;
         previousAnimals = animals;
         previousMembers = members;
         turn++;
