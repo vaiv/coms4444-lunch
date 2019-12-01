@@ -4,7 +4,9 @@ This script will generate all combinatons of length familySize from the list of 
 It will then have each combination play games with monkeys and geese ranging from
 minMonkey to maxMonkey and minGeese to maxGeese
 
-It stores every result in a dataframe and keeps a list of (players, dataframe) 
+It stores every result in a dataframe and keeps a list of (players, dataframe)
+
+It's probably best to run this in an interactive setting like a jupyter notebook or using -i on python. 
 """
 
 
