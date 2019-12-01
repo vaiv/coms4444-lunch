@@ -190,6 +190,7 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() && ps.get_held_item_type()==null && shouldPullFood(ps, monkeys, geese))
 		{
+
 			List<FoodType> allFood = getAllFood();
 			for(FoodType food_type: allFood) // FoodType.values()
 			{
@@ -211,7 +212,6 @@ public class Player implements lunch.sim.Player
 			currentRatio += 1.0 / totalFoodTime;
 			return new Command(CommandType.EAT);
 		}
-
 		// System.out.println("player is searching");
 		return new Command();
 
@@ -317,17 +317,43 @@ public class Player implements lunch.sim.Player
 		double distMonkey = Integer.MAX_VALUE;
 		double distGeese = Integer.MAX_VALUE;
 		int rangeGeese = isDistractor ? 0 : 25;
-		int rangeMonkeys = isDistractor ? 3 : 30;
+		int rangeMonkeys = isDistractor ? 0 : 30;
 		if (monkeys.size() >= 3) {
 			distMonkey = Point.dist(monkeys.get(2).get_location(), ps.get_location());
 		}
 		if (!geese.isEmpty()) {
 			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
 		}
+		if (cur == FoodType.SANDWICH1 || cur == FoodType.SANDWICH2) {
+			System.out.println(id + " " +ps.get_location() + " " + (distGeese >= rangeGeese) + " " + (distMonkey >= rangeMonkeys));
+		}
+		if (id == 0) {
+			System.out.println(id + " " +ps.get_location() + " " + (distGeese >= rangeGeese) + " " + (distMonkey >= rangeMonkeys));
+		}
 		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
+	private Point getDistractorLoctaion(ArrayList<Family> members, ArrayList<Animal> monkeys) {
+		int maxMonkeys = 0;
+		Point loc = null;
+		for (Family member : members) {
+			int numberOfMonkeys = 0;
+			for (Animal monkey : monkeys) {
+				if (Point.dist(member.get_location(), monkey.get_location()) <= 40) {
+					numberOfMonkeys++;
+				}
+			}
+			if (maxMonkeys < numberOfMonkeys) {
+				maxMonkeys = numberOfMonkeys;
+				loc = member.get_location();
+			}
+		}
+		return loc;
+	}
 
+//	private Point pointToHelpDistract(Point cur, Point distractor) {
+//
+//	}
 
 
 }
