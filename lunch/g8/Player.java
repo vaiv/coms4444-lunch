@@ -128,4 +128,14 @@ public class Player implements lunch.sim.Player {
         return "P" + state.getId() + command.get_type();
     }
 
+    private int getGeeseDensity() {
+        int numGeese = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.GOOSE) {
+                numGeese++;
+            }
+        }
+        return numGeese / family.size();
+    }
+
 }
