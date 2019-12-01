@@ -92,12 +92,15 @@ public class Player implements lunch.sim.Player
 				return res;
 			}
 		}
-        double ratioForTime = monkeys.size() >= 100 ? 0.8 : 0.5;
+        double ratioForTime = 0.65;
+		if (monkeys.size() < 50)
+			ratioForTime = 0.5;
+		else if (monkeys.size() < 100)
+			ratioForTime = 0.65;
+		else
+			ratioForTime = 0.75;
 		// if there is not enough time for distractor to finish food, go to corner
 		if (isDistractor && currentRatio <= 0.4 && time >= ratioForTime * timeLimit) {
-		    if (ps.is_player_searching() && ps.get_held_item_type() == null) {
-		        return new Command(CommandType.ABORT);
-            }
 			Point dest = new Point(50, -50);
 			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
@@ -107,7 +110,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if the player almost finished food, and there is sufficient time to distract
-		if (currentRatio >= 0.95 && timeLimit - time >= 800) {
+		if (currentRatio >= 0.99 && timeLimit - time >= 800) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             if (this.id == 0) {
@@ -310,6 +313,9 @@ public class Player implements lunch.sim.Player
 	public Command getMove(Point start, Point dest, PlayerState ps) {
 		if (Math.abs(Point.dist(start, dest)) <= 0.00001) {
 			return null;
+		}
+		if (ps.is_player_searching()) {
+			return new Command(CommandType.ABORT);
 		}
 		if (ps.get_held_item_type() != null) {
 			return new Command(CommandType.KEEP_BACK);
