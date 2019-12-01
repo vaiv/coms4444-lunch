@@ -65,21 +65,23 @@ public class Player implements lunch.sim.Player
 		// go to corresponding corners
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
-			switch (this.id % 4) {
-				case 0:
-					dest = new Point(0,0);
-					isDistractor = true;
-					break;
-				case 1:
-					dest = new Point(50, -50);
-					break;
-				case 2:
-					dest = new Point(-50, 50);
-					break;
-				case 3:
-					dest = new Point(-50, -50);
-					break;
-			}
+			if (this.id == 0) {
+                dest = new Point(0, 0);
+                isDistractor = true;
+            }
+			else {
+                switch ((this.id + 1) % 3) {
+                    case 0:
+                        dest = new Point(50, -50);
+                        break;
+                    case 1:
+                        dest = new Point(-50, 50);
+                        break;
+                    case 2:
+                        dest = new Point(-50, -50);
+                        break;
+                }
+            }
 			Point start = new Point(ps.get_location());
 			Command res = getMove(start, dest, ps);
 			if (res == null) {
@@ -104,19 +106,21 @@ public class Player implements lunch.sim.Player
 		if (currentRatio >= 0.95 && timeLimit - time >= 500) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
-            switch (this.id % 4) {
-                case 0:
-                    dest = new Point(0,0);
-                    break;
-                case 1:
-                    dest = new Point(20, -20);
-                    break;
-                case 2:
-                    dest = new Point(-20, 20);
-                    break;
-                case 3:
-                    dest = new Point(-20, -20);
-                    break;
+            if (this.id == 0) {
+                dest = new Point(0, 0);
+            }
+            else {
+                switch ((this.id + 1) % 3) {
+                    case 0:
+                        dest = new Point(20, -20);
+                        break;
+                    case 1:
+                        dest = new Point(-20, 20);
+                        break;
+                    case 2:
+                        dest = new Point(-20, -20);
+                        break;
+                }
             }
             Command res = getMove(ps.get_location(), dest, ps);
             if (res != null) {
