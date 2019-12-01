@@ -35,7 +35,7 @@ public class DistractionStrategy {
     }
 
     public Command executeStrategy(PlayerState ps) {
-        return (this.status==null)? new Command() : this.status.executeStrategy(ps);
+        return (this.status == null) ? new Command() : this.status.executeStrategy(ps);
     }
 
     public boolean validateStrategy(ArrayList<Animal> animals, Point src) {
@@ -86,7 +86,7 @@ public class DistractionStrategy {
 
     public DistractionStatus generateDistractionStrategy(ArrayList<Family> members, ArrayList<Animal> animals,
             ArrayList<Animal> prevanimals, Point playerPos, Boolean eatFood) {
-        
+
         // Get current player position in integers
         Integer x = (int) (Math.round(playerPos.x));
         Integer y = (int) (Math.round(playerPos.y));
@@ -175,19 +175,26 @@ public class DistractionStrategy {
     /**
      * Reset pre-calculated distraction strategy
      */
-    public void resetDistractionStrategy(){
+    public void resetDistractionStrategy() {
         this.status = null;
     }
 
     /**
      * Redirect food to player
+     * 
      * @param playerLoc
      * @param ps
      * @return number of steps required to redirect monkeys to the player
      */
-    public Integer redirectToPlayer(Point playerLoc, PlayerState ps){
+    public Integer redirectToPlayer(Point playerLoc, ArrayList<Animal> animals, ArrayList<Animal> prevanimals,
+            PlayerState ps) {
 
         return 0;
+    }
+
+    public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> prevanimals,
+            PlayerState ps) {
+        return this.getCommand(members, animals, prevanimals, ps, true);
     }
 
     /**
@@ -196,7 +203,7 @@ public class DistractionStrategy {
      * @param animals
      * @param prevanimals
      * @param ps
-     * @param eatFood Boolean on whether to eat or not
+     * @param eatFood     Boolean on whether to eat or not
      * @return
      */
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> prevanimals,
@@ -210,12 +217,12 @@ public class DistractionStrategy {
             return Command.createMoveCommand(new Point(Math.round(playerPos.x), Math.round(playerPos.y)));
         }
 
-        if (playerPos.x < 0 || playerPos.y < 0){
+        if (playerPos.x < 0 || playerPos.y < 0) {
             Double newX = playerPos.x + (playerPos.x < playerPos.y ? 1.0 : 0.0);
             Double newY = playerPos.y + (playerPos.x >= playerPos.y ? 1.0 : 0.0);
             return Command.createMoveCommand(new Point(newX, newY));
         }
-        
+
         if (!this.validateStrategy(animals, playerPos))
             this.generateDistractionStrategy(members, animals, prevanimals, playerPos, eatFood);
 
