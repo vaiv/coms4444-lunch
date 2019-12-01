@@ -25,6 +25,7 @@ public class Player implements lunch.sim.Player
 	private double ratioToGo;
 	private int roundToGo= 1;
 	private final int totalFoodTime = (3*2 + 2*3 + 1)*60;
+	private Point desToDistract = null;
 
 	private boolean inPosition = false;
 	private boolean isDistractor = false;
@@ -103,24 +104,32 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if the player almost finished food, and there is sufficient time to distract
-		if (currentRatio >= 0.95 && timeLimit - time >= 500) {
+		if (currentRatio >= 0.95 && timeLimit - time >= 800) {
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             if (this.id == 0) {
-                dest = new Point(0, 0);
+				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
+				dest = desToDistract;
+				if (dest == null) {
+					dest = new Point(0, 0);
+				}
             }
             else {
-                switch ((this.id + 1) % 3) {
-                    case 0:
-                        dest = new Point(20, -20);
-                        break;
-                    case 1:
-                        dest = new Point(-20, 20);
-                        break;
-                    case 2:
-                        dest = new Point(-20, -20);
-                        break;
-                }
+				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
+				dest = desToDistract;
+				if (dest == null) {
+					switch ((this.id + 1) % 3) {
+						case 0:
+							dest = new Point(20, -20);
+							break;
+						case 1:
+							dest = new Point(-20, 20);
+							break;
+						case 2:
+							dest = new Point(-20, -20);
+							break;
+					}
+				}
             }
             Command res = getMove(ps.get_location(), dest, ps);
             if (res != null) {
@@ -328,16 +337,10 @@ public class Player implements lunch.sim.Player
 		if (!geese.isEmpty()) {
 			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
 		}
-		if (cur == FoodType.SANDWICH1 || cur == FoodType.SANDWICH2) {
-			System.out.println(id + " " +ps.get_location() + " " + (distGeese >= rangeGeese) + " " + (distMonkey >= rangeMonkeys));
-		}
-		if (id == 0) {
-			System.out.println(id + " " +ps.get_location() + " " + (distGeese >= rangeGeese) + " " + (distMonkey >= rangeMonkeys));
-		}
 		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
-	private Point getDistractorLoctaion(ArrayList<Family> members, ArrayList<Animal> monkeys) {
+	private Point getDistractorLoctaion(List<Family> members, List<Animal> monkeys) {
 		int maxMonkeys = 0;
 		Point loc = null;
 		for (Family member : members) {
@@ -355,9 +358,37 @@ public class Player implements lunch.sim.Player
 		return loc;
 	}
 
-//	private Point pointToHelpDistract(Point cur, Point distractor) {
-//
-//	}
+	private Point pointToHelpDistract(Point cur, Point distractor, List<Family> members) {
+		double dist = 28;
+		boolean isMe = true;
+		Point des = null;
+		for (Family member : members) {
+			if (Point.dist(distractor, member.get_location()) <= eps && !member.get_id().equals(id)) {
+				isMe = false;
+			}
+		}
+		if (isMe) {
+			return des;
+		}
+		else if (Point.dist(cur, distractor) <= dist) {
+			boolean found_valid_move = false;
+			while(!found_valid_move)
+			{
+				Double bearing = random.nextDouble()*2*Math.PI;
+				des = new Point(distractor.x + dist*Math.cos(bearing), distractor.y + dist*Math.sin(bearing));
+				found_valid_move = Point.within_bounds(des);
+			}
+		}
+		else {
+			double len = Point.dist(cur, distractor);
+			double xLen = Math.abs(cur.x - distractor.x) * dist / len;
+			double x = cur.x >= distractor.x ? distractor.x + xLen : distractor.x - xLen;
+			double yLen = Math.abs(cur.y - distractor.y) * dist / len;
+			double y = cur.y >= distractor.y ? distractor.y + yLen : distractor.y - yLen;
+			des = new Point(x, y);
+		}
+		return des;
+	}
 
 
 }
