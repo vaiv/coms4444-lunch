@@ -129,7 +129,7 @@ public class Helper {
     public static HashMap<Integer, Point> calculateTrajectories(ArrayList<Animal> animals, ArrayList<Animal> prev_animals) {
         HashMap<Integer, Point> result = new HashMap<>();
         // This assumes animal's position in array does not change
-        for (int i = 0; i < prev_animals.size(); i++){
+        for (int i = 0; i < prev_animals.size(); i++) {
             Point curr_loc = animals.get(i).get_location();
             Point prev_loc = prev_animals.get(i).get_location();
             double delta_x = curr_loc.x - prev_loc.x;
@@ -360,27 +360,30 @@ public class Helper {
 
     public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id) {
         boolean distract = false;
-        Point distractingCorner = new Point(50,50);
+        Point distractingCorner = new Point(50, 50);
         Double minDist = Double.MAX_VALUE;
-        Family closest = null; 
+        Family closest = null;
         for (Family f: members) {
             Point curLoc = f.get_location();
             Double distance = Point.dist(curLoc, distractingCorner);
             if (distance < minDist) {
-                minDist = distance; 
+                minDist = distance;
                 closest = f;
             }
         }
-        if (closest.get_id() == id) distract = true; 
+        if (closest.get_id() == id) {
+            distract = true;
+        }
         // Check if someone is there to relieve you
-        for (Family f: members){
-            if (f.get_id() == id) continue; 
+        for (Family f: members) {
+            if (f.get_id() == id) {
+                continue;
+            } 
             Point curLoc = f.get_location();
-            if (curLoc.x > 10 && curLoc.y > 10){
+            if (curLoc.x > 10 && curLoc.y > 10) {
                 distract = false;
             }
         }
-        
         return distract;
     }
 
