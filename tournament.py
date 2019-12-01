@@ -11,6 +11,9 @@ minGeese = 1
 maxGeese = 2
 seed = 12345
 legibleOutput = False #disable this to have more machine readable output
+logPath = './logs'
+if not os.path.exists(logPath):
+    os.makedirs(logPath)
 
 
 def runGames(team):
@@ -19,7 +22,7 @@ def runGames(team):
         for g in range(minGeese, maxGeese+1):
             process = ["java", "lunch.sim.Simulator", "-t", str(time), "--players"]
             process.extend(team)
-            process.extend(["-m",str(m),"-g",str(g),"-f", str(familySize), "-s", str(seed), "-l" ,f'log_{mainPlayer}_{m}_{g}.txt'])
+            process.extend(["-m",str(m),"-g",str(g),"-f", str(familySize), "-s", str(seed), "-l" ,f'{logPath}/log_{mainPlayer}_{m}_{g}.txt'])
             print(" ".join(process))
             processResult = subprocess.check_output(process)
             processResult = processResult.decode('utf-8')
