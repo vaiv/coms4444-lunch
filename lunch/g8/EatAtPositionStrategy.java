@@ -23,11 +23,11 @@ public abstract class EatAtPositionStrategy extends Strategy {
 
     public EatAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
         super(family, animals, state, random);
+        monkeyMargin = 35.0;
     }
 
     public EatAtPositionStrategy(Point position, List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
-        super(family, animals, state, random);
-        monkeyMargin = 40.0;
+        this(family, animals, state, random);
     }
 
     @Override
@@ -58,8 +58,10 @@ public abstract class EatAtPositionStrategy extends Strategy {
             if (shouldTakeFoodOut()) {
                 List<FoodType> food = state.getAvailableFood();
                 boolean tooManyGeese = false;
-                if(getGeeseDensity() > 50) tooManyGeese = true; //TODO: play with this number a bit
-                if(tooManyGeese){
+                if (getGeeseDensity() > 50) {
+                    tooManyGeese = true; //TODO: play with this number a bit
+                }
+                if (tooManyGeese) {
                     return Command.createRetrieveCommand(orderFoodSandwichLast(food).get(0));
                 } else {
                     return Command.createRetrieveCommand(orderFood(food).get(0));
@@ -116,9 +118,10 @@ public abstract class EatAtPositionStrategy extends Strategy {
         }
         return ordered;
     }
-    
+
     /**
-     * Sorts the food by prioritizing the points obtained by eating it, with Sandwiches last
+     * Sorts the food by prioritizing the points obtained by eating it, with
+     * Sandwiches last
      *
      * @param unordered the list of food without any order
      * @return the ordered list of food
