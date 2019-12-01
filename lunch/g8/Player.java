@@ -5,6 +5,7 @@ import java.util.Random;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import java.util.List;
+import lunch.sim.AnimalType;
 
 /**
  *
@@ -13,7 +14,6 @@ import java.util.List;
 public class Player implements lunch.sim.Player {
 
     private int id;
-    private int turn;
     private Random random;
     protected final List<FamilyMember> family;
     protected final List<Animal> animals;
@@ -49,9 +49,8 @@ public class Player implements lunch.sim.Player {
             Integer s) {
         this.id = id;
         random = new Random(s);
-        turn = 0;
-        for (lunch.sim.Family member : members) {
-            family.add(new FamilyMember(member));
+        for (int i = 0; i < members.size(); i++) {
+            family.add(new FamilyMember(members.get(i), i == id, i));
         }
         for (lunch.sim.Animal ani : animals) {
             this.animals.add(new Animal(ani));
@@ -90,7 +89,8 @@ public class Player implements lunch.sim.Player {
         }
 
         // increase turn counter and return command
-        turn++;
+        state.tick();
+        //System.out.println(describe(command));
         return command;
     }
 
@@ -122,7 +122,21 @@ public class Player implements lunch.sim.Player {
      * @return
      */
     private Strategy selectStrategy() {
-        return new EatAtCornerStrategy(family, animals, state);
+        return new DistractIfNeededStrategy(family, animals, state, random);
+    }
+
+    private String describe(Command command) {
+        return "P" + state.getId() + command.get_type();
+    }
+
+    private int getMonkeyDensity() {
+        int numMonkeys = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.MONKEY) {
+                numMonkeys++;
+            }
+        }
+        return numMonkeys / family.size();
     }
 
 }

@@ -28,9 +28,13 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 	private String avatars;
 
-    Double min_dist = Double.MAX_VALUE;
+	Double eps = 10e-7;
 
     List<Point> animalLocations;
+    List<Boolean> animalMovement;
+	List<Double> animalDirections;
+
+	List<FoodType> priorityList;
 
     private Point corner_direction = new Point(0, 0);
 	
@@ -42,11 +46,14 @@ public class Player implements lunch.sim.Player
 	{
 		this.id = id;
 		this.animalLocations = new ArrayList<>();
+		this.animalMovement = new ArrayList<>();
+		this.animalDirections = new ArrayList<>();
 		for(Animal animal : animals){
-			if(animal.which_animal() == AnimalType.MONKEY){
-				animalLocations.add(animal.get_location());
-			}
+			animalLocations.add(animal.get_location());
+			animalMovement.add(false);
+			animalDirections.add(0.0);
 		}
+		this.priorityList = getPriority();
 		avatars = "flintstone";
 		random = new Random(s);
 		return avatars;
@@ -55,12 +62,22 @@ public class Player implements lunch.sim.Player
 
 	public ArrayList<FoodType> getPriority(){
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
+		   /* time left: 1552
 		   priorityList.add(FoodType.COOKIE);
 		   priorityList.add(FoodType.FRUIT1);
 		   priorityList.add(FoodType.FRUIT2);
-		   priorityList.add(FoodType.EGG);
 		   priorityList.add(FoodType.SANDWICH1);
 		   priorityList.add(FoodType.SANDWICH2);
+		   priorityList.add(FoodType.EGG);
+		   */
+		   
+		   // time left: 1656
+		   priorityList.add(FoodType.COOKIE);
+		   priorityList.add(FoodType.SANDWICH1);
+		   priorityList.add(FoodType.SANDWICH2);
+		   priorityList.add(FoodType.FRUIT1);
+		   priorityList.add(FoodType.FRUIT2);
+		   priorityList.add(FoodType.EGG);
 
 		   return priorityList;
 
@@ -70,59 +87,46 @@ public class Player implements lunch.sim.Player
 	//if a third Monkey is coming near
 	public boolean checkMonkey(ArrayList<Animal> animals, PlayerState ps){
 		int num_monkey_close = 0;
-		HashMap<Integer,Boolean> monkey_status = new HashMap<>();
-		for(Integer i=0; i < animals.size();i++){
-			if (animals.get(i).which_animal() == AnimalType.MONKEY){
-
-				if (Point.dist(ps.get_location(),animals.get(i).get_location()) < 4.0){
-					monkey_status.put(i,true);
-					num_monkey_close += 1;
-				}
-				else{
-					monkey_status.put(i,false);
-				}
-
+		for (Animal animal: animals){
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 6.0 ){
+				num_monkey_close++;
 			}
 		}
-//		System.out.println(num_monkey_close);
-		//if three monkeys are around, immediately put back
-		if (num_monkey_close >= 3){
-//			System.out.println("three simultaneously come");
+		if (num_monkey_close>=3){
 			return true;}
-		//check if there is a third Monkey coming near
-		else if (num_monkey_close == 2){
-			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
-				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
-//					System.out.println("detect third monkey");
-					return true;
-				}
-			}
-		}
-		//two monkeys are coming near with 1 already within 2 meters
-		else if (num_monkey_close ==1){
-			int num_monkey_addition = 0;
-			for (Map.Entry<Integer, Boolean> entry : monkey_status.entrySet()){
-				if (!entry.getValue() && Point.dist(ps.get_location(),animals.get(entry.getKey()).get_location()) < 6.0){
-					num_monkey_addition += 1;
-				}
-
-			}
-			if (num_monkey_addition >= 2){
-//				System.out.println("detect additional monkeys");
-				return true;}
-		}
 		return false;
 	}
+
+	public boolean checkMonkeyAway(ArrayList<Animal> animals, PlayerState ps){
+		int num_monkey_away = 0;
+		for (int i = 0; i < animals.size(); i++){
+			Animal animal = animals.get(i);
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 31.0 ){
+				System.out.print("check monkey away ");
+				System.out.println(animalMovement);
+				if(animalMovement.get(i)){
+					num_monkey_away += 1;
+					System.out.println(num_monkey_away);
+				}
+			}
+		}
+		if (num_monkey_away>=3){
+			return true;}
+		return false;
+	}
+
+
 
 	//if there is goose less than 3 meters away DANGER!
 	public boolean checkGeese(ArrayList<Animal> animals, PlayerState ps){
 		double dist;
-		for(Integer i=0;i<animals.size();i++){
+		for(Animal animal: animals){
 			//only matter if eating sandwich
-			if (animals.get(i).which_animal() == AnimalType.GOOSE &&
-					(ps.get_held_item_type() == FoodType.SANDWICH1 || ps.get_held_item_type() == FoodType.SANDWICH2 ) ){
-				dist = Point.dist(ps.get_location(),animals.get(i).get_location());
+			if (animal.which_animal() == AnimalType.GOOSE &&
+					ps.get_held_item_type() == FoodType.SANDWICH ){
+				dist = Point.dist(ps.get_location(),animal.get_location());
 				if (dist < 6.0){
+					System.out.println("goose detected");
 					return true;
 				}
 			}
@@ -132,7 +136,7 @@ public class Player implements lunch.sim.Player
 
 	public Command getCommand( ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps ) {
         turn++;
-		this.getAnimalMovement(animals);
+		this.getAnimalMovement(animals, ps);
         // make one random move (to get away from initial point 0,0)
         if (turn == 1) {
             Point next_move = getRandomMove(ps);
@@ -140,6 +144,7 @@ public class Player implements lunch.sim.Player
         }
         
         // move towards corner
+        //if (turn < 70 && id != members.size() - 1) {
         if (turn < 70) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
@@ -158,7 +163,7 @@ public class Player implements lunch.sim.Player
 			min_dist = Math.min(min_dist,Point.dist(ps.get_location(),animals.get(i).get_location()));
 		}
 
-
+		System.out.println(min_dist);
 /*
 		if(turn<100)
 		{
@@ -184,7 +189,7 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.ABORT);
 		}
 		// keep food item back if animal is too close
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist < 2.0 &&
+		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null && min_dist < 4.0 &&
 				(checkMonkey(animals, ps) || checkGeese(animals,ps)))
 		{
 			return new Command(CommandType.KEEP_BACK);
@@ -208,7 +213,7 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
-			ArrayList<FoodType> priorityList = getPriority();
+			if(checkMonkeyAway(animals, ps) && priorityList.size() > 2) return new Command(CommandType.KEEP_BACK);
 			for(FoodType food_type: priorityList)
 			{
 				if(ps.check_availability_item(food_type))
@@ -216,6 +221,7 @@ public class Player implements lunch.sim.Player
 					Command c = new Command(CommandType.TAKE_OUT, food_type);
 					return c;
 				}
+				priorityList.remove(food_type);
 			}
 		}
 		// if no animal in vicinity then take a bite
@@ -255,6 +261,7 @@ public class Player implements lunch.sim.Player
         boolean[] isUnassigned = new boolean[members.size()];
         for (int i = 0; i < isUnassigned.length; i++) isUnassigned[i] = true;
 
+        // all players (except for last (-1)) will move to a corner
         for (int i = 0; i < members.size(); i++) {
             // cycle through corners for all family members
             Point corner = corners[i % 4];
@@ -304,19 +311,17 @@ public class Player implements lunch.sim.Player
 		return next_move;
     }
 
-    private double getAngle(Point newPoint, Point oldPoint){
+	private double getAngle(Point oldPoint, Point newPoint){
 		double xDelt = newPoint.x - oldPoint.x;
 		double yDelt = -1 * (newPoint.y - oldPoint.y);
-		double theta = 0;
-		if(yDelt == 0 && xDelt > 0) theta = 0;
+		double theta;
+		if( yDelt == 0 && xDelt == 0) theta = 42;
+		else if(yDelt == 0 && xDelt > 0) theta = 0;
 		else if(yDelt == 0 && xDelt < 0) theta = Math.PI;
 		else if(yDelt > 0 && xDelt == 0) theta = Math.PI / 2;
 		else if(yDelt < 0 && xDelt == 0) theta = - Math.PI / 2;
 		else{
 			theta = Math.atan(yDelt / xDelt);
-//			System.out.println("yDelt " + yDelt);
-//			System.out.println("xDelt " + xDelt);
-//			System.out.println(theta);
 			if(yDelt > 0.0 && xDelt < 0.0) theta = Math.PI + theta;
 			else if(yDelt < 0.0 && xDelt < 0.0) theta = -Math.PI + theta;
 		}
@@ -324,19 +329,21 @@ public class Player implements lunch.sim.Player
 		return theta;
 	}
 
-    private HashMap<Integer, Double> getAnimalMovement( ArrayList<Animal> animals ){
-		HashMap<Integer, Double> movementMap = new HashMap<>();
+	private void getAnimalMovement( ArrayList<Animal> animals, PlayerState ps){
 		int ind = 0;
 		for(Animal animal : animals){
-			if(animal.which_animal() == AnimalType.MONKEY){
-				Point oldPoint = animalLocations.get(ind);
-				Point newPoint = animal.get_location();
-				animalLocations.add(ind, newPoint);
-				double theta = getAngle(newPoint, oldPoint);
-				movementMap.put(ind, theta);
-				ind++;
-			}
+			Point oldPoint = animalLocations.get(ind);
+			Point newPoint = animal.get_location();
+			double oldDist = Point.dist(oldPoint, ps.get_location());
+			double newDist = Point.dist(newPoint, ps.get_location());
+			animalMovement.set(ind, newDist > oldDist);
+			animalLocations.set(ind, newPoint);
+			double theta = getAngle(oldPoint, newPoint);
+			//System.out.println(theta);
+			animalDirections.set(ind, theta);
+			ind++;
 		}
-		return movementMap;
+		System.out.print("get movement ");
+		System.out.println(animalMovement);
 	}
 }

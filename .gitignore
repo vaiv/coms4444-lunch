@@ -26,3 +26,5 @@ lunch/random/*.class
 hs_err_pid*
 
 out
+/javafx/util/
+/javafx/scene/shape/
