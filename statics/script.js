@@ -25,7 +25,15 @@ var eaten_cookie_imgs = [];
 
 var bag_imgs = [];
 
+var status_cont;
+var player_statuses = [];
+var food_list = ['e', 'c', 's_1', 's_2', 'f_1', 'f_2'];
 
+var food_state = [];
+const EATEN = 1;
+const STOLEN = -1;
+const STORED = 0;
+const EATING = 2;
 
 function init(monkeys,geese,family,food) {
 
@@ -54,8 +62,9 @@ function init(monkeys,geese,family,food) {
     {
         var member = family[i];
         var member_img = new Image();
-	var j = i%4;
-        member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+	var j = i%9;
+        //member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+        member_img.src = 'flintstone_'+(j+1).toString() + '.png';
         family_imgs.push(member_img);
     }
 
@@ -91,10 +100,35 @@ function init(monkeys,geese,family,food) {
         eaten_cookie_imgs.push(eaten_cookie_img);
         bag_imgs.push(bag_img);
     }
+    
+    initPlayerStatus(family);
   
   window.requestAnimationFrame(draw);
 }
 
+function initPlayerStatus(family) {
+    var tpl = document.getElementById('player-status-x');
+    status_cont = tpl.parentNode;
+    
+    for (var i = 0; i < family.length; i++) 
+    {
+        var si = tpl.cloneNode(true);
+        player_statuses.push(si);
+        status_cont.appendChild(si);
+        si.id = 'ps-' + i;
+        si.classList.remove('d-none');
+        si.getElementsByClassName('ps-img')[0].src = 'flintstone' + '_'+(i+1).toString() + '.png';
+        si.getElementsByClassName('ps-gid')[0].innerText = family[i].name;
+        //member_img.src = family[i].avatars+ '_'+(j+1).toString() + '.png';
+        //family_imgs.push(member_img);
+        var fStatus = {};
+        food_state.push(fStatus);
+        for (var j = 0; j < food_list.length; j++) {
+            fStatus[food_list[j]] = {percentage: 0, status: STORED};
+        }
+        fStatus['eating'] = null;
+    }
+}
 
 function draw()
 {
@@ -243,12 +277,7 @@ function drawFamily(ctx, family) {
             var drawY = ((member.y + 50) /100) * 1200;
             var aspect_ratio = 0.515;
 
-            if((i%4)+1==3)
-                aspect_ratio = 0.879;
-            else if ((i%4)+1==4)
-                aspect_ratio = 1.132;
-
-            ctx.drawImage(img,drawX,drawY,100, 100/aspect_ratio);
+            ctx.drawImage(img,drawX,drawY,100*img.width/img.height, 100);
 
              }, false);
         img.src='jetson_'+((i%4)+1).toString()+'.png';
@@ -257,8 +286,86 @@ function drawFamily(ctx, family) {
     }
 }
 
+function drawStats() {
+    total_score = 0;
+    for (var i = 0; i < family.length; i++) {
+        var p = family[i];
+        var ps = player_statuses[i];
+        ps.getElementsByClassName("ps-score")[0].innerText = p.score;
+        var eating = null;
+        var fStatus = food_state[i];
+        switch (p.eating) {
+            case 'SANDWICH1' : eating = 's_1'; break;
+            case 'SANDWICH2' : eating = 's_2'; break;
+            case 'FRUIT1' : eating = 'f_1'; break;
+            case 'FRUIT2' : eating = 'f_2'; break;
+            case 'COOKIE' : eating = 'c'; break;
+            case 'EGG' : eating = 'e'; break;
+        }
+        
+        // check for food that was being eaten and now is gone
+        if (fStatus.eating !== null){
+            if (!p[fStatus.eating]) {
+                if (fStatus[fStatus.eating].percentage > 98.2) {
+                    fStatus[fStatus.eating].percentage = 100;
+                    fStatus[fStatus.eating].status = EATEN;
+                } else {
+                    fStatus[fStatus.eating].status = STOLEN;
+                }
+            } else if (eating === null) {
+                fStatus[fStatus.eating].status = STORED;
+            }
+        }
+        if (fStatus.eating !== null)
+            updateFoodStatus(i, fStatus.eating);
+        
+        fStatus['eating'] = eating;
+        if (fStatus['eating'] !== null) {
+            var percent_rem = 100 - parseFloat(p.rem_time).toFixed(2);
+            percent_rem = percent_rem.toFixed(2);
+            if(percent_rem>100)
+                percent_rem = 100;
+            fStatus[fStatus.eating].percentage = percent_rem;
+            fStatus[fStatus.eating].status = EATING;
+            updateFoodStatus(i, fStatus.eating);
+        }
+        
+        if(!isNaN(p.score) && p.score>0)
+            total_score+= p.score;
+    }
+    document.getElementById("total-score").innerHTML = total_score;
+}
 
-function drawStats(ctx)
+function updateFoodStatus(member, food) {
+    var ps = player_statuses[member];
+    var foodStatus = ps.getElementsByClassName("ps-food-" + food)[0];
+    var colorCl = 'default';
+    switch (food_state[member][food].status) {
+        case STORED: colorCl = 'secondary'; break;
+        case EATEN: colorCl = 'success'; break;
+        case STOLEN: colorCl = 'danger'; break;
+        case EATING: colorCl = 'primary'; break;
+    }
+    //foodStatus.previousElementSibling.classList.remove("bg-secondary", "bg-success", "bg-danger");
+    //foodStatus.previousElementSibling.classList.add("bg-" + colorCl);
+    //foodStatus.classList.remove("bg-secondary", "bg-success", "bg-danger");
+    //foodStatus.classList.add("bg-" + colorCl);
+    var progress = foodStatus.getElementsByClassName("progress-bar")[0];
+    progress.classList.remove("bg-secondary", "bg-success", "bg-danger");
+    progress.classList.add("bg-" + colorCl);
+    if (food_state[member][food].status !== STOLEN) {
+        var percent_rem = food_state[member][food].percentage;
+        if(percent_rem>100)
+            percent_rem = 100;
+        progress.style.width = percent_rem + "%";
+        progress.innerText = percent_rem + "%";
+    } else {
+        progress.style.width = 100 + "%";
+        progress.innerText = "Stolen";
+    }
+}
+
+function drawStats1(ctx)
 {
     var colors = ["blue", "darkblue", "darkgreen", "darkmagenta", "salmon", "gold", "deeppink"]
     total_score = 0;
@@ -341,7 +448,7 @@ function process(data) {
         first = false;
     }
      timeElement = document.getElementById('time');
-    timeElement.innerHTML = "<pre>" + "Remaining Time: " + result.remaining_time + "</pre>";
+    timeElement.innerHTML = result.remaining_time;
 
     return refresh;
 }
