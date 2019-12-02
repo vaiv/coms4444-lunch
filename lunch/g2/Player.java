@@ -507,12 +507,14 @@ public class Player implements lunch.sim.Player
 			return hideFood;
 		}
 
+		Point lurePoint = new Point(40,40);
+		Point corner = new Point(50,50);
 		if(this.descriptiveState.equals("food_out")) {
 			Point targetDest;
 			if(this.fanningOut) {
-				targetDest = this.getWalkingTargetToDenseRegion(5, ps);
+				targetDest = lurePoint;
 			} else {
-				targetDest = new Point(0, 0);
+				targetDest = corner;
 			}
 
 			Double delta_x = targetDest.x - ps.get_location().x;
@@ -521,9 +523,9 @@ public class Player implements lunch.sim.Player
 			if(distance < 1) {
 				this.fanningOut = ! this.fanningOut;
 				if(this.fanningOut) {
-					targetDest = this.getWalkingTargetToDenseRegion(5, ps);
+					targetDest = lurePoint;
 				} else {
-					targetDest = new Point(0, 0);
+					targetDest = corner;
 				}
 			}
 			this.walkingTarget = targetDest;
@@ -635,7 +637,7 @@ public class Player implements lunch.sim.Player
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
-
+		System.out.println(this.playerRole + ": G2 player role");
 		if(this.playerRole.equals("distract")) {
 			return distract(monkey_dists, goose_dists, ps);
 		}
@@ -646,7 +648,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 10 || this.currentTime % 1000 == 0) {
+		if (this.currentTime == 10 || this.currentTime % 100 == 0) {
 			this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
 		}
 
@@ -675,11 +677,11 @@ public class Player implements lunch.sim.Player
 
 	boolean jobAvailable(ArrayList<Family> members)
 	{
-		Point distractionSpot = new Point(50,-50);
-		Double radiusOfDistraction = 10.0;
+		Point distractionSpot = new Point(50,50);
+		Double radiusOfDistraction = 50.0;
 		for(Family member: members)
 		{
-			if (Point.dist(member.get_location(), distractionSpot) > radiusOfDistraction)
+			if (Point.dist(member.get_location(), distractionSpot) < radiusOfDistraction)
 			{
 				return false;
 			}
