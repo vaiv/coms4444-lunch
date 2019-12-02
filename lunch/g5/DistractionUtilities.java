@@ -1,10 +1,12 @@
 package lunch.g5;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.PriorityQueue;
 
 import javafx.util.Pair;
 import lunch.sim.Animal;
+import lunch.sim.Log;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
 
@@ -66,6 +68,87 @@ public class DistractionUtilities {
         dist.poll();
 
         return (int) Math.floor(dist.poll()) - 6;
+    }
+
+    public static Integer getEatBuffer(AnimalPosition monkeyPositions, Point playerLoc) {
+        return DistractionUtilities.getEatBuffer(monkeyPositions, playerLoc, 0);
+    }
+
+    public static Integer getEatBuffer(AnimalPosition monkeyPositions, Point playerLoc, Integer hungrySteps) {
+        if (monkeyPositions.size() < 3)
+            return 100;
+
+        Double[] distances = { 100., 100., 100. };
+        for (PositionStruct pos : monkeyPositions) {
+            Double distance = Math.hypot(playerLoc.x - pos.location.x, playerLoc.y - pos.location.y);
+
+            if (hungrySteps > 0 || pos.movement == null || pos.numSteps > 0)
+                distance = distance - pos.numSteps - hungrySteps;
+
+            if (distance < distances[0]) {
+                distances[2] = distances[1];
+                distances[1] = distances[0];
+                distances[0] = distance;
+            } else if (distance < distances[1]) {
+                distances[2] = distances[1];
+                distances[1] = distance;
+            } else if (distance < distances[2]) {
+                distances[2] = distance;
+            }
+        }
+
+        return distances[2].intValue() - 6;
+    }
+
+    public static Pair<Integer, Point> simulateWalking(AnimalPosition monkeyPositions, Point ourLocation,
+            Integer eatSteps) {
+        Integer minX = 0, maxX = 40, minY = 0, maxY = 40;
+
+        // Initiate empty matrices for each timestep
+        Integer x = (int) Math.round(ourLocation.x);
+        Integer y = (int) Math.round(ourLocation.y);
+
+        Integer[] dxs = { 0, 0, -1, +1 };
+        Integer[] dys = { -1, 1, 0, 0 };
+
+        boolean[] valid = { y >= minY, y <= maxY, x >= minX, x <= maxX };
+        Integer[] numSteps = { y - minY, maxY - y, x - minX, maxX - x };
+
+        Integer bestNumSteps = -1;
+        Point bestDestination = null;
+
+        // Simulate eating
+        // monkeyPositions = DistractionUtilities.simulateTimestep(monkeyPositions, );
+        for (int dir = 0; dir < 4; dir++) {
+            if (!valid[dir])
+                continue;
+
+            // TODO: Simplify to simply select after steps numSteps
+            Integer curSteps = 0;
+            Integer maxSteps = numSteps[dir];
+
+            for (int steps = 0; steps < maxSteps; steps++) {
+                Integer curX = x + steps * dxs[dir];
+                Integer curY = y + steps * dys[dir];
+
+                Integer eatBuffer = DistractionUtilities.getEatBuffer(monkeyPositions, new Point(curX, curY),
+                        steps + eatSteps);
+
+                if (eatBuffer < 0)
+                    break;
+                curSteps = steps;
+            }
+
+            // Log.log(String.format("Direction = %d. Steps = [%d / %d]", dir, curSteps,
+            // numSteps));
+
+            if (curSteps > bestNumSteps) {
+                bestNumSteps = curSteps;
+                bestDestination = new Point(x + curSteps * dxs[dir], y + curSteps * dys[dir]);
+            }
+        }
+
+        return new Pair<Integer, Point>(bestNumSteps, bestDestination);
     }
 
     public static Pair<Integer, Point> simulateWalk(ArrayList<Point> monkeyPositions, Point ourLocation) {
@@ -140,56 +223,133 @@ public class DistractionUtilities {
      *
      * @param previousAnimals: An array of previous animals in the field
      * @param animals:         An array of current animals in the field
-     * @param nTimesteps:      Number of timesteps to predict
+     * @param steps:           Number of timesteps to predict
      * @return An array of arrays, where each inner array under index j is predicted
      *         animal positions in the field after j timesteps.
      */
-    public static ArrayList<ArrayList<Point>> predictNotNull(ArrayList<Animal> previousAnimals,
-            ArrayList<Animal> animals, Point playerPos, int nTimesteps) {
 
-        if (previousAnimals == null)
-            throw new RuntimeException("No previous animals saved => cannot calculate the animal directions");
+    public static AnimalPosition simulateTimestep(AnimalPosition animalLocs, int steps) {
+        AnimalPosition newLocs = new AnimalPosition();
 
-        ArrayList<ArrayList<Point>> animalTimesteps = new ArrayList<ArrayList<Point>>();
-        // Initiate empty arrays for each timestep
-        for (int i = 0; i < nTimesteps; i++) {
-            animalTimesteps.add(new ArrayList<Point>());
-        }
+        for (PositionStruct position : animalLocs) {
+            Point location = position.location;
+            Point movement = position.movement;
+            Integer numSteps = position.numSteps;
 
-        // Go through each animal and 'draw' it's path
-        for (int i = 0; i < animals.size(); i++) {
-            Point currentLocation = animals.get(i).get_location();
-            Point previousLocation = previousAnimals.get(i).get_location();
+            if (movement == null)
+                numSteps = numSteps + steps;
+            else {
+                Double newX = location.x + movement.x * steps;
+                Double newY = location.y + movement.y * steps;
 
-            // Get animal direction vector
-            Boolean outOfBounds = false;
-            Point directionVector = PointUtilities.normalizedSubtract(previousLocation, currentLocation, 1.0);
+                if (newX < -50 || newX > 50 || newY < -50 || newY > 50) {
+                    Integer excessSteps = -10;
+                    if(newX < -50 || newX > 50)
+                        excessSteps = Math.max(excessSteps, (int) Math.ceil((Math.abs(newX) - 50) / Math.abs(movement.x)));
+                    if (newY < -50 || newY > 50)
+                        excessSteps = Math.max(excessSteps, (int) Math.ceil((Math.abs(newY) - 50) / Math.abs(movement.y)));
 
-            // Log.log("Debugging normalizedSubtract "+previousLocation + " -> " +
-            // currentLocation + " = "+ directionVector);
-            // Initialize with timestep 0
-            animalTimesteps.get(0).add(currentLocation);
+                    // int i = 0;
+                    // for (; i < steps; i++) {
+                    //     newX = location.x + movement.x * i;
+                    //     newY = location.y + movement.y * i;
 
-            // We start with timestep 0, which is the current timestep
-            for (int j = 1; j < nTimesteps; j++) {
-                // Log.log("Debugging timestep " + currentLocation + " = "+ directionVector + "
-                // [" + outOfBounds + "]");
+                    //     if (newX < -50 || newX > 50 || newY < -50 || newY > 50)
+                    //         break;
+                    // }
 
-                // Make a step after each timestep
-                Point nextLocation = PointUtilities.add(currentLocation, directionVector);
+                    Integer stepsTaken = steps - excessSteps;
+                    // if(excessSteps+stepsTaken!=steps)
+                    //     Log.log(String.format("Excess(%d) + stepsTaken(%d) == steps(%d) [%b]", excessSteps, stepsTaken, steps));
+                    // Integer stepsTaken = steps;
+                    // if (newX < -50)
+                    // stepsTaken = Math.min(stepsTaken, (int) ((50 - location.x) / movement.x));
+                    // if (newX > 50)
+                    // stepsTaken = Math.min(stepsTaken, (int) ((-50 - location.x) / movement.x));
+                    // if (newY < -50)
+                    // stepsTaken = Math.min(stepsTaken, (int) ((50 - location.y) / movement.y));
+                    // if (newY > -50)
+                    // stepsTaken = Math.min(stepsTaken, (int) ((-50 - location.y) / movement.y));
 
-                if (!Point.within_bounds(nextLocation) || outOfBounds) {
-                    outOfBounds = true;
-                    directionVector = PointUtilities.normalizedSubtract(currentLocation, playerPos, 1.0);
-                    nextLocation = PointUtilities.add(currentLocation, directionVector);
+                    newX = location.x + movement.x * stepsTaken;
+                    newY = location.y + movement.y * stepsTaken;
+
+                    location = new Point(newX, newY);
+                    movement = null;
+                    numSteps = steps - stepsTaken;
+                } else {
+                    location = new Point(newX, newY);
                 }
-
-                animalTimesteps.get(j).add(nextLocation);
-                currentLocation = nextLocation;
             }
+
+            newLocs.add(new PositionStruct(location, movement, numSteps));
         }
-        return animalTimesteps;
+
+        return newLocs;
     }
+
+    public static AnimalPosition[] simulateTimesteps(AnimalPosition animalLocs, int steps) {
+        ArrayList<AnimalPosition> animalLocations = new ArrayList<AnimalPosition>();
+
+        animalLocations.add(animalLocs);
+        for (int i = 1; i < steps; i++) {
+            AnimalPosition tmp = DistractionUtilities.simulateTimestep(animalLocations.get(i - 1), 1);
+            animalLocations.add(tmp);
+        }
+
+        AnimalPosition[] animalLocat = new AnimalPosition[steps];
+        for (int i = 0; i < steps; i++)
+            animalLocat[i] = animalLocations.get(i);
+        return animalLocat;
+    }
+
+    // public static ArrayList<ArrayList<Point>> predictNotNull(AnimalPosition
+    // animalLocs, Point playerPos,
+    // int nTimesteps) {
+
+    // ArrayList<ArrayList<Point>> animalTimesteps = new
+    // ArrayList<ArrayList<Point>>();
+    // // Initiate empty arrays for each timestep
+    // for (int i = 0; i < nTimesteps; i++) {
+    // animalTimesteps.add(new ArrayList<Point>());
+    // }
+
+    // // Go through each animal and 'draw' it's path
+    // for (int i = 0; i < animalLocs.size(); i++) {
+    // Point position = animalLocs.get(i).location;
+    // Point movement = animalLocs.get(i).movement;
+    // Integer numSteps = animalLocs.get(i).numSteps;
+
+    // // Get animal direction vector
+    // Boolean outOfBounds = false;
+
+    // // Log.log("Debugging normalizedSubtract "+previousLocation + " -> " +
+    // // currentLocation + " = "+ directionVector);
+    // // Initialize with timestep 0
+    // animalTimesteps.get(0).add(currentLocation);
+
+    // // We start with timestep 0, which is the current timestep
+    // for (int j = 1; j < nTimesteps; j++) {
+    // // Log.log("Debugging timestep " + currentLocation + " = "+ directionVector +
+    // "
+    // // [" + outOfBounds + "]");
+
+    // // Make a step after each timestep
+    // Point nextLocation = PointUtilities.add(currentLocation, directionVector);
+
+    // if (!Point.within_bounds(nextLocation) || outOfBounds) {
+    // outOfBounds = true;
+    // directionVector = PointUtilities.normalizedSubtract(currentLocation,
+    // playerPos, 1.0);
+    // nextLocation = PointUtilities.add(currentLocation, directionVector);
+    // }
+
+    // animalTimesteps.get(j).add(nextLocation);
+    // currentLocation = nextLocation;
+    // }
+    // }
+    // return animalTimesteps;
+    // }
 
     public static ArrayList<Point> predictFood(ArrayList<Point> monkeyLocations, Point playerPos) {
 

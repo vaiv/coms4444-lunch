@@ -9,7 +9,7 @@ import lunch.sim.Log;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
 
-class DistractionStatus {
+public class DistractionStatus {
     class StrategyType {
         public Integer mode; // 0 for move, 1 for take food out
         public Integer timestep;
@@ -91,12 +91,21 @@ class DistractionStatus {
         if (move.mode == 0 || move.mode == 4) {
             Point source = ps.get_location();
 
-            Point dirVec = PointUtilities.normalizedSubtract(source, move.destination, 1.0);
-            Point newLoc = PointUtilities.add(source, dirVec);
+            Point newLoc = null;
+            if (source.x < move.destination.x)
+                newLoc = new Point(source.x + 1, source.y);
+            else if (source.x > move.destination.x)
+                newLoc = new Point(source.x - 1, source.y);
+            else if (source.y < move.destination.y)
+                newLoc = new Point(source.x, source.y + 1);
+            else if (source.y > move.destination.y)
+                newLoc = new Point(source.x, source.y - 1);
 
             if (--move.timestep <= 0)
                 this.strategy.remove(0);
 
+            if (newLoc == null)
+                return new Command();
             // Log.log("Moving from " + source.toString() + " to " + newLoc.toString());
             return Command.createMoveCommand(newLoc);
 
