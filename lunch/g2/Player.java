@@ -1,12 +1,9 @@
 package lunch.g2;
 
-import java.awt.geom.Line2D;
-import java.util.List;
 import java.util.Collections;
-import java.util.List;
+
 import java.util.Random;
 import java.util.HashMap;
-import javafx.util.Pair; 
 import java.util.ArrayList;
 
 import lunch.sim.Point;
@@ -20,10 +17,8 @@ import lunch.sim.PlayerState;
 
 public class Player implements lunch.sim.Player
 {
-	private int seed;
 	private Random random;
 	private Integer id;
-	private Integer turn;
 	private String avatars;
 	private ArrayList<HashMap<Integer, Double>> densityRecord;
 	private int currentTime;
@@ -36,18 +31,7 @@ public class Player implements lunch.sim.Player
 	// animals back to center
 	private Double total_time;
 	private ArrayList<Point> eatLocations;
-
-
-
-	public Player()
-	{
-		turn = 0;
-		inPosition = false;
-		descriptiveState = "initial";
-		playerRole = "distract";
-		fanningOut = true;
-		prevAnimalLocs = null;
-	}
+	private double flowThresh;
 
 	public void updateState(PlayerState ps) {
 		String newState = "";
@@ -64,17 +48,19 @@ public class Player implements lunch.sim.Player
 		this.descriptiveState = newState;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals,
+					   Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		avatars = "flintstone";
-		random = new Random(s);
+		this.random = new Random(s);
 		this.densityRecord = new ArrayList<HashMap<Integer, Double>>();
 		this.currentTime = 0;
 		this.descriptiveState = "initial";
 		this.playerRole = "eat";
 		fanningOut = true;
 		this.total_time = t;
+		this.flowThresh = 2.5;
 
 		this.eatLocations = new ArrayList<Point>();
 		this.eatLocations.add(new Point(50, -50));
@@ -137,6 +123,9 @@ public class Player implements lunch.sim.Player
 	// indicates whether geese are about to steal food
 	private boolean gooseIsNear(ArrayList<Double> goose_dists, Double threshold) {
 		// check if closest goose is within a distance of threshold suggested to be 6
+		if(goose_dists.size() == 0) {
+			return false;
+		}
 		return goose_dists.get(0) <= threshold;
 	}
 
@@ -181,7 +170,7 @@ public class Player implements lunch.sim.Player
 
 	private FoodType pickEatingFood(PlayerState ps, ArrayList<Double> goose_dists) {
 		FoodType f;
-		Double minGooseDist = Collections.min(goose_dists);
+		Double minGooseDist = goose_dists.size() == 0 ? Double.POSITIVE_INFINITY : Collections.min(goose_dists);
 
 		if(ps.check_availability_item(FoodType.COOKIE))
 		{
@@ -219,16 +208,11 @@ public class Player implements lunch.sim.Player
 		return f;
 	}
 
-	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart, boolean stopEating, ArrayList<Double> goose_dists) {
+	private Command makeEatingProgress(PlayerState ps, boolean waitToEat, ArrayList<Double> goose_dists) {
 		//if holding something, eat it
 		if(holdingFood(ps)) {
-			if(stopEating) {
-				System.out.println("Stop eating");
-				return new Command(CommandType.KEEP_BACK);
-			} else {
-				System.out.println("Eating!");
-				return new Command(CommandType.EAT);
-			}
+			System.out.println("Eating!");
+			return new Command(CommandType.EAT);
 		}
 
 		//else pull out in order if not already pulling out
@@ -236,7 +220,7 @@ public class Player implements lunch.sim.Player
 		{
 			FoodType f = pickEatingFood(ps, goose_dists);
 
-			if(waitToRestart) {
+			if(waitToEat) {
 				System.out.println("Asking to wait before trying to eat again...");
 				return new Command(CommandType.WAIT);
 			} else {
@@ -500,37 +484,8 @@ public class Player implements lunch.sim.Player
 		return this.eatLocations.get(minIdx);
 	}
 
-	public Command distract(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
-		// don't let food get taken
-		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
-		if (hideFood != null) {
-			return hideFood;
-		}
-
-		Point lurePoint = new Point(40,40);
-		Point corner = new Point(50,50);
-		if(this.descriptiveState.equals("food_out")) {
-			Point targetDest;
-			if(this.fanningOut) {
-				targetDest = lurePoint;
-			} else {
-				targetDest = corner;
-			}
-
-			Double delta_x = targetDest.x - ps.get_location().x;
-			Double delta_y = targetDest.y - ps.get_location().y;
-			double distance = Math.sqrt(Math.pow(delta_x, 2) + Math.pow(delta_y, 2));
-			if(distance < 1) {
-				this.fanningOut = ! this.fanningOut;
-				if(this.fanningOut) {
-					targetDest = lurePoint;
-				} else {
-					targetDest = corner;
-				}
-			}
-			this.walkingTarget = targetDest;
-			return this.walkToPosition(ps);
-		} else if(this.descriptiveState.equals("initial")) {
+	public Command distract(PlayerState ps) {
+		if(this.descriptiveState.equals("initial")) {
 			FoodType f = this.pickDistractorFood(ps);
 			return new Command(CommandType.TAKE_OUT, f);
 		}
@@ -602,80 +557,80 @@ public class Player implements lunch.sim.Player
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
-		this.currentTime += 1;
-		this.densityRecord.add(getDensities(animals));  // keep a running record of animal densities
-		this.updateState(ps); // descriptive state - one of "taking_out", "initial", "food_out", "putting_back"
-		updatePlayerRole(ps, members);
+		try {
+			this.currentTime += 1;
+			this.densityRecord.add(getDensities(animals));  // keep a running record of animal densities
+			this.updateState(ps); // descriptive state - one of "taking_out", "initial", "food_out", "putting_back"
+			updatePlayerRole(ps, members);
 
-		ArrayList<Integer> stepsToOrbit = predictDirections(ps.get_location(), prevAnimalLocs, animals);
-		double minSteps = 99999;
-		int numWithin = 0;
-		int numToEnter = 0;
-		for(int steps : stepsToOrbit) {
-			minSteps = Math.min(steps, minSteps);
-			if(steps < 0) {
-				numWithin += 1;
+			ArrayList<Integer> stepsToOrbit = predictDirections(ps.get_location(), prevAnimalLocs, animals);
+			double minSteps = 99999;
+			int numWithin = 0;
+			int numToEnter = 0;
+			for(int steps : stepsToOrbit) {
+				minSteps = Math.min(steps, minSteps);
+				if(steps < 0) {
+					numWithin += 1;
+				}
 			}
-		}
-		minSteps *= -1.0;
-		for(int steps : stepsToOrbit) {
-			if(steps > 0 && steps <= minSteps) {
-				numToEnter += 1;
+			minSteps *= -1.0;
+			for(int steps : stepsToOrbit) {
+				if(steps > 0 && steps <= minSteps) {
+					numToEnter += 1;
+				}
 			}
-		}
 
-		double flowRatio = numWithin == 0 ? 0.0 : (double) numWithin / (double) Math.max(1.0, numToEnter);
-		boolean waitToEat = flowRatio >= 5.0;
-		boolean stopEating = flowRatio >= 10.0;
-		System.out.println(flowRatio + "=" + numWithin + "/" + numToEnter);
+			double flowRatio = numWithin == 0 ? 0.0 : (double) numWithin / (double) Math.max(1.0, numToEnter);
 
-		for(int i = 0; i < animals.size(); i++) {
-			prevAnimalLocs.set(i, animals.get(i).get_location());
-		}
+			boolean waitToEat = flowRatio >= this.flowThresh;
+			System.out.println(flowRatio + "=" + numWithin + "/" + numToEnter);
 
-		// get animal distances, useful for many core functions
-		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
-		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
-		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
-		System.out.println(this.playerRole + ": G2 player role");
-		
-		if(this.playerRole.equals("distract")) {
-			return distract(monkey_dists, goose_dists, ps);
-		}
-
-		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
-		if (hideFood != null) {
-			return hideFood;
-		}
-
-		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 10 || this.currentTime % 100 == 0) {
-			this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
-		}
-
-		if (this.walkingTarget != null) {
-			if (ps.is_player_searching()) {
-				return new Command(CommandType.ABORT);
+			for(int i = 0; i < animals.size(); i++) {
+				prevAnimalLocs.set(i, animals.get(i).get_location());
 			}
-			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
+
+			// get animal distances, useful for many core functions
+			HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
+			ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
+			ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
+			System.out.println(this.playerRole + ": G2 player role");
+
+			Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
+			if (hideFood != null) {
+				return hideFood;
+			}
+
+			if(this.playerRole.equals("distract")) {
+				return distract(ps);
+			}
+
+			// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
+			if (this.currentTime == 20 || this.currentTime % 100 == 0) {
+				this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
+			}
+
+			if (this.walkingTarget != null) {
+				if (ps.is_player_searching()) {
+					return new Command(CommandType.ABORT);
+				}
+				System.out.println("We are walking on purpose");
+				return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
+			}
+
+			Command progress = makeEatingProgress(ps, waitToEat, goose_dists);
+			if (progress != null) {
+				return progress;
+			}
+
+			// just run TA code in case we didn't do anything
+			return new Command(CommandType.WAIT);
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return new Command(CommandType.WAIT);
 		}
-
-		Command progress = makeEatingProgress(ps, waitToEat, stopEating, goose_dists);
-		if (progress != null) {
-			return progress;
-		}
-
-		// just run TA code in case we didn't do anything
-		System.out.println("Returning default command");
-		return getDefaultCommand(members, animals, ps, monkey_dists, goose_dists);
-
-		//////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////
-
 	}
 
 	//boolean jobFree to check if anyone is currently distracting.
-
 	boolean jobAvailable(ArrayList<Family> members)
 	{
 		Point distractionSpot = new Point(50,50);
@@ -704,7 +659,6 @@ public class Player implements lunch.sim.Player
 	{
 		
 		//if there's quite a bit of time left and we're almost done, start distracting
-
 		if( this.total_time - this.currentTime > 100 && time_needed(ps)<3)
 		{
 			return true; 
@@ -712,11 +666,8 @@ public class Player implements lunch.sim.Player
 
 		else if(jobAvailable(members)) //if no one is doing it, take one for the team.
 			return true;
-
 		else
 			return false;
-
-
 	}
 
 
@@ -740,73 +691,6 @@ public class Player implements lunch.sim.Player
 		}
 
 		return false; //only stop distracting when you have good reason to.
-
 	}
-
-	public Command getDefaultCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps, ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists) {
-		// TA code
-		Double monkey_min = monkey_dists.get(0);
-		if(turn<10)
-		{
-			boolean found_valid_move= false;
-			Point next_move = new Point(-1,-1);
-			while(!found_valid_move)
-			{
-				Double bearing = random.nextDouble()*2*Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
-			}
-			// System.out.println("move command issued");
-			turn++;
-			return Command.createMoveCommand(next_move);
-		}
-
-		// abort taking out if animal is too close
-		if(monkey_min<3.0 && ps.is_player_searching() && ps.get_held_item_type()==null)
-		{
-			// System.out.println("abort command issued");
-			// System.out.println(monkey_min.toString());
-			return new Command(CommandType.ABORT);
-		}
-
-		// move away from animal 
-		else if(monkey_min<3.0)
-		{
-			boolean found_valid_move= false;
-			Point next_move = new Point(-1,-1);
-			while(!found_valid_move)
-			{
-				Double bearing = random.nextDouble()*2*Math.PI;
-				next_move = new Point(ps.get_location().x + Math.cos(bearing), ps.get_location().y + Math.sin(bearing));
-				found_valid_move = Point.within_bounds(next_move);
-			}
-			return Command.createMoveCommand(next_move);
-			
-		}
-		// if no animal is near then take out food
-		else if (!ps.is_player_searching() &&  monkey_min>=5 && ps.get_held_item_type()==null )
-		{
-			for(FoodType food_type: FoodType.values())
-			{
-				if(ps.check_availability_item(food_type))
-				{
-					Command c = new Command(CommandType.TAKE_OUT, food_type);
-					return c;
-				}
-			}
-		}
-		
-		// if no animal in vicinity then take a bite
-		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null)
-		{
-			return new Command(CommandType.EAT);
-		}
-
-		// System.out.println("player is searching");
-		return new Command();
-	}
-	
-
-
 }
-/////////////////
+
