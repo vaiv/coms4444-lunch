@@ -130,6 +130,11 @@ public class DistractionStatus {
         } else if (move.mode == 3) {
             if (--move.timestep <= 0)
                 this.strategy.remove(0);
+            
+            if (ps.time_to_eat_remaining() < move.timestep){
+                this.strategy.clear();
+                this.eatFood(ps.time_to_eat_remaining());
+            }
             return new Command(CommandType.EAT);
         }
         return new Command();

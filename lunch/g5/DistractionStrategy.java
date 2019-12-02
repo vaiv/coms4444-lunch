@@ -124,12 +124,12 @@ public class DistractionStrategy {
             AnimalPosition monkeyPositions = posEstimates[t];
 
             for (int i = -t; i <= t; i++) {
-                if (x + i < 0 || x + i > 40)
+                if (x + i < 0 || x + i > 35)
                     continue;
 
                 int jlim = t - Math.abs(i);
                 for (int j = -jlim; j <= jlim; j++) {
-                    if (y + j < 0 || y + j > 40)
+                    if (y + j < 0 || y + j > 35)
                         continue;
 
                     Point startingPosition = new Point(x + i, y + j);
@@ -148,7 +148,7 @@ public class DistractionStrategy {
 
         Integer bestWalkFound = 0;
         DistractionStatus bestStrategy = null;
-        Integer maxWalkPossible = Math.max(Math.max(x, 40 - x), Math.max(y, 40 - y));
+        Integer maxWalkPossible = Math.max(Math.max(x, 35 - x), Math.max(y, 35 - y));
 
         // Only consider a few starting positions to avoid timeout
         int consideredCount = 0;

@@ -222,7 +222,7 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command;
         // Get the bahivour typ to execute
-        BehaviorType type = getNextBehaviorType(members, animals, ps);
+        BehaviorType type = BehaviorType.DISTRACTION;// getNextBehaviorType(members, animals, ps);
         // Depending on the type generate the appropriate command
         switch (type) {
             case DISTRACTION:
