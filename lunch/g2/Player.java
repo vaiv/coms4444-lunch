@@ -675,7 +675,7 @@ public class Player implements lunch.sim.Player
 		Double radiusOfDistraction = 10.0;
 		for(Family member: members)
 		{
-			if (Point.dist(member.get_location(), center) > radiusOfDistraction) 
+			if (Point.dist(member.get_location(), distractionSpot) > radiusOfDistraction)
 			{
 				return false;
 			}
@@ -725,7 +725,7 @@ public class Player implements lunch.sim.Player
 			}
 
 		// you still need to finish your sandwich so time to move on
-		int time_rem = this.total_time - this.currentTime;
+		double time_rem = this.total_time - this.currentTime;
 
 		if ((time_rem/time_needed(ps)) < 2) //if remaining time is less than 200% of the time needed, go eat. 
 		{
