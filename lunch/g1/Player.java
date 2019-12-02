@@ -27,6 +27,7 @@ public class Player implements lunch.sim.Player
 	private Integer id;
 	private Integer turn;
 	private String avatars;
+    private double t;
 
 	Double eps = 10e-7;
 
@@ -45,6 +46,7 @@ public class Player implements lunch.sim.Player
 	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
+		this.t = t;
 		this.animalLocations = new ArrayList<>();
 		this.animalMovement = new ArrayList<>();
 		this.animalDirections = new ArrayList<>();
@@ -60,7 +62,7 @@ public class Player implements lunch.sim.Player
 	}
 
 
-	public ArrayList<FoodType> getPriority(){
+	public ArrayList<FoodType> getPriority() {
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
 		   /* time left: 1552
 		   priorityList.add(FoodType.COOKIE);
@@ -70,14 +72,26 @@ public class Player implements lunch.sim.Player
 		   priorityList.add(FoodType.SANDWICH2);
 		   priorityList.add(FoodType.EGG);
 		   */
+		   System.out.println(t);
+		   if (t <= 30 *60) {
+               // time left: 1656
+               priorityList.add(FoodType.COOKIE);
+               priorityList.add(FoodType.FRUIT1);
+               priorityList.add(FoodType.FRUIT2);
+               priorityList.add(FoodType.EGG);
+               priorityList.add(FoodType.SANDWICH1);
+               priorityList.add(FoodType.SANDWICH2);
+		   }
 		   
-		   // time left: 1656
-		   priorityList.add(FoodType.COOKIE);
-		   priorityList.add(FoodType.SANDWICH1);
-		   priorityList.add(FoodType.SANDWICH2);
-		   priorityList.add(FoodType.FRUIT1);
-		   priorityList.add(FoodType.FRUIT2);
-		   priorityList.add(FoodType.EGG);
+		   else {
+               // time left: 1656
+               priorityList.add(FoodType.COOKIE);
+               priorityList.add(FoodType.SANDWICH1);
+               priorityList.add(FoodType.SANDWICH2);
+               priorityList.add(FoodType.FRUIT1);
+               priorityList.add(FoodType.FRUIT2);
+               priorityList.add(FoodType.EGG);
+		   }
 
 		   return priorityList;
 
