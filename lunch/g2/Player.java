@@ -181,7 +181,7 @@ public class Player implements lunch.sim.Player
 
 	private FoodType pickEatingFood(PlayerState ps, ArrayList<Double> goose_dists) {
 		FoodType f;
-		Double minGooseDist = Collections.min(goose_dists)
+		Double minGooseDist = Collections.min(goose_dists);
 
 		if(ps.check_availability_item(FoodType.COOKIE))
 		{
@@ -189,11 +189,11 @@ public class Player implements lunch.sim.Player
 		}
 		else if (ps.check_availability_item(FoodType.SANDWICH1) && minGooseDist > 25.0) 
 		{
-			f = SANDWICH1;
+			f = FoodType.SANDWICH1;
 		}
 		else if (ps.check_availability_item(FoodType.SANDWICH2) && minGooseDist > 25.0) 
 		{
-			f = SANDWICH2;
+			f = FoodType.SANDWICH2;
 		}
 		else if(ps.check_availability_item(FoodType.EGG))
 		{
@@ -216,7 +216,7 @@ public class Player implements lunch.sim.Player
 			f = FoodType.SANDWICH2;
 		}
 
-		return f
+		return f;
 	}
 
 	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart, ArrayList<Double> goose_dists) {
@@ -230,7 +230,7 @@ public class Player implements lunch.sim.Player
 		//else pull out in order if not already pulling out
 		else if(!ps.is_player_searching())
 		{
-			f = pickEatingFood(ps, goose_dists)
+			FoodType f = pickEatingFood(ps, goose_dists);
 
 			if(waitToRestart) {
 				System.out.println("Asking to wait to restart eating...");
@@ -649,7 +649,7 @@ public class Player implements lunch.sim.Player
 			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 		}
 
-		Command progress = makeEatingProgress(ps, waitToEat);
+		Command progress = makeEatingProgress(ps, waitToEat, goose_dists);
 		if (progress != null) {
 			return progress;
 		}
