@@ -72,7 +72,7 @@ public class Player implements lunch.sim.Player
 		this.densityRecord = new ArrayList<HashMap<Integer, Double>>();
 		this.currentTime = 0;
 		this.descriptiveState = "initial";
-		this.playerRole = "distract";
+		this.playerRole = "eat";
 		fanningOut = true;
 		this.total_time = t;
 
@@ -219,12 +219,16 @@ public class Player implements lunch.sim.Player
 		return f;
 	}
 
-	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart, ArrayList<Double> goose_dists) {
+	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart, boolean stopEating, ArrayList<Double> goose_dists) {
 		//if holding something, eat it
-		if(holdingFood(ps))
-		{
-			System.out.println("Asking player to eat");
-			return new Command(CommandType.EAT);
+		if(holdingFood(ps)) {
+			if(stopEating) {
+				System.out.println("Stop eating");
+				return new Command(CommandType.KEEP_BACK);
+			} else {
+				System.out.println("Eating!");
+				return new Command(CommandType.EAT);
+			}
 		}
 
 		//else pull out in order if not already pulling out
@@ -233,7 +237,7 @@ public class Player implements lunch.sim.Player
 			FoodType f = pickEatingFood(ps, goose_dists);
 
 			if(waitToRestart) {
-				System.out.println("Asking to wait to restart eating...");
+				System.out.println("Asking to wait before trying to eat again...");
 				return new Command(CommandType.WAIT);
 			} else {
 				Command c = new Command(CommandType.TAKE_OUT, f);
@@ -533,6 +537,10 @@ public class Player implements lunch.sim.Player
 	};
 
 	private void updatePlayerRole(PlayerState ps, ArrayList<Family> members) {
+		if(members.size() == 1) {
+			this.playerRole = "eat";  // no distracting here
+		}
+
 		if (this.playerRole.equals("eat") && startDistract(ps, members)) {
 			this.playerRole = "distract";
 		}
@@ -616,6 +624,8 @@ public class Player implements lunch.sim.Player
 
 		double flowRatio = numWithin == 0 ? 0.0 : (double) numWithin / (double) Math.max(1.0, numToEnter);
 		boolean waitToEat = flowRatio >= 5.0;
+		boolean stopEating = flowRatio >= 10.0;
+		System.out.println(flowRatio + "=" + numWithin + "/" + numToEnter);
 
 		for(int i = 0; i < animals.size(); i++) {
 			prevAnimalLocs.set(i, animals.get(i).get_location());
@@ -625,8 +635,6 @@ public class Player implements lunch.sim.Player
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
-
-		this.playerRole = "eat";
 
 		if(this.playerRole.equals("distract")) {
 			return distract(monkey_dists, goose_dists, ps);
@@ -638,7 +646,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 30 || this.currentTime % 100 == 0) {
+		if (this.currentTime == 10 || this.currentTime % 1000 == 0) {
 			this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
 		}
 
@@ -649,13 +657,13 @@ public class Player implements lunch.sim.Player
 			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 		}
 
-		Command progress = makeEatingProgress(ps, waitToEat, goose_dists);
+		Command progress = makeEatingProgress(ps, waitToEat, stopEating, goose_dists);
 		if (progress != null) {
 			return progress;
 		}
 
 		// just run TA code in case we didn't do anything
-		print("Returning default command");
+		System.out.println("Returning default command");
 		return getDefaultCommand(members, animals, ps, monkey_dists, goose_dists);
 
 		//////////////////////////////////////////////////////////////////
@@ -664,10 +672,6 @@ public class Player implements lunch.sim.Player
 	}
 
 	//boolean jobFree to check if anyone is currently distracting.
-
-	void print(String str){
-		System.out.println(str);
-	}
 
 	boolean jobAvailable(ArrayList<Family> members)
 	{
