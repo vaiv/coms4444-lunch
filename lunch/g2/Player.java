@@ -671,8 +671,8 @@ public class Player implements lunch.sim.Player
 
 	boolean jobAvailable(ArrayList<Family> members)
 	{
-		Point center = new Point(0,0);
-		Double radiusOfDistraction = 5.0;
+		Point distractionSpot = new Point(50,-50);
+		Double radiusOfDistraction = 10.0;
 		for(Family member: members)
 		{
 			if (Point.dist(member.get_location(), center) > radiusOfDistraction) 
@@ -685,12 +685,20 @@ public class Player implements lunch.sim.Player
 
 	}
 
+	int time_needed(PlayerState ps) //get the time needed to finish eating everything 
+	{
+
+		return ps.get_time_for_item(FoodType.SANDWICH1) + ps.get_time_for_item(FoodType.SANDWICH2) +ps.get_time_for_item(FoodType.FRUIT1) + ps.get_time_for_item(FoodType.FRUIT2) + ps.get_time_for_item(FoodType.EGG)+ ps.get_time_for_item(FoodType.COOKIE);
+
+	}
+
 
 	boolean startDistract(PlayerState ps, ArrayList<Family> members)
 	{
 		
 		//if there's quite a bit of time left and we're almost done, start distracting
-		if( this.total_time - this.currentTime > 100 && ps.get_time_for_item(FoodType.SANDWICH2)<3)
+
+		if( this.total_time - this.currentTime > 100 && time_needed(ps)<3)
 		{
 			return true; 
 		}
@@ -717,7 +725,9 @@ public class Player implements lunch.sim.Player
 			}
 
 		// you still need to finish your sandwich so time to move on
-		if (this.total_time - this.currentTime < 50) 
+		int time_rem = this.total_time - this.currentTime;
+
+		if ((time_rem/time_needed(ps)) < 2) //if remaining time is less than 200% of the time needed, go eat. 
 		{
 			return true;
 		}
