@@ -33,6 +33,7 @@ public class Player implements lunch.sim.Player
 	private boolean fanningOut; // when distracting are we currently going toward dense region or bringing
 	// animals back to center
 	private Double total_time;
+	private ArrayList<Point> eatPoints;
 
 
 
@@ -71,6 +72,13 @@ public class Player implements lunch.sim.Player
 		this.playerRole = "distract";
 		fanningOut = true;
 		this.total_time = t;
+
+		this.eatPoints = new ArrayList<Point>();
+		this.eatPoints.add(new Point(50, -50));
+		this.eatPoints.add(new Point(0, -50));
+		this.eatPoints.add(new Point(-50, -50));
+		this.eatPoints.add(new Point(-50, 0));
+		this.eatPoints.add(new Point(-50, 50));
 
 		return avatars;
 	}
@@ -434,6 +442,24 @@ public class Player implements lunch.sim.Player
 		return null;
 	}
 
+
+	private Point getEatingPoint(ArrayList<Family> members) {
+		// go to least occupied corner by other family members
+		ArrayList<Integer> occupancies = new ArrayList<Integer>(Collections.nCopies(5, 0));
+		for (Family member : members) {
+			for (int i=0; i <=4; i++) {
+				if (Point.dist(member.get_location(), this.eatPoints.get(i)) < 8) {
+					occupancies.set(i, occupancies.get(i) + 1) ;
+				}
+			}
+			
+		}
+
+		int minIdx = occupancies.indexOf(Collections.min(occupancies));
+		print(minIdx + " minIdx");
+		return this.eatPoints.get(minIdx);
+	}
+
 	public Command distract(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
 		// don't let food get taken
 		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
@@ -496,12 +522,14 @@ public class Player implements lunch.sim.Player
 			return distract(monkey_dists, goose_dists, ps);
 		}
 
-		// basic scaffolding ////////////////////////
-		///////////////////////////////////////////////////////////////
+		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
+		if (hideFood != null) {
+			return hideFood;
+		}
 
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 10 || this.currentTime % 200 == 0) {
-			this.walkingTarget = getWalkingTargetToEmptyRegion(3, ps);  // also checks if walking is worth the time
+		if (this.currentTime == 10 || this.currentTime % 100 == 0) {
+			this.walkingTarget = getEatingPoint(members);  // also checks if walking is worth the time
 		}
 
 		if (this.walkingTarget != null) {
@@ -511,11 +539,7 @@ public class Player implements lunch.sim.Player
 			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 		}
 
-		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
-		if (hideFood != null) {
-			return hideFood;
-		}
-
+		// if we have nothing else to do, make progress eating
 		Command progress = makeEatingProgress(ps);
 		if (progress != null) {
 			return progress;
