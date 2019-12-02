@@ -1,5 +1,6 @@
 package lunch.g2;
 
+import java.awt.geom.Line2D;
 import java.util.List;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +27,7 @@ public class Player implements lunch.sim.Player
 	private String avatars;
 	private ArrayList<HashMap<Integer, Double>> densityRecord;
 	private int currentTime;
+	private ArrayList<Point> prevAnimalLocs;
 	private Point walkingTarget;
 	private boolean inPosition;  // indicates whether we are happy with our location
 	private String descriptiveState;
@@ -44,6 +46,7 @@ public class Player implements lunch.sim.Player
 		descriptiveState = "initial";
 		playerRole = "distract";
 		fanningOut = true;
+		prevAnimalLocs = null;
 	}
 
 	public void updateState(PlayerState ps) {
@@ -79,6 +82,11 @@ public class Player implements lunch.sim.Player
 		this.eatPoints.add(new Point(-50, -50));
 		this.eatPoints.add(new Point(-50, 0));
 		this.eatPoints.add(new Point(-50, 50));
+
+		prevAnimalLocs = new ArrayList<>();
+		for(int i = 0; i < animals.size(); i++) {
+			prevAnimalLocs.add(new Point(0.0, 0.0));
+		}
 
 		return avatars;
 	}
@@ -174,7 +182,7 @@ public class Player implements lunch.sim.Player
 	}
 
 	// to be completed
-	private Command makeEatingProgress(PlayerState ps) {
+	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart) {
 		//if holding something, eat it
 		if(holdingFood(ps))
 		{
@@ -212,12 +220,15 @@ public class Player implements lunch.sim.Player
 			{
 				f = FoodType.SANDWICH2;
 			}
-			
-			Command c = new Command(CommandType.TAKE_OUT, f);
-			System.out.println("Sending food to take out");
-			return c;
 
-
+			if(waitToRestart) {
+				System.out.println("Asking to wait to restart eating...");
+				return new Command(CommandType.WAIT);
+			} else {
+				Command c = new Command(CommandType.TAKE_OUT, f);
+				System.out.println("Sending food to take out");
+				return c;
+			}
 		}
 
 		return null;
@@ -505,6 +516,54 @@ public class Player implements lunch.sim.Player
 		}
 	}
 
+	public double dist(Point p1, Point p2) {
+		return Math.sqrt(Math.pow(p2.x - p1.x, 2.0) + Math.pow(p2.y - p1.y, 2.0));
+	}
+
+	public ArrayList<Integer> predictDirections(Point pp, ArrayList<Point> prevAnimalLocs, ArrayList<Animal> animals) {
+		ArrayList<Integer> stepsToOrbit = new ArrayList<>();
+
+		for(int i = 0; i < animals.size(); i++) {
+			Point currLocation = animals.get(i).get_location();
+			Point prevLocation = prevAnimalLocs.get(i);
+			double deltaY = prevLocation.y - currLocation.y;
+			double deltaX = currLocation.x - prevLocation.x;
+
+			double theta = Math.atan2(deltaY, deltaX);
+			double angle = 180 * theta / Math.PI;
+
+			boolean initiallyWithin = this.dist(pp, new Point(currLocation.x, currLocation.y)) <= 40.0;
+			int timeStepsAway = 100;
+			for(int d = 1; d < (int) (Math.sqrt(2) * 100.0); d += 5) {
+				double newX = currLocation.x + Math.cos(theta) * d;
+				double newY = currLocation.y - Math.sin(theta) * d;
+				double dist = this.dist(pp, new Point(newX, newY));
+
+				if(dist <= 40.0 && !initiallyWithin) {
+					timeStepsAway = d;
+					break;
+				}
+
+				if(dist > 40.0 && initiallyWithin) {
+					timeStepsAway = - d;
+					break;
+				}
+
+				if(newX < -50 || newX > 50 || newY < -50 || newY > 50) {
+					if(initiallyWithin) {
+						timeStepsAway = -(d + 40);
+					} else {
+						timeStepsAway = d + 100;
+					}
+					break;
+				}
+			}
+			stepsToOrbit.add(timeStepsAway);
+		}
+
+		return stepsToOrbit;
+	}
+
 
 	public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps)
 	{
@@ -513,10 +572,36 @@ public class Player implements lunch.sim.Player
 		this.updateState(ps); // descriptive state - one of "taking_out", "initial", "food_out", "putting_back"
 		updatePlayerRole(ps, members);
 
+		ArrayList<Integer> stepsToOrbit = predictDirections(ps.get_location(), prevAnimalLocs, animals);
+		double minSteps = 99999;
+		int numWithin = 0;
+		int numToEnter = 0;
+		for(int steps : stepsToOrbit) {
+			minSteps = Math.min(steps, minSteps);
+			if(steps < 0) {
+				numWithin += 1;
+			}
+		}
+		minSteps *= -1.0;
+		for(int steps : stepsToOrbit) {
+			if(steps > 0 && steps <= minSteps) {
+				numToEnter += 1;
+			}
+		}
+
+		double flowRatio = numWithin == 0 ? 0.0 : (double) numWithin / (double) Math.max(1.0, numToEnter);
+		boolean waitToEat = flowRatio >= 5.0;
+
+		for(int i = 0; i < animals.size(); i++) {
+			prevAnimalLocs.set(i, animals.get(i).get_location());
+		}
+
 		// get animal distances, useful for many core functions
 		HashMap<AnimalType, ArrayList<Double>> distances = getDistances(animals, ps);
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
+
+		this.playerRole = "eat";
 
 		if(this.playerRole.equals("distract")) {
 			return distract(monkey_dists, goose_dists, ps);
@@ -532,15 +617,19 @@ public class Player implements lunch.sim.Player
 			this.walkingTarget = getEatingPoint(members);  // also checks if walking is worth the time
 		}
 
-		if (this.walkingTarget != null) {
-			if (ps.is_player_searching()) {
-				return new Command(CommandType.ABORT);
-			}
-			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
+//		if (this.walkingTarget != null) {
+//			if (ps.is_player_searching()) {
+//				return new Command(CommandType.ABORT);
+//			}
+//			return walkToPosition(ps);  // we have a target, make progress walking to it.  Null target when we arrive.
+//		}
+
+		Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
+		if (hideFood != null) {
+			return hideFood;
 		}
 
-		// if we have nothing else to do, make progress eating
-		Command progress = makeEatingProgress(ps);
+		Command progress = makeEatingProgress(ps, waitToEat);
 		if (progress != null) {
 			return progress;
 		}
