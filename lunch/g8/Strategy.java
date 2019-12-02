@@ -100,4 +100,24 @@ public abstract class Strategy {
         return list;
     }
 
+    public int getMonkeyDensity() {
+        int numMonkeys = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.MONKEY) {
+                numMonkeys++;
+            }
+        }
+        return numMonkeys / family.size();
+    }
+
+    public int getGeeseDensity() {
+        int numGeese = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.GOOSE) {
+                numGeese++;
+            }
+        }
+        return numGeese / family.size();
+    }
+
 }

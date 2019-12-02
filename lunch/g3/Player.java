@@ -17,12 +17,19 @@ public class Player implements lunch.sim.Player {
     // t: Time limit for simulation.
     private FoodType foodToPull;
     private double THRESHOLD = 6.5;
+    private boolean firstMove;
     public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
+        firstMove = true;
         return new String("");
     };
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
+        if(firstMove) {
+            firstMove = false;
+            return Command.createMoveCommand(randomMove(ps));
+        }
+
         // Is food in hand? Yes -> should we stop?; No -> should we pull food out?
         if (ps.get_held_item_type() != null) {
             // Should we stop? Yes -> put food away; No -> keep eating
@@ -51,6 +58,11 @@ public class Player implements lunch.sim.Player {
             }
         }
     };
+
+    public Point randomMove(PlayerState ps) {
+        double theta = Math.random() * 2 * Math.PI;
+        return new Point(ps.get_location().x + Math.cos(theta), ps.get_location().y + Math.sin(theta));
+    }
 
     public FoodType selectFood(PlayerState ps) {
         if (ps.check_availability_item(FoodType.COOKIE)) return FoodType.COOKIE;
@@ -131,10 +143,10 @@ public class Player implements lunch.sim.Player {
 		Point top_right = new Point(50, -50);
 		Point top_left = new Point(-50, -50);
         Point bottom_left = new Point(-50, 50);
-        Point bottom_right = new Point(50, 50);
+        //Point bottom_right = new Point(50, 50);
 		corners.add(top_right);
         corners.add(top_left);
-        corners.add(bottom_right);
+        //corners.add(bottom_right);
         corners.add(bottom_left);
         Point chosenCorner = top_right;
         double minDist = Integer.MAX_VALUE;

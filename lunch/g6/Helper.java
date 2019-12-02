@@ -129,7 +129,7 @@ public class Helper {
     public static HashMap<Integer, Point> calculateTrajectories(ArrayList<Animal> animals, ArrayList<Animal> prev_animals) {
         HashMap<Integer, Point> result = new HashMap<>();
         // This assumes animal's position in array does not change
-        for (int i = 0; i < prev_animals.size(); i++){
+        for (int i = 0; i < prev_animals.size(); i++) {
             Point curr_loc = animals.get(i).get_location();
             Point prev_loc = prev_animals.get(i).get_location();
             double delta_x = curr_loc.x - prev_loc.x;
@@ -348,8 +348,8 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
-                continue; 
+            // if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
+            //     continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
@@ -358,20 +358,32 @@ public class Helper {
         return new Command(); 
     }
 
-    public static boolean shouldDistract(PlayerState ps) {
-        // Implement priority: cookie --> non sandwich --> sandwich 
-        FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
-        boolean fruitAvailable = false; 
-        boolean eggAvailable = false; 
-        for (FoodType food_type: ordered) {
-            if (food_type == FoodType.FRUIT2)
-                fruitAvailable = ps.check_availability_item(food_type);
-            if (food_type == FoodType.EGG)
-                eggAvailable = ps.check_availability_item(food_type);
-        }
+    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id) {
         boolean distract = false;
-        if (!eggAvailable && fruitAvailable)
+        Point distractingCorner = new Point(50, 50);
+        Double minDist = Double.MAX_VALUE;
+        Family closest = null;
+        for (Family f: members) {
+            Point curLoc = f.get_location();
+            Double distance = Point.dist(curLoc, distractingCorner);
+            if (distance < minDist) {
+                minDist = distance;
+                closest = f;
+            }
+        }
+        if (closest.get_id() == id) {
             distract = true;
+        }
+        // Check if someone is there to relieve you
+        for (Family f: members) {
+            if (f.get_id() == id) {
+                continue;
+            } 
+            Point curLoc = f.get_location();
+            if (curLoc.x > 10 && curLoc.y > 10) {
+                distract = false;
+            }
+        }
         return distract;
     }
 
