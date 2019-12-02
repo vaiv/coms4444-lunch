@@ -68,3 +68,4 @@ if(multi):
     results = [ (x, runGames(x)) for x in allPossibleFamilies ]
 else:
     results = runGames([mainPlayer]*familySize)
+    results.to_csv("./games_results.csv")
