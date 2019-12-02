@@ -143,18 +143,16 @@ public class Player implements lunch.sim.Player
 
 	// issues a response command if in danger
 	private Command respondIfDanger(ArrayList<Double> monkey_dists, ArrayList<Double> goose_dists, PlayerState ps) {
-		Double monkey_threshold = 7.0;  // conservative
-		Double goose_threshold = 6.0;   // conservative
+		Double monkey_threshold = 6.0;  // should be lowest we can go
+		Double goose_threshold = 5.0;   // ditto
 		boolean gooseTooClose = gooseIsNear(goose_dists, goose_threshold);
 		boolean monkeysTooClose = monkeysAreNear(monkey_dists, monkey_threshold);
 		if ((monkeysTooClose && holdingFood(ps)) || (gooseTooClose && ps.get_held_item_type() == FoodType.SANDWICH)) {
-			// danger sensed, start putting food away
 			return new Command(CommandType.KEEP_BACK);
 		}
 
-		// actually we only want to abort if we're close to getting the food out
+		// We only want to abort if we're close to getting the food out
 		if ((gooseTooClose || monkeysTooClose) && ps.is_player_searching() && ps.time_to_finish_search() < 2) {
-			// danger sensed, start putting food away
 			return new Command(CommandType.ABORT);
 		}
 
@@ -181,8 +179,47 @@ public class Player implements lunch.sim.Player
 		return Command.createMoveCommand(move);
 	}
 
-	// to be completed
-	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart) {
+	private FoodType pickEatingFood(PlayerState ps, ArrayList<Double> goose_dists) {
+		FoodType f;
+		Double minGooseDist = Collections.min(goose_dists)
+
+		if(ps.check_availability_item(FoodType.COOKIE))
+		{
+			f = FoodType.COOKIE;
+		}
+		else if (ps.check_availability_item(FoodType.SANDWICH1) && minGooseDist > 25.0) 
+		{
+			f = SANDWICH1;
+		}
+		else if (ps.check_availability_item(FoodType.SANDWICH2) && minGooseDist > 25.0) 
+		{
+			f = SANDWICH2;
+		}
+		else if(ps.check_availability_item(FoodType.EGG))
+		{
+			f = FoodType.EGG;
+		}
+		else if(ps.check_availability_item(FoodType.FRUIT1))
+		{
+			f = FoodType.FRUIT1;
+		}
+		else if(ps.check_availability_item(FoodType.FRUIT2))
+		{
+			f = FoodType.FRUIT2;
+		}
+		else if(ps.check_availability_item(FoodType.SANDWICH1))
+		{
+			f = FoodType.SANDWICH1;
+		}
+		else 
+		{
+			f = FoodType.SANDWICH2;
+		}
+
+		return f
+	}
+
+	private Command makeEatingProgress(PlayerState ps, boolean waitToRestart, ArrayList<Double> goose_dists) {
 		//if holding something, eat it
 		if(holdingFood(ps))
 		{
@@ -193,33 +230,7 @@ public class Player implements lunch.sim.Player
 		//else pull out in order if not already pulling out
 		else if(!ps.is_player_searching())
 		{
-			FoodType f;
-			if(ps.check_availability_item(FoodType.COOKIE))
-			{
-				f = FoodType.COOKIE;
-			}
-
-			else if(ps.check_availability_item(FoodType.EGG))
-			{
-				f = FoodType.EGG;
-			}
-
-			else if(ps.check_availability_item(FoodType.FRUIT1))
-			{
-				f = FoodType.FRUIT1;
-			}
-			else if(ps.check_availability_item(FoodType.FRUIT2))
-			{
-				f = FoodType.FRUIT2;
-			}
-			else if(ps.check_availability_item(FoodType.SANDWICH1))
-			{
-				f = FoodType.SANDWICH1;
-			}
-			else 
-			{
-				f = FoodType.SANDWICH2;
-			}
+			f = pickEatingFood(ps, goose_dists)
 
 			if(waitToRestart) {
 				System.out.println("Asking to wait to restart eating...");
@@ -454,19 +465,34 @@ public class Player implements lunch.sim.Player
 	}
 
 
-	private Point getEatingLocation(ArrayList<Family> members) {
-		// go to least occupied corner by other family members
+	private Integer getCurrentEatingLocation(PlayerState ps) {
+		for (int i=0; i < eatLocations.size(); i++) {
+			if (Point.dist(eatLocations.get(i), ps.get_location()) < 8) {
+				return i;
+			}
+		}
+		return null;
+	}
+
+	private Point getNewEatingLocation(ArrayList<Family> members, PlayerState ps) {
+		// go to least occupied eating spot by other family members
 		ArrayList<Integer> occupancies = new ArrayList<Integer>(Collections.nCopies(5, 0));
 		for (Family member : members) {
 			for (int i=0; i <=4; i++) {
 				if (Point.dist(member.get_location(), this.eatLocations.get(i)) < 8) {
-					occupancies.set(i, occupancies.get(i) + 1) ;
+					occupancies.set(i, occupancies.get(i) + 1);
 				}
 			}
 			
 		}
 
 		int minIdx = occupancies.indexOf(Collections.min(occupancies));
+		// don't move if new location is equally as good as where we are at
+		Integer current = getCurrentEatingLocation(ps);
+		if (current != null && occupancies.get(minIdx) == occupancies.get(current) - 1) {
+			return null;
+		}
+
 		return this.eatLocations.get(minIdx);
 	}
 
@@ -612,8 +638,8 @@ public class Player implements lunch.sim.Player
 		}
 
 		// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
-		if (this.currentTime == 10 || this.currentTime % 1000 == 0) {
-			this.walkingTarget = getEatingLocation(members);  // also checks if walking is worth the time
+		if (this.currentTime == 30 || this.currentTime % 100 == 0) {
+			this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
 		}
 
 		if (this.walkingTarget != null) {
