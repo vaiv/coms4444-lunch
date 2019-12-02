@@ -17,7 +17,7 @@ public class LureAtPositionStrategy extends EatAtPositionStrategy {
     public boolean reCentering = true;
 
     public LureAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
-        super(CENTER, family, animals, state, random);
+        super(RB_CORNER, family, animals, state, random);
         monkeyMargin = 6;
     }
 
@@ -49,7 +49,7 @@ public class LureAtPositionStrategy extends EatAtPositionStrategy {
 
     @Override
     protected Point pickAPosition() {
-        return CENTER;
+        return RB_CORNER;
     }
 
 }
