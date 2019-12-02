@@ -6,7 +6,7 @@ minMonkey to maxMonkey and minGeese to maxGeese
 
 It stores every result in a dataframe and keeps a list of (players, dataframe)
 
-It's probably best to run this in an interactive setting like a jupyter notebook or using -i on python. 
+It's probably best to run this in an interactive setting like a jupyter notebook or using -i on python.
 """
 
 
@@ -18,12 +18,14 @@ players = ['g2','g4','g5','g7','g8']
 mainPlayer = 'g4'
 familySize = 4
 time = 3600
-minMonkey = 1
-maxMonkey = 2
-minGeese = 1
-maxGeese = 2
+minMonkey = 30
+maxMonkey = 60
+minGeese = 30
+maxGeese = 60
 seed = 12345
 legibleOutput = False #disable this to have more machine readable output
+multi = False # Turn on to have all families play, turn off to only have families with one group play (g4,g4,g4,g4)
+
 logPath = './logs'
 if not os.path.exists(logPath):
     os.makedirs(logPath)
@@ -62,4 +64,7 @@ def runGames(team):
 
     return results
 
-results = [ (x, runGames(x)) for x in allPossibleFamilies ]
+if(multi):
+    results = [ (x, runGames(x)) for x in allPossibleFamilies ]
+else:
+    results = runGames([mainPlayer]*familySize)
