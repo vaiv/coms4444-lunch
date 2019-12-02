@@ -27,7 +27,6 @@ public class Player implements lunch.sim.Player
 	private boolean inPosition;  // indicates whether we are happy with our location
 	private String descriptiveState;
 	private String playerRole; // "distract" or "eat"
-	private boolean fanningOut; // when distracting are we currently going toward dense region or bringing
 	// animals back to center
 	private Double total_time;
 	private ArrayList<Point> eatLocations;
@@ -58,7 +57,6 @@ public class Player implements lunch.sim.Player
 		this.currentTime = 0;
 		this.descriptiveState = "initial";
 		this.playerRole = "eat";
-		fanningOut = true;
 		this.total_time = t;
 		this.flowThresh = 2.5;
 
