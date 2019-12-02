@@ -117,6 +117,10 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 
         Log.log("###############################################################################################################");
 	 	Log.log("Simulation Beginning");
+	 	Log.log("number of players: " + f.toString());
+	 	Log.log("number of monkeys: " + m.toString());
+	 	Log.log("number of geese: " + g.toString());
+	 	Log.log("total time: " + turns.toString());
 
 	 	try
 	 	{
@@ -351,11 +355,13 @@ public static void main(String[] args) throws ClassNotFoundException, Instantiat
 	 	Log.log("simulation concluded!");
 	 	Log.log("----------------------------------------------Summary of results------------------------------------------");
 	 	Log.log("player name \t score");
+	 	Integer total_score = 0;
 	 	for(int l=0;l<agents.size();l++)
 	 	{
 	 		Log.log(playerNames.get(l) + "\t\t" + agents.get(l).get_score().toString());
+	 		total_score+= agents.get(l).get_score();
 	 	}
-
+	 	Log.log("total score: " + total_score.toString());
 	 	Log.log("----------------------------------------------End of log.-------------------------------------------------");
 
         Log.end();
