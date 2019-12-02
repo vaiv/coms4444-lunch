@@ -4,6 +4,8 @@ import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 
 import lunch.sim.Point;
 import lunch.sim.Family;
@@ -13,18 +15,45 @@ import lunch.sim.PlayerState;
 
 public class EatingStatus {
 
-    private HashMap<FoodType, Integer> foodTimeConstants;
+    public static HashMap<FoodType, Integer> foodTimeConstants = new HashMap<FoodType, Integer>() {{
+        put(FoodType.SANDWICH, 360-2);
+        put(FoodType.SANDWICH1, 180-1);
+        put(FoodType.SANDWICH2, 180-1);
+        put(FoodType.FRUIT, 240-2);
+        put(FoodType.FRUIT1, 120-1);
+        put(FoodType.FRUIT2, 120-1);
+        put(FoodType.EGG, 120-1);
+        put(FoodType.COOKIE, 60-1);
+    }};
 
     private ArrayList<HashMap<FoodType, Integer>> previousEatingStatus;
     private ArrayList<FoodType> previousVisibilities = new ArrayList<>();
 
-    public EatingStatus() {
-        this.foodTimeConstants = new HashMap<FoodType, Integer>();
-        this.foodTimeConstants.put(FoodType.SANDWICH, 360-2);
-        this.foodTimeConstants.put(FoodType.FRUIT, 240-2);
-        this.foodTimeConstants.put(FoodType.EGG, 120-1);
-        this.foodTimeConstants.put(FoodType.COOKIE, 60-1);
+    public static List<FoodType> allFoodTypesList = Arrays.asList(
+            FoodType.SANDWICH1, FoodType.SANDWICH2, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.COOKIE
+    );
+
+    public static HashMap<FoodType, Integer> getEatingStatusLeft(PlayerState ps) {
+        HashMap<FoodType, Integer> status = new HashMap<>();
+        for (FoodType ft : allFoodTypesList) {
+            Integer secondsLeft = ps.get_time_for_item(ft);
+            status.put(ft, secondsLeft);
+        }
+        return status;
     }
+
+    public static HashMap<FoodType, Double> getEatingStatusInPercentages(PlayerState ps) {
+        HashMap<FoodType, Double> status = new HashMap<>();
+        for (FoodType ft : allFoodTypesList) {
+            Integer secondsLeft = ps.get_time_for_item(ft);
+            Integer maxSeconds = foodTimeConstants.get(ft) + 1;
+            Double percentage = (maxSeconds - secondsLeft) * 1.0 / maxSeconds;
+            status.put(ft, percentage);
+        }
+        return status;
+    }
+
+    public EatingStatus() { }
 
     /**
      * A function that calculates the eating status of each player in percentages.

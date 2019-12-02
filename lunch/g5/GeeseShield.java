@@ -25,7 +25,7 @@ public class GeeseShield {
 		this.arrived = false;
 	}
 	
-	public Command getCommandGeeseShield(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> previousAnimals, PlayerState ps, int totalTurn) {
+	public Command getCommandGeeseShield(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps, ArrayList<Animal> previousAnimals, int totalTurn) {
 		// go to the shield position
 		if(!arrived) {
 			if(ps.get_held_item_type() != null)
