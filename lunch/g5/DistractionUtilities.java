@@ -151,64 +151,68 @@ public class DistractionUtilities {
         return new Pair<Integer, Point>(bestNumSteps, bestDestination);
     }
 
-    public static Pair<Integer, Point> simulateWalk(ArrayList<Point> monkeyPositions, Point ourLocation) {
-        Integer minX = 0, maxX = 35, minY = 0, maxY = 35;
+    // public static Pair<Integer, Point> simulateWalk(ArrayList<Point>
+    // monkeyPositions, Point ourLocation) {
+    // Integer minX = 0, maxX = 35, minY = 0, maxY = 35;
 
-        // Initiate empty matrices for each timestep
-        Integer x = (int) Math.round(ourLocation.x);
-        Integer y = (int) Math.round(ourLocation.y);
+    // // Initiate empty matrices for each timestep
+    // Integer x = (int) Math.round(ourLocation.x);
+    // Integer y = (int) Math.round(ourLocation.y);
 
-        Integer[] dxs = { 0, 0, -1, +1 };
-        Integer[] dys = { -1, 1, 0, 0 };
-        // Integer[] numSteps = { x + 30, 30 - x, y + 30, 30 - y };
-        boolean[] valid = { x >= minX, x <= maxX, y >= minY, y <= maxY };
+    // Integer[] dxs = { 0, 0, -1, +1 };
+    // Integer[] dys = { -1, 1, 0, 0 };
+    // // Integer[] numSteps = { x + 30, 30 - x, y + 30, 30 - y };
+    // boolean[] valid = { x >= minX, x <= maxX, y >= minY, y <= maxY };
 
-        Integer bestNumSteps = -1;
-        Point bestDestination = null;
+    // Integer bestNumSteps = -1;
+    // Point bestDestination = null;
 
-        for (int dir = 0; dir < 4; dir++) {
-            if (!valid[dir])
-                continue;
+    // for (int dir = 0; dir < 4; dir++) {
+    // if (!valid[dir])
+    // continue;
 
-            // TODO: Simplify to simply select after steps numSteps
-            Integer curSteps = 0;
-            Integer numSteps = 0;
+    // // TODO: Simplify to simply select after steps numSteps
+    // Integer curSteps = 0;
+    // Integer numSteps = 0;
 
-            if (dir == 0)
-                numSteps = (y < minY) ? 0 : y - minY;
-            else if (dir == 1)
-                numSteps = (y > maxY) ? 0 : maxY - y;
-            else if (dir == 2)
-                numSteps = (x < minX) ? 0 : x - minX;
-            else if (dir == 3)
-                numSteps = (x > maxX) ? 0 : maxX - x;
+    // if (dir == 0)
+    // numSteps = (y < minY) ? 0 : y - minY;
+    // else if (dir == 1)
+    // numSteps = (y > maxY) ? 0 : maxY - y;
+    // else if (dir == 2)
+    // numSteps = (x < minX) ? 0 : x - minX;
+    // else if (dir == 3)
+    // numSteps = (x > maxX) ? 0 : maxX - x;
 
-            ArrayList<Point> newMonkeyPos = monkeyPositions;
-            for (int steps = 0; steps < numSteps; steps++) {
-                Integer curX = x + steps * dxs[dir];
-                Integer curY = y + steps * dys[dir];
+    // ArrayList<Point> newMonkeyPos = monkeyPositions;
+    // for (int steps = 0; steps < numSteps; steps++) {
+    // Integer curX = x + steps * dxs[dir];
+    // Integer curY = y + steps * dys[dir];
 
-                Integer numMonkeys = DistractionUtilities.countMonkeys(newMonkeyPos, new Point(curX, curY));
-                // Log.log(newMonkeyPos.toString());
+    // Integer numMonkeys = DistractionUtilities.countMonkeys(newMonkeyPos, new
+    // Point(curX, curY));
+    // // Log.log(newMonkeyPos.toString());
 
-                if (numMonkeys > 2)
-                    break;
+    // if (numMonkeys > 2)
+    // break;
 
-                newMonkeyPos = DistractionUtilities.predictFood(newMonkeyPos, new Point(curX, curY));
-                curSteps = steps;
-            }
+    // newMonkeyPos = DistractionUtilities.predictFood(newMonkeyPos, new Point(curX,
+    // curY));
+    // curSteps = steps;
+    // }
 
-            // Log.log(String.format("Direction = %d. Steps = [%d / %d]", dir, curSteps,
-            // numSteps));
+    // // Log.log(String.format("Direction = %d. Steps = [%d / %d]", dir, curSteps,
+    // // numSteps));
 
-            if (curSteps > bestNumSteps) {
-                bestNumSteps = curSteps;
-                bestDestination = new Point(x + curSteps * dxs[dir], y + curSteps * dys[dir]);
-            }
-        }
+    // if (curSteps > bestNumSteps) {
+    // bestNumSteps = curSteps;
+    // bestDestination = new Point(x + curSteps * dxs[dir], y + curSteps *
+    // dys[dir]);
+    // }
+    // }
 
-        return new Pair<Integer, Point>(bestNumSteps, bestDestination);
-    }
+    // return new Pair<Integer, Point>(bestNumSteps, bestDestination);
+    // }
 
     /**
      * A function that predicts the future positions of animals. If the future
@@ -244,33 +248,14 @@ public class DistractionUtilities {
 
                 if (newX < -50 || newX > 50 || newY < -50 || newY > 50) {
                     Integer excessSteps = -10;
-                    if(newX < -50 || newX > 50)
-                        excessSteps = Math.max(excessSteps, (int) Math.ceil((Math.abs(newX) - 50) / Math.abs(movement.x)));
+                    if (newX < -50 || newX > 50)
+                        excessSteps = Math.max(excessSteps,
+                                (int) Math.ceil((Math.abs(newX) - 50) / Math.abs(movement.x)));
                     if (newY < -50 || newY > 50)
-                        excessSteps = Math.max(excessSteps, (int) Math.ceil((Math.abs(newY) - 50) / Math.abs(movement.y)));
-
-                    // int i = 0;
-                    // for (; i < steps; i++) {
-                    //     newX = location.x + movement.x * i;
-                    //     newY = location.y + movement.y * i;
-
-                    //     if (newX < -50 || newX > 50 || newY < -50 || newY > 50)
-                    //         break;
-                    // }
+                        excessSteps = Math.max(excessSteps,
+                                (int) Math.ceil((Math.abs(newY) - 50) / Math.abs(movement.y)));
 
                     Integer stepsTaken = steps - excessSteps;
-                    // if(excessSteps+stepsTaken!=steps)
-                    //     Log.log(String.format("Excess(%d) + stepsTaken(%d) == steps(%d) [%b]", excessSteps, stepsTaken, steps));
-                    // Integer stepsTaken = steps;
-                    // if (newX < -50)
-                    // stepsTaken = Math.min(stepsTaken, (int) ((50 - location.x) / movement.x));
-                    // if (newX > 50)
-                    // stepsTaken = Math.min(stepsTaken, (int) ((-50 - location.x) / movement.x));
-                    // if (newY < -50)
-                    // stepsTaken = Math.min(stepsTaken, (int) ((50 - location.y) / movement.y));
-                    // if (newY > -50)
-                    // stepsTaken = Math.min(stepsTaken, (int) ((-50 - location.y) / movement.y));
-
                     newX = location.x + movement.x * stepsTaken;
                     newY = location.y + movement.y * stepsTaken;
 
@@ -289,6 +274,7 @@ public class DistractionUtilities {
     }
 
     public static AnimalPosition[] simulateTimesteps(AnimalPosition animalLocs, int steps) {
+        // TODO: Figure out this array shenanigans
         ArrayList<AnimalPosition> animalLocations = new ArrayList<AnimalPosition>();
 
         animalLocations.add(animalLocs);
@@ -350,6 +336,38 @@ public class DistractionUtilities {
     // }
     // return animalTimesteps;
     // }
+
+    public static AnimalPosition simulateTimestepWithFood(AnimalPosition animalLocs, Point playerLoc) {
+        AnimalPosition newLocs = new AnimalPosition();
+
+        for (PositionStruct position : animalLocs) {
+            Point location = position.location;
+            Point movement = position.movement;
+            Integer numSteps = position.numSteps;
+
+            // Assume player attracts all monkeys. Improve by considering other players
+            if (Point.dist(location, playerLoc) < 40)
+                movement = PointUtilities.normalizedSubtract(location, playerLoc, 1.0);
+
+            if (movement == null)
+                numSteps++;
+            else {
+                Double newX = location.x + movement.x;
+                Double newY = location.y + movement.y;
+
+                if (newX < -50 || newX > 50 || newY < -50 || newY > 50) {
+                    movement = null;
+                    numSteps = 1;
+                } else {
+                    location = new Point(newX, newY);
+                }
+            }
+
+            newLocs.add(new PositionStruct(location, movement, numSteps));
+        }
+
+        return newLocs;
+    }
 
     public static ArrayList<Point> predictFood(ArrayList<Point> monkeyLocations, Point playerPos) {
 

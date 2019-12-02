@@ -10,17 +10,21 @@ import lunch.sim.PlayerState;
 import lunch.sim.Point;
 
 public class DistractionStatus {
+    enum StrategyMode {
+        MOVE_NOFOOD, TAKE_FOOD, EAT_FOOD, MOVE_FOOD, KEEP_FOOD, ABORT
+    }
+
     class StrategyType {
-        public Integer mode; // 0 for move, 1 for take food out
+        public StrategyMode mode; // 0 for move, 1 for take food out
         public Integer timestep;
         public Point destination;
 
-        public StrategyType(Integer mode, Integer timestep) {
+        public StrategyType(StrategyMode mode, Integer timestep) {
             this.mode = mode;
             this.timestep = timestep;
         }
 
-        public StrategyType(Integer mode, Integer timestep, Point dest) {
+        public StrategyType(StrategyMode mode, Integer timestep, Point dest) {
             this.mode = mode;
             this.timestep = timestep;
             this.destination = dest;
@@ -28,15 +32,17 @@ public class DistractionStatus {
 
         public String toString() {
             switch (mode) {
-            case 0:
-            case 4:
+            case MOVE_NOFOOD:
+            case MOVE_FOOD:
                 return String.format("MOVE[%d, (%.0f, %.0f)]", timestep, destination.x, destination.y);
-            case 1:
+            case TAKE_FOOD:
                 return String.format("FOOD[%d]", timestep);
-            case 2:
-                return String.format("KEEP[%d]", timestep);
-            case 3:
+            case EAT_FOOD:
                 return String.format("EAT[%d]", timestep);
+            case KEEP_FOOD:
+                return String.format("KEEP[%d]", timestep);
+            case ABORT:
+                return String.format("ABORT");
             default:
                 Log.log("Cannot decipher wtf this is");
             }
@@ -52,30 +58,34 @@ public class DistractionStatus {
 
     public DistractionStatus(Point starting, Integer t1, Integer eatTime, Point ending, Integer t2) {
         this.strategy = new ArrayList<StrategyType>();
-        this.addMove(starting, t1, 0); // Mode 0
-        this.addFoodOut(); // Mode 1
-        this.eatFood(eatTime); // Mode 3
-        this.addMove(ending, t2, 4); // Mode 4
-        this.keepFoodIn(); // Mode 2
+        this.addMove(starting, t1, StrategyMode.MOVE_NOFOOD);
+        this.addFoodOut();
+        this.eatFood(eatTime);
+        this.addMove(ending, t2, StrategyMode.MOVE_FOOD);
+        this.keepFoodIn();
     }
 
-    public void addMove(Point dest, Integer steps, Integer mode) {
+    public void addMove(Point dest, Integer steps, StrategyMode mode) {
         if (steps <= 0)
             return;
         strategy.add(new StrategyType(mode, steps, dest));
     }
 
     public void addFoodOut() {
-        strategy.add(new StrategyType(1, 10));
+        strategy.add(new StrategyType(StrategyMode.TAKE_FOOD, 10));
     }
 
     public void eatFood(Integer timestep) {
         if (timestep > 0)
-            strategy.add(new StrategyType(3, timestep));
+            strategy.add(new StrategyType(StrategyMode.EAT_FOOD, timestep));
     }
 
     public void keepFoodIn() {
-        strategy.add(new StrategyType(2, 10));
+        strategy.add(new StrategyType(StrategyMode.KEEP_FOOD, 10));
+    }
+
+    public void addAbort() {
+        strategy.add(new StrategyType(StrategyMode.ABORT, 1));
     }
 
     public Integer getNumMoves() {
@@ -88,7 +98,7 @@ public class DistractionStatus {
     public Command executeStrategy(PlayerState ps) {
         StrategyType move = strategy.get(0);
 
-        if (move.mode == 0 || move.mode == 4) {
+        if (move.mode == StrategyMode.MOVE_NOFOOD || move.mode == StrategyMode.MOVE_FOOD) {
             Point source = ps.get_location();
 
             Point newLoc = null;
@@ -109,7 +119,7 @@ public class DistractionStatus {
             // Log.log("Moving from " + source.toString() + " to " + newLoc.toString());
             return Command.createMoveCommand(newLoc);
 
-        } else if (move.mode == 1) {
+        } else if (move.mode == StrategyMode.TAKE_FOOD) {
             if (move.timestep-- == 10) {
                 FoodType[] foodlist = { FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG };
 
@@ -123,19 +133,22 @@ public class DistractionStatus {
                 this.strategy.remove(0);
 
             return new Command();
-        } else if (move.mode == 2) {
+        } else if (move.mode == StrategyMode.KEEP_FOOD) {
             if (--move.timestep <= 0)
                 this.strategy.remove(0);
             return new Command(CommandType.KEEP_BACK);
-        } else if (move.mode == 3) {
+        } else if (move.mode == StrategyMode.EAT_FOOD) {
             if (--move.timestep <= 0)
                 this.strategy.remove(0);
-            
-            if (ps.time_to_eat_remaining() < move.timestep){
+
+            if (ps.time_to_eat_remaining() < move.timestep) {
                 this.strategy.clear();
                 this.eatFood(ps.time_to_eat_remaining());
             }
             return new Command(CommandType.EAT);
+        } else if (move.mode == StrategyMode.ABORT) {
+            this.strategy.remove(0);
+            return new Command(CommandType.ABORT);
         }
         return new Command();
     }

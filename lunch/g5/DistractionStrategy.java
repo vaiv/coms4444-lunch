@@ -40,50 +40,68 @@ public class DistractionStrategy {
         return (this.status == null) ? new Command() : this.status.executeStrategy(ps);
     }
 
-    public boolean validateStrategy(ArrayList<Animal> animals, Point src) {
-        if (this.status == null)
-            return false;
-        if (this.status.getNumMoves() == 0) {
+    public boolean validateStrategy(AnimalPosition animalLocs, PlayerState ps) {
+        if (this.status == null || this.status.getNumMoves() == 0) {
             this.status = null;
             return false;
         }
 
-        Integer topMode = this.status.strategy.get(0).mode;
-        if (topMode == 0 || topMode == 1 || topMode == 2)
+        // Improved strategy validator to avoid unforseen events
+        DistractionStatus.StrategyType curMove = this.status.strategy.get(0);
+        switch (curMove.mode) {
+        case MOVE_NOFOOD:
             return true;
-
-        if (topMode == 4) {
-            Point dst = this.status.strategy.get(0).destination;
-            Point dp = PointUtilities.normalizedSubtract(src, dst, 1.0);
-
-            src = PointUtilities.add(src, dp);
-        }
-
-        Integer monkeyCount = 0;
-        for (Animal animal : animals) {
-            if (animal.which_animal() != AnimalType.MONKEY)
-                continue;
-
-            Point p = animal.get_location();
-            if (Math.hypot(src.x - p.x, src.y - p.y) <= 6.0)
-                monkeyCount++;
-        }
-
-        if (monkeyCount > 2) {
-            while (true) {
-                topMode = this.status.strategy.get(0).mode;
-
-                if (topMode == 0 || topMode == 1 || topMode == 2)
-                    return true;
-
-                return true;
-                // Log.log("Monkey count = " + monkeyCount + " " + src + " => " + this.status);
-                // Log.log("Removing : " + this.status.toString());
-                // this.status.strategy.remove(0);
-                // Log.log("Removed : " + this.status.toString());
+        case TAKE_FOOD:
+            // Check if monkeys are around when food is taken out
+            Integer eatSteps = DistractionUtilities.getEatBuffer(
+                    DistractionUtilities.simulateTimestep(animalLocs, curMove.timestep), ps.get_location());
+            if (eatSteps < 0) {
+                Log.log("validateStrategy : Aborting food removal");
+                this.status.strategy.clear();
+                this.status.addAbort();
             }
+            return true;
+        case EAT_FOOD:
+            // Check if monkeys are around for 1 to x steps
+            Integer available = DistractionUtilities.getEatBuffer(animalLocs, ps.get_location()) + 1;
+            if (available < curMove.timestep && available < 2) {
+                if (available < 0) {
+                    // Log.log("validateStrategy : clearing Movement");
+                    this.status.strategy.clear();
+                    this.status.keepFoodIn();
+                } else {
+                    // Log.log("validateStrategy : Decreasing eating time " + curMove.timestep + " -> " + available);
+                    curMove.timestep = available;
+                }
+            } 
+            // else if (available > curMove.timestep) {
+                // TODO: Recalculate movement with food
+                // curMove.timestep = available;
+                // if (this.status.strategy.size() > 1
+                // && this.status.strategy.get(1).mode ==
+                // DistractionStatus.StrategyMode.MOVE_FOOD)
+                // this.status.strategy.remove(1);
+            // }
+            return true;
+        case MOVE_FOOD:
+            // Check if the next step is still clear
+            Point curLoc = ps.get_location();
+            Point newLoc = PointUtilities.add(curLoc,
+                    PointUtilities.normalizedSubtract(curLoc, curMove.destination, 1.));
+
+            // Check if there are > 3 monkeys in the next time step
+
+            Integer buffer = DistractionUtilities.getEatBuffer(animalLocs, newLoc) + 1;
+            if (buffer < 0) {
+                // Log.log("validateStrategy : Removing food movement " + curLoc.toString() + newLoc.toString() + curMove.destination.toString() + " " + buffer);
+                this.status.strategy.remove(0);
+            }
+            return true;
+        case KEEP_FOOD:
+            return true;
+        default:
+            return true;
         }
-        return true;
     }
 
     public DistractionStatus generateDistractionStrategy(AnimalPosition animalLocs, PlayerState ps, Boolean eatFood) {
@@ -186,11 +204,11 @@ public class DistractionStrategy {
 
         if (bestStrategy != null) {
             // // if (this.turn <= 6)
-                Log.log("(" + this.turn + ") " + bestStrategy.toString());
+            // Log.log("(" + this.turn + ") " + bestStrategy.toString());
             // // if (this.turn == 6) {
-            //     Log.log("Initial loc = " + animalLocs.toString());
-            //     for (int t = 0; t < posEstimates.length; t++)
-            //         Log.log(String.format("t=%d. %s", t, posEstimates[t].toString()));
+            // Log.log("Initial loc = " + animalLocs.toString());
+            // for (int t = 0; t < posEstimates.length; t++)
+            // Log.log(String.format("t=%d. %s", t, posEstimates[t].toString()));
             // // }
             this.turn++;
         } else {
@@ -255,16 +273,16 @@ public class DistractionStrategy {
 
         AnimalPosition animalLocs = AnimalPosition.parse(curAnimals, prvAnimals, true);
         // if (this.turn == 6)
-        //     Log.log(animalLocs.toString());
+        // Log.log(animalLocs.toString());
 
-        if (!this.validateStrategy(curAnimals, playerPos))
+        if (!this.validateStrategy(animalLocs, ps))
             this.status = this.generateDistractionStrategy(animalLocs, ps, eatFood);
 
         // if (this.turn == 7)
-        //     if (this.status != null)
-        //         Log.log("(" + this.turn + ") " + this.status.toString());
-        //     else
-        //         Log.log("Null strategy");
+        // if (this.status != null)
+        // Log.log("(" + this.turn + ") " + this.status.toString());
+        // else
+        // Log.log("Null strategy");
         return this.executeStrategy(ps);
     }
 }
