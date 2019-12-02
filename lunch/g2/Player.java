@@ -638,6 +638,7 @@ public class Player implements lunch.sim.Player
 		ArrayList<Double> monkey_dists = distances.get(AnimalType.MONKEY);
 		ArrayList<Double> goose_dists = distances.get(AnimalType.GOOSE);
 		System.out.println(this.playerRole + ": G2 player role");
+		
 		if(this.playerRole.equals("distract")) {
 			return distract(monkey_dists, goose_dists, ps);
 		}
@@ -678,7 +679,7 @@ public class Player implements lunch.sim.Player
 	boolean jobAvailable(ArrayList<Family> members)
 	{
 		Point distractionSpot = new Point(50,50);
-		Double radiusOfDistraction = 50.0;
+		Double radiusOfDistraction = 75.0;
 		for(Family member: members)
 		{
 			if (Point.dist(member.get_location(), distractionSpot) < radiusOfDistraction)
