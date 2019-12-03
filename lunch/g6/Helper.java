@@ -265,6 +265,28 @@ public class Helper {
         double time_to_reach = close_3 - 5;
         return time_to_reach;
     }
+    
+    // Get the number of monkeys within 40m of a point
+    public static int countMonkeys(ArrayList<Animal> animals, Point p) {
+        return countMonkeys(animals, p, 40.0);
+    }
+    
+    // Get the number of monkeys within a certain distance of a point
+    public static int countMonkeys(ArrayList<Animal> animals, Point p, double d) {
+        int count = 0;
+        double dist = 0.0;
+        for (int i = 0; i < animals.size(); i++) {
+            Animal thisAnimal = animals.get(i);
+            if (thisAnimal.which_animal() == AnimalType.GOOSE)
+                continue;
+            Point thisLoc = thisAnimal.get_location();
+            dist = Point.dist(thisLoc, p);
+            if (dist <= d) {
+                count++;
+            }
+        }
+        return count;
+    }
 
     /**
      * Helper function: move a player to a new target position
