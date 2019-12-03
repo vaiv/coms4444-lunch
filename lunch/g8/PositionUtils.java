@@ -11,9 +11,11 @@ public class PositionUtils {
 
     public static final Double MIN_X = -50.0, MAX_X = 50.0, MIN_Y = -50.0, MAX_Y = 50.0;
     public static final Point CENTER;
+    public static final Point RB_CORNER;
 
     static {
         CENTER = new Point(0, 0);
+        RB_CORNER = new Point(MAX_X, MAX_Y);
     }
 
     public static Point moveTowards(Point currentPos, Point destPos) {
