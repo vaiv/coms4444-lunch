@@ -19,6 +19,7 @@ public class Player implements lunch.sim.Player {
     private Integer turn;
     private Integer nFamily;
     private Integer nMonkeys;
+    private Integer nGeese;
     private Integer overallTime;
 
     MatrixPredictor matrixPredictor;
@@ -54,6 +55,7 @@ public class Player implements lunch.sim.Player {
         this.nFamily = f;
         this.overallTime = (int)Math.round(t);
         this.nMonkeys = m;
+        this.nGeese = g;
         this.random = new Random(this.seed + id);
 
         this.previousAnimals = animals;
@@ -135,6 +137,40 @@ public class Player implements lunch.sim.Player {
         return true;
     }
 
+    private int estimatedTimeToEatEverythingButSandwiches(PlayerState ps) {
+        HashMap<FoodType, Integer> es = EatingStatus.getEatingStatusLeft(ps);
+        int timeToEat = 0;
+        for (FoodType food : es.keySet()) {
+            int timeLeft = es.get(food);
+            if(timeLeft < 1) {
+                continue;
+            }
+            if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
+                continue;
+            } else {
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 60.0) + 70;
+            }
+        }
+        return timeToEat;
+    }
+
+    private int estimatedTimeToEatEverything(PlayerState ps) {
+        HashMap<FoodType, Integer> es = EatingStatus.getEatingStatusLeft(ps);
+        int timeToEat = 0;
+        for (FoodType food : es.keySet()) {
+            int timeLeft = es.get(food);
+            if(timeLeft < 1) {
+                continue;
+            }
+            if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0 + nGeese * 3.0) / 60.0) + 70;
+            } else {
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 60.0) + 70;
+            }
+        }
+        return timeToEat;
+    }
+
     private boolean weWillBeAbleToFinishSandwich(PlayerState ps) {
         // TODO: Implement
         return true;
@@ -155,8 +191,11 @@ public class Player implements lunch.sim.Player {
         System.out.println("[|] noDistractor:\t\t" + noDistractor(members, animals, ps));
         System.out.println("[|] beAggressiveTillTheEnd:\t" + beAggressiveTillTheEnd);
         System.out.println("[|] weHaveEatenOurFood: \t" + weHaveEatenOurFood(ps));
+        System.out.println("[|] didEveryoneEat:\t\t" + didEveryoneEat(members, ps));
         System.out.println("[|] nTimestepsWithNoDistractor:\t" + nTimestepsWithNoDistractor);
         System.out.println("[|] nTimestepsSomeoneIsDistr.:\t" + nTimestepsSomeoneIsDistractor);
+        System.out.println("[|] estTime2EatEvrthg.ButSand.:\t" + estimatedTimeToEatEverythingButSandwiches(ps));
+        System.out.println("[|] estTime2EatEvrthg.:\t\t" + estimatedTimeToEatEverything(ps));
         // Zero it down if we are distracting
         if(weAreDistracting()) {
             nTimestepsWithNoDistractor = 0;
@@ -197,12 +236,28 @@ public class Player implements lunch.sim.Player {
         if (didEveryoneEat(members, ps)) {
             return BehaviorType.AGGRESSIVE;
         }
+
+        // ================== INITIAL CHECKS DONE ============================
+
+        // If we have almost eaten our food with aggresive and there is still some time => go distract
+        if (weHaveEatenOurFood(ps) && timeLeft() > 400) {
+            return BehaviorType.DISTRACTION_NOEAT;
+        }
         // Check if we are distacting
         if (weAreDistracting()) {
-            if (!weHaveOnlySandwiches(ps)) {
-                if (timeLeft() < 900) {
-                    beAggressiveTillTheEnd = true;
-                    return BehaviorType.AGGRESSIVE;
+            if (nGeese > 25) {
+                if (!weHaveOnlySandwiches(ps)) {
+                    if (timeLeft() < estimatedTimeToEatEverythingButSandwiches(ps)) {
+                        beAggressiveTillTheEnd = true;
+                        return BehaviorType.AGGRESSIVE;
+                    }
+                }
+            } else {
+                if (!weHaveEatenOurFood(ps)) {
+                    if (timeLeft() < estimatedTimeToEatEverything(ps)) {
+                        beAggressiveTillTheEnd = true;
+                        return BehaviorType.AGGRESSIVE;
+                    }
                 }
             }
         }
