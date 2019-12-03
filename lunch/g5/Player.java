@@ -235,20 +235,22 @@ public class Player implements lunch.sim.Player {
         Command command;
         // Get the bahivour typ to execute
         BehaviorType type = getNextBehaviorType(members, animals, ps);
+        System.out.println("[|] Playing type:\t" + type);
+        System.out.println("[^] =======================================");
         // Depending on the type generate the appropriate command
         switch (type) {
             case DISTRACTION:
             case DISTRACTION_EAT:
                 if(previousBehaviourType != BehaviorType.DISTRACTION_EAT && previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
-                    mDistraction.resetDistractionStrategy();
+                    mDistraction.resetDistractionStrategy(ps);
                 }
-                command = mDistraction.getCommand(members, animals, previousAnimals, ps, false);
+                command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
                 break;
             case DISTRACTION_NOEAT:
                 if(previousBehaviourType != BehaviorType.DISTRACTION_EAT && previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
-                    mDistraction.resetDistractionStrategy();
+                    mDistraction.resetDistractionStrategy(ps);
                 }
-                command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
+                command = mDistraction.getCommand(members, animals, previousAnimals, ps, false);
                 break;
             case GEESE_SHIELD:
             case SANDWICH_FLASHING:
