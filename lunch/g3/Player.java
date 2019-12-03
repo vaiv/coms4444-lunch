@@ -18,6 +18,7 @@ public class Player implements lunch.sim.Player {
     private FoodType foodToPull;
     private double THRESHOLD = 6.5;
     private boolean firstMove;
+    private double foodTimer;
     public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         firstMove = true;
         return new String("");
@@ -51,8 +52,12 @@ public class Player implements lunch.sim.Player {
                 // Are we in a corner? Yes -> select food
                 if (inCorner(ps) && startPullOut(animals, ps)) {
                     this.foodToPull = selectFood(ps);
+                    foodTimer = 0;
                     return Command.createRetrieveCommand(this.foodToPull);
                 } else {
+                    if(inCorner((ps))) {
+                        foodTimer++;
+                    }
                     return Command.createMoveCommand(getNextMoveToCorner(ps));
                 }
             }
@@ -75,9 +80,13 @@ public class Player implements lunch.sim.Player {
     }
     public boolean startPullOut(ArrayList<Animal> animals, PlayerState ps) {
         int monkeysNear = 0;
+        double thresholdDist = 35;
+        if(foodTimer > 15) {
+            thresholdDist = Math.max(thresholdDist - foodTimer/5, 20);
+        }
         for(Animal animal : animals) {
             if(animal.which_animal() == AnimalType.MONKEY) {
-                if(dist(animal.get_location(), ps.get_location()) < 35) {
+                if(dist(animal.get_location(), ps.get_location()) < thresholdDist) {
                     monkeysNear++;
                     if(monkeysNear > 2) {
                         return false;
