@@ -140,7 +140,7 @@ public class Player implements lunch.sim.Player {
     }
 
     private boolean weAreDistracting() {
-        return previousBehaviourType == BehaviorType.DISTRACTION;
+        return previousBehaviourType == BehaviorType.DISTRACTION_EAT || previousBehaviourType == BehaviorType.DISTRACTION_NOEAT;
     }
 
     private int timeLeft() {
@@ -148,6 +148,14 @@ public class Player implements lunch.sim.Player {
     }
 
     public BehaviorType getNextBehaviorType(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
+        System.out.println("[v] =======================================");
+        System.out.println("[|] timeLeft: \t\t\t" + timeLeft());
+        System.out.println("[|] weAreDistracting:\t\t" + weAreDistracting());
+        System.out.println("[|] noDistractor:\t\t" + noDistractor(members, animals, ps));
+        System.out.println("[|] beAggressiveTillTheEnd:\t" + beAggressiveTillTheEnd);
+        System.out.println("[|] weHaveEatenOurFood: \t" + weHaveEatenOurFood(ps));
+        System.out.println("[|] nTimestepsWithNoDistractor:\t" + nTimestepsWithNoDistractor);
+        System.out.println("[^] =======================================");
         // Zero it down if we are distracting
         if(weAreDistracting()) {
             nTimestepsWithNoDistractor = 0;
@@ -170,7 +178,7 @@ public class Player implements lunch.sim.Player {
             if (nMonkeys < 100 || nFamily <= 4) {
                 return BehaviorType.AGGRESSIVE;
             } else {
-                return BehaviorType.DISTRACTION;
+                return BehaviorType.DISTRACTION_EAT;
             }
         }
         // If we have little food that needs to be eaten (1 seconds) && there is less than 100 seconds left?
@@ -187,13 +195,17 @@ public class Player implements lunch.sim.Player {
             if (!weHaveOnlySandwiches(ps)) {
                 if (timeLeft() < 900) {
                     beAggressiveTillTheEnd = true;
-                    return BehaviorType.DUMP_MONKEYS;
+                    return BehaviorType.AGGRESSIVE;
                 }
             }
         }
         // Is there is no other distractor => go be one
         if(weAreDistracting() || nTimestepsWithNoDistractor >= 10) {
-            return BehaviorType.DISTRACTION;
+            if(weHaveEatenOurFood(ps)) {
+                return BehaviorType.DISTRACTION_NOEAT;
+            } else {
+                return BehaviorType.DISTRACTION_EAT;
+            }
         }
         // Check if we have eaten our food
         if (weHaveEatenOurFood(ps)) {
@@ -222,12 +234,23 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command;
         // Get the bahivour typ to execute
-        BehaviorType type = BehaviorType.DISTRACTION;// getNextBehaviorType(members, animals, ps);
+        BehaviorType type = getNextBehaviorType(members, animals, ps);
         // Depending on the type generate the appropriate command
         switch (type) {
             case DISTRACTION:
-                command = mDistraction.getCommand(members, animals, previousAnimals, ps);
+            case DISTRACTION_EAT:
+                if(previousBehaviourType != BehaviorType.DISTRACTION_EAT && previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
+                    mDistraction.resetDistractionStrategy();
+                }
+                command = mDistraction.getCommand(members, animals, previousAnimals, ps, false);
                 break;
+            case DISTRACTION_NOEAT:
+                if(previousBehaviourType != BehaviorType.DISTRACTION_EAT && previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
+                    mDistraction.resetDistractionStrategy();
+                }
+                command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
+                break;
+            case GEESE_SHIELD:
             case SANDWICH_FLASHING:
                 command = sandwichFlasher.getCommandSandwichFlasher(members, animals, ps);
                 break;
