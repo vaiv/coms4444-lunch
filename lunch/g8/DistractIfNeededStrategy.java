@@ -2,8 +2,7 @@ package lunch.g8;
 
 import java.util.List;
 import java.util.Random;
-import static lunch.g8.PositionUtils.*;
-import lunch.sim.AnimalType;
+import static lunch.g8.PositionUtils.RB_CORNER;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import lunch.sim.Point;
@@ -15,36 +14,30 @@ import lunch.sim.Point;
 public class DistractIfNeededStrategy extends Strategy {
 
     private final LureAtPositionStrategy lureStrategy;
-    private final EatAtCornerStrategy cornerStrategy;
+    private final GreedyEatingStrategy greedyStrategy;
     private Strategy subStrategy;
-
-    private FamilyMember familyBeingHelped;
+    private boolean waitingToFinish = false;
 
     public DistractIfNeededStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
         super(family, animals, state, random);
         lureStrategy = new LureAtPositionStrategy(family, animals, state, random);
         lureStrategy.setMonkeyMargin(10);
         lureStrategy.setCanFinishEating(false);
-        cornerStrategy = new EatAtCornerStrategy(family, animals, state, random);
-        subStrategy = cornerStrategy;
+        greedyStrategy = new GreedyEatingStrategy(family, animals, state, random);
+        subStrategy = greedyStrategy;
     }
 
     @Override
     public Command run() throws AbortStrategyException {
         //System.out.println("T: " + state.getTurn());
-        if (!isHelpingOther()) {
-            FamilyMember famToHelp = getFamilyToHelp();
-            if (famToHelp != null) {
-                familyBeingHelped = famToHelp;
-                lureStrategy.setPosition(pickPositionToLure());
+        if (waitingToFinish && (getAveragePercFoodEatenByFamily() > 110 || state.getRemainingTime() < 5)) {
+            lureStrategy.setCanFinishEating(true);
+        }
+        if (state.getTurn() % 10 == 0) {
+            if (!isDistracting() && shouldStartDistracting()) {
                 return switchStrategy(lureStrategy);
-            }
-        } else {
-            if (isDoneHelping()) {
-                familyBeingHelped = null;
-                return switchStrategy(cornerStrategy);
-            } else {
-                lureStrategy.setPosition(pickPositionToLure());
+            } else if (isDistracting() && isDoneDistracting()) {
+                return switchStrategy(greedyStrategy);
             }
         }
         return subStrategy.run();
@@ -59,43 +52,65 @@ public class DistractIfNeededStrategy extends Strategy {
         }
     }
 
-    /**
-     * If there is a family member that needs help finishing their food this
-     * method will return the corresponding object.
-     *
-     * @return the family member to help or null if no one is too far behind
-     */
-    protected FamilyMember getFamilyToHelp() {
-        final double percEaten = state.getPercentageOfFoodEaten();
-        for (FamilyMember fm : family) {
-            if ((!fm.isOneSelf() && percEaten - fm.getMaxPercentageOfFoodEaten() > 10) || 
-                    (percEaten > 99 && fm.getMaxPercentageOfFoodEaten() < 110 && fm.isHoldingItem())) {
-                return fm;
-            }
+    protected boolean shouldStartDistracting() {
+        // if we are alone or someone else seems to be distracting
+        if (family.size() == 1) {
+            return false;
         }
-        return null;
-    }
-
-    protected boolean isDoneHelping() {
-        if (familyBeingHelped == null) {
+        final double percEaten = state.getPercentageOfFoodEaten();
+        List<FamilyMember> familyDistracting = getOtherFamilyWithIn(10, RB_CORNER);
+        if (familyDistracting.size() > 1) {
+            return false;
+        } else if (!familyDistracting.isEmpty() && percEaten - familyDistracting.get(0).getMaxPercentageOfFoodEaten() > 7) {
             return true;
         }
-        final double percEaten = state.getPercentageOfFoodEaten();
-        return (percEaten < 99 || !familyBeingHelped.isHoldingItem())
-                && percEaten - familyBeingHelped.getMaxPercentageOfFoodEaten() < 3;
+        final double avgPercEaten = getAveragePercFoodEatenByFamily();
+        return percEaten - avgPercEaten > 10 || (percEaten > 99 && avgPercEaten < 110);
     }
 
-    protected boolean isHelpingOther() {
-        return familyBeingHelped != null;
+    protected boolean isDoneDistracting() {
+        final double percEaten = state.getPercentageOfFoodEaten();
+        final double avgPercEaten = getAveragePercFoodEatenByFamily();
+        waitingToFinish = percEaten > 99;
+        boolean eatenDiffOk = (percEaten < 99 || !isSomeoneHoldingFood())
+                && percEaten - avgPercEaten < 3;
+        if (!eatenDiffOk) {
+            // check if someone else is nearby and have eaten well enough
+            // we could assume they are here to distract
+            List<FamilyMember> familyNearby = this.getOtherFamilyWithIn(10);
+            for (FamilyMember fm : familyNearby) {
+                if (fm.getMaxPercentageOfFoodEaten() - percEaten > -5) {
+                    return true;
+                }
+            }
+        }
+        return eatenDiffOk;
+    }
+
+    protected double getAveragePercFoodEatenByFamily() {
+        double addPercEaten = 0;
+        for (FamilyMember fm : family) {
+            if (!fm.isOneSelf()) {
+                addPercEaten += fm.getMaxPercentageOfFoodEaten();
+            }
+        }
+        return addPercEaten / (family.size() - 1);
+    }
+
+    protected boolean isDistracting() {
+        return subStrategy == lureStrategy;
     }
 
     protected Point pickPositionToLure() {
-        Double direction = getDirection(familyBeingHelped.getLocation(), CENTER);
-        if (direction == null) {
-            direction = getDirection(familyBeingHelped.getLocation(), state.getLocation());
+        return RB_CORNER;
+    }
+
+    private boolean isSomeoneHoldingFood() {
+        for (FamilyMember fm : family) {
+            if (!fm.isOneSelf() && fm.isHoldingItem()) {
+                return true;
+            }
         }
-        List<Animal> monkeys = this.getAnimalsWithIn(AnimalType.MONKEY, 40, familyBeingHelped.getLocation());
-        final double distance = monkeys.size() > 2 ? 15 : 40;
-        return moveInDirection(familyBeingHelped.getLocation(), direction, distance);
+        return false;
     }
 }

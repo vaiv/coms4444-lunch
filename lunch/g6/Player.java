@@ -50,7 +50,7 @@ public class Player implements lunch.sim.Player {
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
-        
+        // shouldDistract = False
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -61,16 +61,12 @@ public class Player implements lunch.sim.Player {
         if (turn == 50)
             corner = new Point(-50, -50); //Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress
-
         Point location = !shouldDistract ? corner : new Point(50, 50);
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move
             // means we're not there yet
-
             // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK
-            System.out.println(ps.get_id()+"are we gonna mnnkey walk" + shouldDistract);
-            if (shouldDistract== true && ps.check_availability_item(FoodType.EGG)){
-                System.out.println(ps.get_id()+"MONKEY WALKING " + shouldDistract);
+            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
                 return MonkeyWalk(animals, location, ps);
             }
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
@@ -79,61 +75,52 @@ public class Player implements lunch.sim.Player {
             }
             prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
-        }
-        else{
-            if(shouldDistract==true && ps.check_availability_item(FoodType.EGG)){
-                return MonkeyStop(animals,location, ps);
+        } else {
+            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
+                return MonkeyStop(animals, location, ps);
             }
             return tryToEat(animals, prev_animals, ps);
         }
     }
 
-    public Command MonkeyWalk(ArrayList<Animal> animals, Point location, PlayerState ps){
+    public Command MonkeyWalk(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
-        //if food out and monkeys not in grabbing distance, just keep going
-        if (ps.get_held_item_type()!= null && monkey_time >2){
+        // if food out and monkeys not in grabbing distance, just keep going
+        if (ps.get_held_item_type() != null && monkey_time > 2) {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
         // if food is being pulled out and time remaining is 1 second, but monkey time is less than 2, abort.
-        //if (ps.time_to_finish_search()<=2&&monkey_time <=2){
+        //if (ps.time_to_finish_search() <= 2&& monkey_time <= 2) {
         //    return new Command(CommandType.ABORT);
         //}
-
         // if food not out and monkeys too far, pull food out
-        if (ps.get_held_item_type()==null&&monkey_time >=3) {
+        if (ps.get_held_item_type() == null && monkey_time >= 3) {
             return Helper.takeOutFood(ps);
         }
-
-        //if food out and monkeys too close, put away
-        if (ps.get_held_item_type()!=null&&monkey_time<=2){
+        // if food out and monkeys too close, put away
+        if (ps.get_held_item_type() != null && monkey_time <= 2) {
             return new Command(CommandType.KEEP_BACK);
         }
-
         // if food not out and monkeys too close, just move away
-        //if ps.get_held_item_type()==null&&monkey_time<2
-        else{
+        //if (ps.get_held_item_type() == null && monkey_time < 2)
+        else {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         }
-
     }
 
-
-    public Command MonkeyStop(ArrayList<Animal> animals, Point location, PlayerState ps){
+    public Command MonkeyStop(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
-        if (ps.get_held_item_type()!=null){
-            if(monkey_time<=2){
+        if (ps.get_held_item_type() != null) {
+            if (monkey_time <= 2) {
                 return new Command(CommandType.KEEP_BACK);
-            }
-            else{
+            } else {
                 return tryToEat(animals, prev_animals, ps);
             }
-        }
-        else{
+        } else {
             // food is inside bag
             if (monkey_time >= 3) {
                 return Helper.takeOutFood(ps);
-            }
-            else{
+            } else {
                 return new Command(CommandType.ABORT);
             }
         }
@@ -145,8 +132,7 @@ public class Player implements lunch.sim.Player {
      * @param ps
      * @return
      */
-    private static Command tryToEat(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) {
-        
+    private static Command tryToEat(ArrayList<Animal> animals, ArrayList<Animal> prev_animals, PlayerState ps) { 
         // Find time until geese / monkeys can snatch food
         double geeseTime = Helper.getGeeseTime(animals, prev_animals, ps);
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
@@ -187,7 +173,7 @@ public class Player implements lunch.sim.Player {
         
         // Missed case
         else {
-            System.out.println("oops");
+            //System.out.println("oops");
             return new Command();
         }
         

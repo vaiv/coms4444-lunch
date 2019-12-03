@@ -1,6 +1,7 @@
 package lunch.g5;
 
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 
 import javafx.util.Pair;
 
@@ -11,6 +12,7 @@ import lunch.sim.Family;
 import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
+import java.util.Comparator;
 
 public class GreedyEater {
 	// Configs for calculating future matrices
@@ -22,8 +24,7 @@ public class GreedyEater {
 	private int clean_range = 10; // move to a place which has few animal within this range
 	private int max_monkey = 0; // max animal number when finding a safe place
 	private int max_goose = 0;
-	private int cornerX;
-	private int cornerY;
+	private Point corner;
 
 	private boolean moving; // is in the moving process
 	private int towardX; // point to move to
@@ -32,22 +33,26 @@ public class GreedyEater {
 	private FoodType searching; // which food is searching
 	private FoodType[] eatingOrder;
 	private int coolingTime; // cold time after in danger
+	private boolean movingToCorner;
 	
 	private int turn;
 
 	public GreedyEater() {
 		super();
 		// choose a corner randomly
+		double x, y;
 		do {
-			this.cornerX = Math.random() > 0.5 ? 1 : -1;
-			this.cornerY = Math.random() > 0.5 ? 1 : -1;
-		} while(cornerX == 1 && cornerY == 1);
+			x = Math.random() > 0.5 ? 50 : -50;
+			y = Math.random() > 0.5 ? 50 : -50;
+		} while(x == 50 && y == 50);
+		corner = new Point(x, y);
 		moving = false;
 		this.matrixPredictor = new MatrixPredictor(monkeyDangerDistance, geeseDangerDistance, bufferLookahead);
 		this.eatingOrder = new FoodType[] { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2,
 				FoodType.SANDWICH1, FoodType.SANDWICH2 };
 		this.coolingTime = 0;
 		this.turn = 0;
+		this.movingToCorner = true;
 	}
 
 	// eating exactly at corner with a cold time
@@ -55,17 +60,20 @@ public class GreedyEater {
 			ArrayList<Animal> previousAnimals, int totalTurn) {
 		turn++;
 		// move to the corner
-		if (turn <= 70) {
-//			System.out.println("moving to corner");
-			Point next_move = moveToCorner(ps);
-			return Command.createMoveCommand(next_move);
+		double x = ps.get_location().x;
+		double y = ps.get_location().y;
+		if(corner.x != x || corner.y != y) {
+			movingToCorner = true;
+	        corner = findNearestCorner (ps);
+	        double dist = Point.dist(ps.get_location(), corner);
+			if(dist <= 1.0) {
+				movingToCorner = false;
+				return Command.createMoveCommand(corner);
+			}
+			double cos = (corner.x - x)/dist;
+			double sin = (corner.y - y)/dist;
+			return Command.createMoveCommand(new Point(cos+x, sin+y));
 		}
-		if (turn == 71) {
-			// Go exactly to the corner
-			Point p = new Point(cornerX * 50, cornerY * 50);
-			return Command.createMoveCommand(p);
-		}
-
 		if(coolingTime > 0) {
 			coolingTime -= totalTurn - turn + 2;
 			coolingTime = Math.max(coolingTime, 0);
@@ -106,7 +114,7 @@ public class GreedyEater {
 		}
 		return new Command();
 	}
-
+/*
 	public Command getCommandUseMatrix(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps,
 			ArrayList<Animal> previousAnimals, int totalTurn) {
 		turn++;
@@ -191,7 +199,25 @@ public class GreedyEater {
 		return new Point(ps.get_location().x + cornerX * Math.cos(Math.PI / 4),
 				ps.get_location().y + cornerY * Math.cos(Math.PI / 4));
 	}
-
+*/
+	
+	private static Point findNearestCorner (PlayerState ps) {
+		PriorityQueue<Point> pq = new PriorityQueue<Point>(4, new Comparator<Point>() {
+	    		@Override
+	        public int compare(Point p1, Point p2) {                         
+	            double dist1 = Point.dist(ps.get_location(), p1);
+	            double dist2 = Point.dist(ps.get_location(), p2);
+	            if(dist1 > dist2) return 1;
+	            if(dist1 < dist2) return -1;
+	            return 0;
+	        }      
+	    }); 
+	    pq.add(new Point(-50, 50));
+	    pq.add(new Point(-50, -50));
+	    pq.add(new Point(50, -50));
+	    return pq.poll();
+	}
+	
 	private boolean isSafePoint(Matrix m, Matrix g, int x, int y, int range) {
 		for (int i = Math.max(x - range, -50); i < x + range && i <= 50; i++) {
 			for (int j = Math.max(y - range, -50); j < y + range && j <= 50; j++) {

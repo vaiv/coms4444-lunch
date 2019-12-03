@@ -14,7 +14,7 @@ import lunch.sim.CommandType;
 public class LureRotationStrategy extends Strategy {
 
     private final LureAtPositionStrategy centerStrategy;
-    private final EatAtCornerStrategy cornerStrategy;
+    private final GreedyEatingStrategy cornerStrategy;
     private final double switchPercentage;
     private Strategy subStrategy;
     private boolean hasTakenTurn;
@@ -24,7 +24,7 @@ public class LureRotationStrategy extends Strategy {
         super(family, animals, state, random);
         switchPercentage = 100.0 * state.getId() / family.size();
         centerStrategy = new LureAtPositionStrategy(family, animals, state, random);
-        cornerStrategy = new EatAtCornerStrategy(family, animals, state, random);
+        cornerStrategy = new GreedyEatingStrategy(family, animals, state, random);
         if (state.getId() == 0) {
             subStrategy = centerStrategy;
             hasTakenTurn = true;

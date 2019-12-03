@@ -5,7 +5,6 @@ import java.util.Random;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import java.util.List;
-import lunch.sim.AnimalType;
 
 /**
  *
@@ -19,6 +18,7 @@ public class Player implements lunch.sim.Player {
     protected final List<Animal> animals;
     protected PlayerState state;
     private Strategy strategy;
+    private int totalTime;
 
     public Player() {
         family = new ArrayList<>();
@@ -48,6 +48,7 @@ public class Player implements lunch.sim.Player {
             double t,
             Integer s) {
         this.id = id;
+        this.totalTime = (int)t;
         random = new Random(s);
         for (int i = 0; i < members.size(); i++) {
             family.add(new FamilyMember(members.get(i), i == id, i));
@@ -65,7 +66,7 @@ public class Player implements lunch.sim.Player {
             lunch.sim.PlayerState ps) {
         // finish initialization of elements that required some player state
         if (state == null) {
-            state = new PlayerState(id, ps);
+            state = new PlayerState(id, ps, totalTime);
         }
         if (strategy == null) {
             strategy = selectStrategy();
@@ -127,16 +128,6 @@ public class Player implements lunch.sim.Player {
 
     private String describe(Command command) {
         return "P" + state.getId() + command.get_type();
-    }
-
-    private int getMonkeyDensity() {
-        int numMonkeys = 0;
-        for (Animal a : animals) {
-            if (a.getType() == AnimalType.MONKEY) {
-                numMonkeys++;
-            }
-        }
-        return numMonkeys / family.size();
     }
 
 }
