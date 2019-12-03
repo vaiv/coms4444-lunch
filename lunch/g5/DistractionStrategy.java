@@ -155,7 +155,7 @@ public class DistractionStrategy {
                     if (eatSteps < 0)
                         continue;
 
-                    startingPositions.add(new Temporary(startingPosition, t, eatSteps));
+                    startingPositions.add(new Temporary(startingPosition, t, eatFood ? eatSteps: 0));
                 }
             }
         }
@@ -220,7 +220,11 @@ public class DistractionStrategy {
     /**
      * Reset pre-calculated distraction strategy
      */
-    public void resetDistractionStrategy() {
+    public void resetDistractionStrategy(PlayerState ps) {
+        if(ps.get_held_item_type() != null){
+            this.status = new DistractionStatus();
+            this.status.keepFoodIn();
+        }
         this.status = null;
     }
 
