@@ -152,9 +152,9 @@ public class Player implements lunch.sim.Player {
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
         prev_animals = new ArrayList<>(animals);
         // No food in hand
+        Double eatTime = 6.0; 
         if (ps.get_held_item_type() == null) {
-            double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
-           // minTime += 10; 
+            double minTime = !ps.is_player_searching() ? 10.0 + eatTime: (ps.time_to_finish_search() + eatTime);
             if ((!ps.check_availability_item(FoodType.EGG))) {
                 // Due to ordering, this check implies eating a sandwich
                 if ((geeseTime > minTime) && (monkeyTime > minTime)) {
@@ -176,8 +176,8 @@ public class Player implements lunch.sim.Player {
         
         // With food in hand
         else if (ps.get_held_item_type() != null) {
-            boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
-            boolean cond2 = (monkeyTime <= 1.0);
+            boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= eatTime);
+            boolean cond2 = (monkeyTime <= eatTime);
             if (cond1 || cond2) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
