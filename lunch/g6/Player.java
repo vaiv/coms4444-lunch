@@ -98,7 +98,7 @@ public class Player implements lunch.sim.Player {
             return Helper.takeOutFood(ps);
         }
         // if food out and monkeys too close, put away
-        if (ps.get_held_item_type()!=null&&monkey_time <= 2) {
+        if (ps.get_held_item_type() != null && monkey_time <= 2) {
             return new Command(CommandType.KEEP_BACK);
         }
         // if food not out and monkeys too close, just move away
