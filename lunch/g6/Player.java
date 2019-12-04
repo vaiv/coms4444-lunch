@@ -34,8 +34,8 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Animal> incomingGeese;
     private Point corner; 
     private static boolean shouldDistract; 
-    private int numMonkeys;
-    private int numGeese;
+    private Integer numMonkeys;
+    private Integer numGeese;
 
 
     public Player() {
@@ -49,18 +49,8 @@ public class Player implements lunch.sim.Player {
         random = new Random(s);
         prev_animals = new ArrayList<>(animals);
         shouldDistract = false;
-        numMonkeys = 0;
-        numGeese = 0;
-        for (int i = 0; i < animals.size(); i++) {
-            Animal thisAnimal = animals.get(i);
-            if (thisAnimal.which_animal() == AnimalType.MONKEY) {
-                numMonkeys++;
-            } else if (thisAnimal.which_animal() == AnimalType.GOOSE) {
-                numGeese++;
-            } else {
-                continue;
-            }
-        }
+        numMonkeys = m;
+        numGeese = g;
         return avatars;
     }
 
