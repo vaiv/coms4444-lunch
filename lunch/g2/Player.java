@@ -348,7 +348,6 @@ public class Player implements lunch.sim.Player
 		if (percentDistracted > .75) {
 			return true;
 		} 
-		System.out.println("Distractor is not effective!");
 		return false;
 	}
 
@@ -722,7 +721,7 @@ public class Player implements lunch.sim.Player
 	boolean jobAvailable(ArrayList<Family> members)
 	{
 		Point distractionSpot = new Point(50,50);
-		Double radiusOfDistraction = 80.0;
+		Double radiusOfDistraction = 70.0;
 		int numberDistractors = 0;
 		for(Family member: members)
 		{
@@ -732,10 +731,6 @@ public class Player implements lunch.sim.Player
 				numberDistractors += 1;
 			}
 		}
-
-		// if (this.playerRole == "distract" && numberDistractors >=2) {
-		// 	return false;
-		// }
 
 		if (numberDistractors >= 1) {
 			return false;
