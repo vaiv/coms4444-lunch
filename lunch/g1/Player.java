@@ -70,6 +70,7 @@ public class Player implements lunch.sim.Player
 	public ArrayList<FoodType> getPriority() {
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
 		   // keep order that most family members are keeping
+		   // time left: 1674
            priorityList.add(FoodType.COOKIE);
            priorityList.add(FoodType.FRUIT1);
            priorityList.add(FoodType.FRUIT2);
@@ -177,13 +178,14 @@ public class Player implements lunch.sim.Player
 		this.getAnimalMovement(animals, ps);
         // make one random move (to get away from initial point 0,0)
         if (turn == 1) {
-            Point next_move = getRandomMove(ps);
+            //Point next_move = getRandomMove(ps);
+            Point next_move = getRandomCornerMove(ps);
             return Command.createMoveCommand(next_move);
         }
         
         // move towards corner
         //if (turn < 70 && id != members.size() - 1) {
-        if (turn < 72) {
+        if (turn <= 71) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
             
@@ -347,6 +349,26 @@ public class Player implements lunch.sim.Player
 		}
 		// System.out.println("move command issued");
 		return next_move;
+    }
+    
+    private Point getRandomCornerMove( PlayerState ps ) {
+        boolean found_valid_move= false;
+		Point next_move = new Point(-1,-1);
+		while(!found_valid_move)
+		{
+		    
+			next_move = new Point(ps.get_location().x + getOneOrNegOne(), ps.get_location().y + getOneOrNegOne());
+			found_valid_move = Point.within_bounds(next_move);
+		}
+		// System.out.println("move command issued");
+		return next_move;
+    }
+    
+    public double getOneOrNegOne() {
+        Random random = new Random();
+        boolean isOne = random.nextBoolean();
+        if (isOne) return 1.;
+        else return -1.;
     }
 
 	private double getAngle(Point oldPoint, Point newPoint){
