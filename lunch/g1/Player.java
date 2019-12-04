@@ -28,6 +28,8 @@ public class Player implements lunch.sim.Player
 	private Integer turn;
 	private String avatars;
     private double t;
+    private Integer num_monkey;
+    private Integer num_geese;
 
 	Double eps = 10e-7;
 
@@ -43,7 +45,7 @@ public class Player implements lunch.sim.Player
 		turn = 0;
 	}
 
-	public String init(ArrayList<Family> members, Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
+	public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s)
 	{
 		this.id = id;
 		this.t = t;
@@ -56,6 +58,9 @@ public class Player implements lunch.sim.Player
 			animalDirections.add(0.0);
 		}
 		this.priorityList = getPriority();
+//		this.animals = animals;
+		this.num_monkey = m;
+		this.num_geese = g;
 		avatars = "flintstone";
 		random = new Random(s);
 		return avatars;
@@ -64,34 +69,54 @@ public class Player implements lunch.sim.Player
 
 	public ArrayList<FoodType> getPriority() {
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
-		   /* time left: 1552
-		   priorityList.add(FoodType.COOKIE);
-		   priorityList.add(FoodType.FRUIT1);
-		   priorityList.add(FoodType.FRUIT2);
-		   priorityList.add(FoodType.SANDWICH1);
-		   priorityList.add(FoodType.SANDWICH2);
-		   priorityList.add(FoodType.EGG);
-		   */
-		   System.out.println(t);
-		   if (t <= 30 *60) {
-               // time left: 1656
-               priorityList.add(FoodType.COOKIE);
-               priorityList.add(FoodType.FRUIT1);
-               priorityList.add(FoodType.FRUIT2);
-               priorityList.add(FoodType.EGG);
-               priorityList.add(FoodType.SANDWICH1);
-               priorityList.add(FoodType.SANDWICH2);
-		   }
+		   // keep order that most family members are keeping
+		   // time left: 1674
+           priorityList.add(FoodType.COOKIE);
+           priorityList.add(FoodType.FRUIT1);
+           priorityList.add(FoodType.FRUIT2);
+           priorityList.add(FoodType.EGG);
+           priorityList.add(FoodType.SANDWICH1);
+           priorityList.add(FoodType.SANDWICH2);
 		   
-		   else {
+		   
+		   // time left: 1552
+//		   priorityList.add(FoodType.COOKIE);
+//		   priorityList.add(FoodType.FRUIT1);
+//		   priorityList.add(FoodType.FRUIT2);
+//		   priorityList.add(FoodType.SANDWICH1);
+//		   priorityList.add(FoodType.SANDWICH2);
+//		   priorityList.add(FoodType.EGG);
+
+//		   System.out.println(t);
+		//if time is less than half an hour
+//		   if (t <= 30 *60 ) {
+//               // time left: 1656
+//               priorityList.add(FoodType.COOKIE);
+//               priorityList.add(FoodType.FRUIT1);
+//               priorityList.add(FoodType.FRUIT2);
+//               priorityList.add(FoodType.EGG);
+//               priorityList.add(FoodType.SANDWICH1);
+//               priorityList.add(FoodType.SANDWICH2);
+//		   }
+
                // time left: 1656
-               priorityList.add(FoodType.COOKIE);
-               priorityList.add(FoodType.SANDWICH1);
-               priorityList.add(FoodType.SANDWICH2);
-               priorityList.add(FoodType.FRUIT1);
-               priorityList.add(FoodType.FRUIT2);
-               priorityList.add(FoodType.EGG);
-		   }
+			   //check the number of Monkeys and geese, if moderate than distract
+//			   if (num_monkey >= 50 && num_geese >= 30){
+//				   priorityList.add(FoodType.COOKIE);
+//				   priorityList.add(FoodType.FRUIT1);
+//				   priorityList.add(FoodType.FRUIT2);
+//				   priorityList.add(FoodType.EGG);
+//				   priorityList.add(FoodType.SANDWICH1);
+//				   priorityList.add(FoodType.SANDWICH2);
+//              }
+//		   else{
+//				   priorityList.add(FoodType.COOKIE);
+//				   priorityList.add(FoodType.SANDWICH1);
+//				   priorityList.add(FoodType.SANDWICH2);
+//				   priorityList.add(FoodType.FRUIT1);
+//				   priorityList.add(FoodType.FRUIT2);
+//				   priorityList.add(FoodType.EGG);
+//			   }
 
 		   return priorityList;
 
@@ -102,7 +127,7 @@ public class Player implements lunch.sim.Player
 	public boolean checkMonkey(ArrayList<Animal> animals, PlayerState ps){
 		int num_monkey_close = 0;
 		for (Animal animal: animals){
-			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 6.0 ){
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 6 ){
 				num_monkey_close++;
 			}
 		}
@@ -139,8 +164,8 @@ public class Player implements lunch.sim.Player
 			if (animal.which_animal() == AnimalType.GOOSE &&
 					ps.get_held_item_type() == FoodType.SANDWICH ){
 				dist = Point.dist(ps.get_location(),animal.get_location());
-				if (dist < 6.0){
-					System.out.println("goose detected");
+				if (dist < 6.5){
+//					System.out.println("goose detected");
 					return true;
 				}
 			}
@@ -153,13 +178,14 @@ public class Player implements lunch.sim.Player
 		this.getAnimalMovement(animals, ps);
         // make one random move (to get away from initial point 0,0)
         if (turn == 1) {
-            Point next_move = getRandomMove(ps);
+            //Point next_move = getRandomMove(ps);
+            Point next_move = getRandomCornerMove(ps);
             return Command.createMoveCommand(next_move);
         }
         
         // move towards corner
         //if (turn < 70 && id != members.size() - 1) {
-        if (turn < 70) {
+        if (turn <= 71) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
             
@@ -323,6 +349,26 @@ public class Player implements lunch.sim.Player
 		}
 		// System.out.println("move command issued");
 		return next_move;
+    }
+    
+    private Point getRandomCornerMove( PlayerState ps ) {
+        boolean found_valid_move= false;
+		Point next_move = new Point(-1,-1);
+		while(!found_valid_move)
+		{
+		    
+			next_move = new Point(ps.get_location().x + getOneOrNegOne(), ps.get_location().y + getOneOrNegOne());
+			found_valid_move = Point.within_bounds(next_move);
+		}
+		// System.out.println("move command issued");
+		return next_move;
+    }
+    
+    public double getOneOrNegOne() {
+        Random random = new Random();
+        boolean isOne = random.nextBoolean();
+        if (isOne) return 1.;
+        else return -1.;
     }
 
 	private double getAngle(Point oldPoint, Point newPoint){
