@@ -121,7 +121,7 @@ public class DistractionStatus {
 
         } else if (move.mode == StrategyMode.TAKE_FOOD) {
             if (move.timestep-- == 10) {
-                FoodType[] foodlist = { FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG };
+                FoodType[] foodlist = { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2 };
 
                 for (FoodType food : foodlist) {
                     if (ps.check_availability_item(food))

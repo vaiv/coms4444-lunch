@@ -6,6 +6,7 @@ import java.util.PriorityQueue;
 import javafx.util.Pair;
 
 import lunch.sim.Animal;
+import lunch.sim.AnimalType;
 import lunch.sim.Command;
 import lunch.sim.CommandType;
 import lunch.sim.Family;
@@ -13,6 +14,7 @@ import lunch.sim.FoodType;
 import lunch.sim.PlayerState;
 import lunch.sim.Point;
 import java.util.Comparator;
+import java.util.HashMap;
 
 public class GreedyEater {
 	// Configs for calculating future matrices
@@ -34,8 +36,8 @@ public class GreedyEater {
 	private FoodType[] eatingOrder;
 	private int coolingTime; // cold time after in danger
 	private boolean movingToCorner;
-	
-	private int turn;
+	private int lastTurn;
+	private int switchingTime;
 
 	public GreedyEater() {
 		super();
@@ -51,34 +53,87 @@ public class GreedyEater {
 		this.eatingOrder = new FoodType[] { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2,
 				FoodType.SANDWICH1, FoodType.SANDWICH2 };
 		this.coolingTime = 0;
-		this.turn = 0;
 		this.movingToCorner = true;
+		this.lastTurn = 0;
+	}
+	
+	private static boolean someoneTogether(ArrayList<Family> members, PlayerState ps) {
+		for(Family f: members) {
+			if(f.get_id() == ps.get_id())
+				continue;
+			if(Point.dist(ps.get_location(), f.get_location()) < 5) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// eating exactly at corner with a cold time
 	public Command getCommandCornerEating(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps,
 			ArrayList<Animal> previousAnimals, int totalTurn) {
-		turn++;
+		if(switchingTime != 0) {
+			switchingTime--;
+			lastTurn = totalTurn;
+			return new Command(CommandType.KEEP_BACK);
+		}
+		if(totalTurn != lastTurn + 1) {
+			corner = findCorner (ps, members, animals);
+			if(ps.is_player_searching() || ps.get_held_item_type() != null) {
+				switchingTime = 10;
+				lastTurn = totalTurn;
+				return new Command(CommandType.KEEP_BACK);
+			}
+		}
 		// move to the corner
 		double x = ps.get_location().x;
 		double y = ps.get_location().y;
+//		Point bestCorner = findCorner (ps, members, animals);
 		if(corner.x != x || corner.y != y) {
+			if(ps.is_player_searching() || ps.get_held_item_type() != null) {
+				switchingTime = 10;
+				lastTurn = totalTurn;
+				return new Command(CommandType.KEEP_BACK);
+			}
 			movingToCorner = true;
-	        corner = findNearestCorner (ps);
+//	        corner = emptyCorner;
 	        double dist = Point.dist(ps.get_location(), corner);
 			if(dist <= 1.0) {
 				movingToCorner = false;
+				lastTurn = totalTurn;
 				return Command.createMoveCommand(corner);
 			}
 			double cos = (corner.x - x)/dist;
 			double sin = (corner.y - y)/dist;
+			lastTurn = totalTurn;
 			return Command.createMoveCommand(new Point(cos+x, sin+y));
 		}
+		
+//		if(someoneTogether(members, ps) && emptyCorner != null || !(ps.is_player_searching() || ps.get_held_item_type() != null)) {
+//			this.corner = emptyCorner;
+//			movingToCorner = true;
+//			double dist = Point.dist(ps.get_location(), corner);
+////			if(dist <= 1.0) {
+////				movingToCorner = false;
+////				lastTurn = totalTurn;
+////				return Command.createMoveCommand(corner);
+////			}
+//			double cos = (corner.x - x)/dist;
+//			double sin = (corner.y - y)/dist;
+//			lastTurn = totalTurn;
+//			System.out.println(corner.x);
+//			System.out.println(corner.y);
+//			return Command.createMoveCommand(new Point(cos+x, sin+y));
+//		}
+		
 		if(coolingTime > 0) {
-			coolingTime -= totalTurn - turn + 2;
+			coolingTime -= totalTurn - lastTurn;
 			coolingTime = Math.max(coolingTime, 0);
+			lastTurn = totalTurn;
 			return new Command();
 		}
+		lastTurn = totalTurn;
+		
+
 		// danger
 		// [surrounded by monkey] or [has close goose while holding or searching
 		// sandwich]
@@ -106,6 +161,7 @@ public class GreedyEater {
 		if (!ps.is_player_searching() && ps.get_held_item_type() == null) {
 			for (FoodType food_type : eatingOrder) {
 				if (ps.check_availability_item(food_type)) {
+//					System.out.println("taking out reset cooling time");
 					searching = food_type;
 					coolingTime = 0;
 					return new Command(CommandType.TAKE_OUT, food_type);
@@ -200,22 +256,37 @@ public class GreedyEater {
 				ps.get_location().y + cornerY * Math.cos(Math.PI / 4));
 	}
 */
+
+	private static Point findCorner (PlayerState ps, ArrayList<Family> members, ArrayList<Animal> animals) {
+		PriorityQueue<Corner> pq = new PriorityQueue<>(); 
+		Point[] corners = new Point[] {new Point(-50, 50), new Point(-50, -50), new Point(50, -50)};
+		for(Point c: corners) {
+			int fmcnt = 0, mkcnt = 0;
+			for(Family f: members) {
+				if(Point.dist(f.get_location(), c) < 20)
+					fmcnt++;
+			}
+			for(Animal a: animals) {
+				if(a.which_animal() == AnimalType.MONKEY && Point.dist(a.get_location(), c) < 20)
+					mkcnt++;
+			}
+			pq.add(new Corner(c, fmcnt, mkcnt, ps.get_location()));
+		}
+	    return pq.poll().p;
+	}
 	
-	private static Point findNearestCorner (PlayerState ps) {
-		PriorityQueue<Point> pq = new PriorityQueue<Point>(4, new Comparator<Point>() {
-	    		@Override
-	        public int compare(Point p1, Point p2) {                         
-	            double dist1 = Point.dist(ps.get_location(), p1);
-	            double dist2 = Point.dist(ps.get_location(), p2);
-	            if(dist1 > dist2) return 1;
-	            if(dist1 < dist2) return -1;
-	            return 0;
-	        }      
-	    }); 
-	    pq.add(new Point(-50, 50));
-	    pq.add(new Point(-50, -50));
-	    pq.add(new Point(50, -50));
-	    return pq.poll();
+	private Point emptyCorner(PlayerState ps, ArrayList<Family> members) {
+		Point[] corners = new Point[] {new Point(-50, 50), new Point(-50, -50), new Point(50, -50)};
+		for(Point c: corners) {
+			for(Family f: members) {
+				if(f.get_id() == ps.get_id())
+					continue;
+				if(Point.dist(f.get_location(), c) < 20)
+					break;
+			}
+			return c;
+		}
+		return null;
 	}
 	
 	private boolean isSafePoint(Matrix m, Matrix g, int x, int y, int range) {

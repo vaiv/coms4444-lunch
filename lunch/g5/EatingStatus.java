@@ -36,6 +36,10 @@ public class EatingStatus {
     public static HashMap<FoodType, Integer> getEatingStatusLeft(PlayerState ps) {
         HashMap<FoodType, Integer> status = new HashMap<>();
         for (FoodType ft : allFoodTypesList) {
+            if(!ps.check_availability_item(ft)) {
+                status.put(ft, 0);
+                continue;
+            }
             Integer secondsLeft = ps.get_time_for_item(ft);
             status.put(ft, secondsLeft);
         }
@@ -45,9 +49,14 @@ public class EatingStatus {
     public static HashMap<FoodType, Double> getEatingStatusInPercentages(PlayerState ps) {
         HashMap<FoodType, Double> status = new HashMap<>();
         for (FoodType ft : allFoodTypesList) {
+            if(!ps.check_availability_item(ft)) {
+                status.put(ft, 1.0);
+                continue;
+            }
             Integer secondsLeft = ps.get_time_for_item(ft);
             Integer maxSeconds = foodTimeConstants.get(ft) + 1;
             Double percentage = (maxSeconds - secondsLeft) * 1.0 / maxSeconds;
+            percentage = Math.min(1.0, percentage);
             status.put(ft, percentage);
         }
         return status;
@@ -70,6 +79,7 @@ public class EatingStatus {
                 Integer seconds = dict.get(food);
                 Integer maxSeconds = foodTimeConstants.get(food);
                 Double percentage = seconds * 1.0 / maxSeconds;
+                percentage = Math.min(1.0, percentage);
                 memberStatus.put(food, percentage);
             }
             eatingStatus.add(memberStatus);
