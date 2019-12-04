@@ -26,6 +26,7 @@ public class Player implements lunch.sim.Player {
     private Integer id;
     private Integer turn;
     private String avatars;
+    private double t;
 
     private ArrayList<Animal> prev_animals;
     private HashMap<Integer, Point> trajectories;
@@ -33,6 +34,8 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Animal> incomingGeese;
     private Point corner; 
     private static boolean shouldDistract; 
+    private Integer numMonkeys;
+    private Integer numGeese;
 
 
     public Player() {
@@ -41,16 +44,24 @@ public class Player implements lunch.sim.Player {
     
     public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         this.id = id;
+        this.t = t;
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>(animals);
-        shouldDistract = false; 
+        shouldDistract = false;
+        numMonkeys = m;
+        numGeese = g;
         return avatars;
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
         // shouldDistract = False
+        // Never distract if the time is no more than 20 minutes or if there are fewer than 20 monkeys
+        // The 20 monkeys condition can be changed
+        if ((t <= 1200) || (numMonkeys <= 20)) {
+            shouldDistract = false;
+        }
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -65,8 +76,8 @@ public class Player implements lunch.sim.Player {
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move
             // means we're not there yet
-            // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK
-            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
+            // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK (unless no geese)
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || numGeese < 1)) {
                 return MonkeyWalk(animals, location, ps);
             }
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
@@ -76,7 +87,7 @@ public class Player implements lunch.sim.Player {
             prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         } else {
-            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || numGeese < 1)) {
                 return MonkeyStop(animals, location, ps);
             }
             return tryToEat(animals, prev_animals, ps);
