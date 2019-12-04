@@ -17,13 +17,15 @@ public class FamilyBehaviorPredictor {
 
     private int nMonkeys;
     private int nFamily;
-    private double threshold;
+    private double thresholdIn;
+    private double thresholdOut;
     private double radius = 40.0;
 
     public FamilyBehaviorPredictor(int f, int m) {
         this.nMonkeys = m;
         this.nFamily = f;
-        this.threshold = Math.min(2.0 * m / f, m * 1.0 / 2.0);
+        this.thresholdIn = Math.min(2.0 * m / f, m * 1.0 / 4.0);
+        this.thresholdOut = Math.min(3.0 * m / f, m * 1.0 / 1.5);
     }
 
     public ArrayList<Integer> getFollowingNumbers(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> previousAnimals) {
@@ -47,13 +49,20 @@ public class FamilyBehaviorPredictor {
             for(Pair<Point, Point> animal: animalLocations) {
                 Point p1 = animal.getKey();
                 Point p2 = animal.getValue();
-                if((Point.dist(p1, p0) < 5 && member.get_held_item_type() != null) || (Point.dist(p1, p0) < radius && PointUtilities.isInLine(p1, p0, p2))) {
+                if((Point.dist(p1, p0) < 10 && member.get_held_item_type() != null) || (Point.dist(p1, p0) < radius && PointUtilities.isInLine(p1, p0, p2))) {
                     nAnimalsFollowing += 1;
                 }
             }
             followingNumbers.add(nAnimalsFollowing);
         }
         return followingNumbers;
+    }
+
+    private boolean inDistractorZone(Point p) {
+        if(p.x > 0 || p.y > 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -68,8 +77,11 @@ public class FamilyBehaviorPredictor {
         ArrayList<Integer> followingNumbers = getFollowingNumbers(members, animals, previousAnimals);
         for (int i = 0; i < members.size(); i++) {
             Family member = members.get(i);
+            Point memberLocation = member.get_location();
             int nAnimalsInRadius = followingNumbers.get(i);
-            if(nAnimalsInRadius > threshold) {
+            if(inDistractorZone(memberLocation) && nAnimalsInRadius > thresholdIn) {
+                familyBehavior.add(BehaviorType.DISTRACTION);
+            } else if(nAnimalsInRadius > thresholdOut) {
                 familyBehavior.add(BehaviorType.DISTRACTION);
             } else {
                 familyBehavior.add(BehaviorType.AGGRESSIVE);
