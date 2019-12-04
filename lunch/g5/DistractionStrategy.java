@@ -225,7 +225,7 @@ public class DistractionStrategy {
      * Reset pre-calculated distraction strategy
      */
     public void resetDistractionStrategy(PlayerState ps) {
-        if (ps.get_held_item_type() != null) {
+        if (ps.is_player_searching() || ps.get_held_item_type() != null) {
             this.status = new DistractionStatus();
             this.status.keepFoodIn();
         }
