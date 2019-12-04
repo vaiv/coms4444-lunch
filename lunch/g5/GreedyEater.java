@@ -34,8 +34,8 @@ public class GreedyEater {
 	private FoodType[] eatingOrder;
 	private int coolingTime; // cold time after in danger
 	private boolean movingToCorner;
-	
-	private int turn;
+	private int lastTurn;
+	private int switchingTime;
 
 	public GreedyEater() {
 		super();
@@ -51,14 +51,25 @@ public class GreedyEater {
 		this.eatingOrder = new FoodType[] { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2,
 				FoodType.SANDWICH1, FoodType.SANDWICH2 };
 		this.coolingTime = 0;
-		this.turn = 0;
 		this.movingToCorner = true;
+		this.lastTurn = 0;
 	}
 
 	// eating exactly at corner with a cold time
 	public Command getCommandCornerEating(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps,
 			ArrayList<Animal> previousAnimals, int totalTurn) {
-		turn++;
+		if(switchingTime != 0) {
+			switchingTime--;
+			lastTurn = totalTurn;
+			return new Command(CommandType.KEEP_BACK);
+		}
+		if(totalTurn != lastTurn + 1) {
+			if(ps.is_player_searching() || ps.get_held_item_type() != null) {
+				switchingTime = 10;
+				lastTurn = totalTurn;
+				return new Command(CommandType.KEEP_BACK);
+			}
+		}
 		// move to the corner
 		double x = ps.get_location().x;
 		double y = ps.get_location().y;
@@ -68,17 +79,21 @@ public class GreedyEater {
 	        double dist = Point.dist(ps.get_location(), corner);
 			if(dist <= 1.0) {
 				movingToCorner = false;
+				lastTurn = totalTurn;
 				return Command.createMoveCommand(corner);
 			}
 			double cos = (corner.x - x)/dist;
 			double sin = (corner.y - y)/dist;
+			lastTurn = totalTurn;
 			return Command.createMoveCommand(new Point(cos+x, sin+y));
 		}
 		if(coolingTime > 0) {
-			coolingTime -= totalTurn - turn + 2;
+			coolingTime -= totalTurn - lastTurn;
 			coolingTime = Math.max(coolingTime, 0);
+			lastTurn = totalTurn;
 			return new Command();
 		}
+		lastTurn = totalTurn;
 		// danger
 		// [surrounded by monkey] or [has close goose while holding or searching
 		// sandwich]
@@ -106,6 +121,7 @@ public class GreedyEater {
 		if (!ps.is_player_searching() && ps.get_held_item_type() == null) {
 			for (FoodType food_type : eatingOrder) {
 				if (ps.check_availability_item(food_type)) {
+					System.out.println("taking out reset cooling time");
 					searching = food_type;
 					coolingTime = 0;
 					return new Command(CommandType.TAKE_OUT, food_type);
