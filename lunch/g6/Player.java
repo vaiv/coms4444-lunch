@@ -60,7 +60,7 @@ public class Player implements lunch.sim.Player {
         // Never distract if the time is no more than 20 minutes or if there are fewer than 20 monkeys
         // The 20 monkeys condition can be changed
         if ((t <= 1200) || (numMonkeys <= 20)) {
-            shouldDistract = False;
+            shouldDistract = false;
         }
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
