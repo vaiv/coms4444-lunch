@@ -17,11 +17,13 @@ public class PlayerState extends Agent<lunch.sim.PlayerState> {
     private final int id;
     private FoodType foodSearched;
     private int turn;
+    private int maxTurns;
 
-    public PlayerState(int id, lunch.sim.PlayerState original) {
+    public PlayerState(int id, lunch.sim.PlayerState original, int maxTurns) {
         super(original);
         this.id = id;
         turn = 0;
+        this.maxTurns = maxTurns;
     }
 
     public int getId() {
@@ -42,6 +44,10 @@ public class PlayerState extends Agent<lunch.sim.PlayerState> {
      */
     public void tick() {
         this.turn++;
+    }
+    
+    public int getRemainingTime() {
+        return maxTurns - turn;
     }
 
     /**
@@ -89,13 +95,32 @@ public class PlayerState extends Agent<lunch.sim.PlayerState> {
         return lastest.check_availability_item(type);
     }
 
-    public Double getPercentageOfFoodEaten() { //percent Food Eaten for function in strat
+    /**
+     * Returns the percentage [0, 100] of food, that has been eaten by this
+     * player so far
+     *
+     * @return the percentage of food eaten
+     */
+    public double getPercentageOfFoodEaten() { //percent Food Eaten for function in strat
         //returns the amount of food, a Double out of 100, that has been eaten by this player so far
         int totalTimeSpentEating = TOTAL_EATING_TIME; //amount of time needed to eat all food in bag
         for (FoodType f : getAvailableFood()) {
             totalTimeSpentEating -= getTimeToFinish(f);
         }
         return (totalTimeSpentEating * 100.0 / TOTAL_EATING_TIME);
+    }
+
+    /**
+     * Returns the amount of time needed to finish eating all the food left
+     *
+     * @return time needed to finish eating
+     */
+    public int getTimeToFinish() {
+        int total = 0;
+        for (FoodType f : getAvailableFood()) {
+            total += getTimeToFinish(f);
+        }
+        return total;
     }
 
     public List<FoodType> getAvailableFood() {

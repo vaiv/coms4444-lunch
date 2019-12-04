@@ -1,6 +1,7 @@
 package lunch.g8;
 
 import java.util.List;
+import java.util.Random;
 import static lunch.g8.PositionUtils.CENTER;
 import static lunch.g8.PositionUtils.distance;
 import lunch.sim.Command;
@@ -12,18 +13,18 @@ import lunch.sim.CommandType;
  */
 public class LureRotationStrategy extends Strategy {
 
-    private final CenterLureStrategy centerStrategy;
-    private final EatAtCornerStrategy cornerStrategy;
+    private final LureAtPositionStrategy centerStrategy;
+    private final GreedyEatingStrategy cornerStrategy;
     private final double switchPercentage;
     private Strategy subStrategy;
     private boolean hasTakenTurn;
     private int switchOnlyAfter;
 
-    public LureRotationStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
-        super(family, animals, state);
+    public LureRotationStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
+        super(family, animals, state, random);
         switchPercentage = 100.0 * state.getId() / family.size();
-        centerStrategy = new CenterLureStrategy(family, animals, state);
-        cornerStrategy = new EatAtCornerStrategy(family, animals, state);
+        centerStrategy = new LureAtPositionStrategy(family, animals, state, random);
+        cornerStrategy = new GreedyEatingStrategy(family, animals, state, random);
         if (state.getId() == 0) {
             subStrategy = centerStrategy;
             hasTakenTurn = true;

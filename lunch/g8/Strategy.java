@@ -2,6 +2,7 @@ package lunch.g8;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import static lunch.g8.PositionUtils.distance;
 import lunch.sim.AnimalType;
 import lunch.sim.Command;
@@ -17,11 +18,13 @@ public abstract class Strategy {
     protected final List<FamilyMember> family;
     protected final List<Animal> animals;
     protected final PlayerState state;
+    protected final Random random;
 
-    public Strategy(List<FamilyMember> family, List<Animal> animals, PlayerState state) {
+    public Strategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
         this.family = family;
         this.animals = animals;
         this.state = state;
+        this.random = random;
     }
 
     public abstract Command run() throws AbortStrategyException;
@@ -70,10 +73,13 @@ public abstract class Strategy {
     }
 
     public List<Animal> getAnimalsWithIn(AnimalType type, int radius) {
+        return this.getAnimalsWithIn(type, radius, state.getLocation());
+    }
+
+    public List<Animal> getAnimalsWithIn(AnimalType type, int radius, Point reference) {
         List<Animal> list = new ArrayList<>();
-        final Point location = state.getLocation();
         for (Animal a : animals) {
-            if (a.getType() == type && distance(location, a.getLocation()) < radius) {
+            if (a.getType() == type && distance(reference, a.getLocation()) < radius) {
                 list.add(a);
             }
         }
@@ -87,11 +93,31 @@ public abstract class Strategy {
     public List<FamilyMember> getOtherFamilyWithIn(int radius, Point reference) {
         List<FamilyMember> list = new ArrayList<>();
         for (FamilyMember fm : family) {
-            if (!fm.isIsOneSelf() && distance(reference, fm.getLocation()) < radius) {
+            if (!fm.isOneSelf() && distance(reference, fm.getLocation()) < radius) {
                 list.add(fm);
             }
         }
         return list;
+    }
+
+    public int getMonkeyDensity() {
+        int numMonkeys = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.MONKEY) {
+                numMonkeys++;
+            }
+        }
+        return numMonkeys / family.size();
+    }
+
+    public int getGeeseDensity() {
+        int numGeese = 0;
+        for (Animal a : animals) {
+            if (a.getType() == AnimalType.GOOSE) {
+                numGeese++;
+            }
+        }
+        return numGeese / family.size();
     }
 
 }
