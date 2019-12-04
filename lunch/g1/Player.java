@@ -69,6 +69,15 @@ public class Player implements lunch.sim.Player
 
 	public ArrayList<FoodType> getPriority() {
 		   ArrayList<FoodType> priorityList = new ArrayList<>();
+		   // keep order that most family members are keeping
+           priorityList.add(FoodType.COOKIE);
+           priorityList.add(FoodType.FRUIT1);
+           priorityList.add(FoodType.FRUIT2);
+           priorityList.add(FoodType.EGG);
+           priorityList.add(FoodType.SANDWICH1);
+           priorityList.add(FoodType.SANDWICH2);
+		   
+		   
 		   // time left: 1552
 //		   priorityList.add(FoodType.COOKIE);
 //		   priorityList.add(FoodType.FRUIT1);
@@ -79,15 +88,15 @@ public class Player implements lunch.sim.Player
 
 //		   System.out.println(t);
 		//if time is less than half an hour
-		   if (t <= 30 *60 ) {
-               // time left: 1656
-               priorityList.add(FoodType.COOKIE);
-               priorityList.add(FoodType.FRUIT1);
-               priorityList.add(FoodType.FRUIT2);
-               priorityList.add(FoodType.EGG);
-               priorityList.add(FoodType.SANDWICH1);
-               priorityList.add(FoodType.SANDWICH2);
-		   }
+//		   if (t <= 30 *60 ) {
+//               // time left: 1656
+//               priorityList.add(FoodType.COOKIE);
+//               priorityList.add(FoodType.FRUIT1);
+//               priorityList.add(FoodType.FRUIT2);
+//               priorityList.add(FoodType.EGG);
+//               priorityList.add(FoodType.SANDWICH1);
+//               priorityList.add(FoodType.SANDWICH2);
+//		   }
 
                // time left: 1656
 			   //check the number of Monkeys and geese, if moderate than distract
@@ -99,14 +108,14 @@ public class Player implements lunch.sim.Player
 //				   priorityList.add(FoodType.SANDWICH1);
 //				   priorityList.add(FoodType.SANDWICH2);
 //              }
-		   else{
-				   priorityList.add(FoodType.COOKIE);
-				   priorityList.add(FoodType.SANDWICH1);
-				   priorityList.add(FoodType.SANDWICH2);
-				   priorityList.add(FoodType.FRUIT1);
-				   priorityList.add(FoodType.FRUIT2);
-				   priorityList.add(FoodType.EGG);
-			   }
+//		   else{
+//				   priorityList.add(FoodType.COOKIE);
+//				   priorityList.add(FoodType.SANDWICH1);
+//				   priorityList.add(FoodType.SANDWICH2);
+//				   priorityList.add(FoodType.FRUIT1);
+//				   priorityList.add(FoodType.FRUIT2);
+//				   priorityList.add(FoodType.EGG);
+//			   }
 
 		   return priorityList;
 
@@ -174,7 +183,7 @@ public class Player implements lunch.sim.Player
         
         // move towards corner
         //if (turn < 70 && id != members.size() - 1) {
-        if (turn < 70) {
+        if (turn < 72) {
             // find and store direction to go towards corner
             if (turn == 2) setCornerDirection(members);
             
