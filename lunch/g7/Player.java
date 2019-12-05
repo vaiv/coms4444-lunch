@@ -29,6 +29,7 @@ public class Player implements lunch.sim.Player
 
 	private boolean inPosition = false;
 	private boolean isDistractor = false;
+	private boolean isArrive = false;
 
 	public Player()
 	{
@@ -63,26 +64,32 @@ public class Player implements lunch.sim.Player
 			}
 		}
 
-		// go to corresponding corners
+		// initial move, go to corresponding corners
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
 			if (this.id == 0) {
-                dest = new Point(0, 0);
-                isDistractor = true;
-            }
+				// no need for distractor if monkey size is low
+				if (monkeys.size() >= 10) {
+					dest = new Point(0, 0);
+					isDistractor = true;
+				}
+				else {
+					dest = new Point(50, -50);
+				}
+			}
 			else {
-                switch ((this.id + 1) % 3) {
-                    case 0:
-                        dest = new Point(50, -50);
-                        break;
-                    case 1:
-                        dest = new Point(-50, 50);
-                        break;
-                    case 2:
-                        dest = new Point(-50, -50);
-                        break;
-                }
-            }
+				switch ((this.id + 1) % 3) {
+					case 0:
+						dest = new Point(50, -50);
+						break;
+					case 1:
+						dest = new Point(-50, 50);
+						break;
+					case 2:
+						dest = new Point(-50, -50);
+						break;
+				}
+			}
 			Point start = new Point(ps.get_location());
 			Command res = getMove(start, dest, ps);
 			if (res == null) {
@@ -92,13 +99,18 @@ public class Player implements lunch.sim.Player
 				return res;
 			}
 		}
-        double ratioForTime = 0.65;
+
+		// calculate how long the distractor should distract
+		double ratioForTime = 0.65;
 		if (monkeys.size() <= 50)
-			ratioForTime = 0.5;
+			ratioForTime = 0.50;
 		else if (monkeys.size() <= 100)
 			ratioForTime = 0.60;
 		else
-			ratioForTime = 0.75;
+			ratioForTime = 0.70;
+		ratioForTime += geese.size() * 0.10;
+		ratioForTime = Math.min(ratioForTime, 0.8);
+
 		// if there is not enough time for distractor to finish food, go to corner
 		if (isDistractor && currentRatio <= 0.4 && time >= ratioForTime * timeLimit) {
 			Point dest = new Point(50, -50);
@@ -110,19 +122,34 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if the player almost finished food, and there is sufficient time to distract
-		if (currentRatio >= 0.99 && timeLimit - time >= 800) {
-		    isDistractor = true;
-            Point dest = new Point(0, 0);
-            if (this.id == 0) {
-				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
-				dest = desToDistract;
+		if (currentRatio >= 0.998 && timeLimit - time >= 800) {
+			if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
+				return new Command(CommandType.KEEP_BACK);
+			}
+			isDistractor = true;
+			Point dest = new Point(0, 0);
+			if (this.id == 0) {
+				Point nxt = pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members);
+				if (!isArrive) {
+					dest = nxt;
+					desToDistract = nxt;
+				}
+				else {
+					dest = desToDistract;
+				}
 				if (dest == null) {
 					dest = new Point(0, 0);
 				}
-            }
-            else {
-				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
-				dest = desToDistract;
+			}
+			else {
+				Point nxt = pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members);
+				if (!isArrive) {
+					dest = nxt;
+					desToDistract = nxt;
+				}
+				else {
+					dest = desToDistract;
+				}
 				if (dest == null) {
 					switch ((this.id + 1) % 3) {
 						case 0:
@@ -136,11 +163,12 @@ public class Player implements lunch.sim.Player
 							break;
 					}
 				}
-            }
-            Command res = getMove(ps.get_location(), dest, ps);
-            if (res != null) {
-                return res;
-            }
+			}
+			Command res = getMove(ps.get_location(), dest, ps);
+			if (res != null) {
+				isArrive = true;
+				return res;
+			}
 		}
 
 		if (Double.compare(currentRatio, 0.9) == 0) {
@@ -225,7 +253,7 @@ public class Player implements lunch.sim.Player
 		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
 			// if almost finished food, flash it to distract until the last seconds
-			if (currentRatio >= 0.995 && timeLimit - time > 200) {
+			if (currentRatio >= 0.998 && timeLimit - time > 200) {
 				return new Command();
 			}
 			currentRatio += 1.0 / totalFoodTime;
@@ -245,7 +273,7 @@ public class Player implements lunch.sim.Player
 		for (Family member : members) {
 			Point cur = member.get_location();
 			if (!cur.equals(point1) && !cur.equals(point2) && !cur.equals(point3) && !cur.equals(point4) &&
-			!cur.equals(point5)) {
+					!cur.equals(point5)) {
 				return true;
 			}
 		}
@@ -275,8 +303,11 @@ public class Player implements lunch.sim.Player
 	private boolean isDangerours(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
 		if (foodToTakeOut != null && (foodToTakeOut == FoodType.SANDWICH1 || foodToTakeOut == FoodType.SANDWICH2))
 			return detectGeese(ps, geese) || detectMonkeys(ps, monkeys);
-		else {
+		else if (foodToTakeOut != null) {
 			return detectMonkeys(ps, monkeys);
+		}
+		else {
+			return false;
 		}
 	}
 
@@ -349,6 +380,23 @@ public class Player implements lunch.sim.Player
 		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
+	// if there is distractor on board
+	private boolean isThereDistractor(List<Family> members, List<Animal> monkeys) {
+		int totalMonkeys = monkeys.size();
+		for (Family member : members) {
+			int numMonkeys = 0;
+			for (Animal monkey : monkeys) {
+				if (Point.dist(member.get_location(), monkey.get_location()) <= 40) {
+					numMonkeys++;
+				}
+			}
+			if (numMonkeys >= 0.8 * totalMonkeys){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private Point getDistractorLoctaion(List<Family> members, List<Animal> monkeys) {
 		int maxMonkeys = 0;
 		Point loc = null;
@@ -368,6 +416,9 @@ public class Player implements lunch.sim.Player
 	}
 
 	private Point pointToHelpDistract(Point cur, Point distractor, List<Family> members) {
+		if (distractor == null) {
+			return cur;
+		}
 		double dist = 28;
 		boolean isMe = true;
 		Point des = null;
