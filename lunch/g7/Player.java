@@ -392,6 +392,9 @@ public class Player implements lunch.sim.Player
 	}
 
 	private Point pointToHelpDistract(Point cur, Point distractor, List<Family> members) {
+	    if (distractor == null) {
+	        return cur;
+        }
 		double dist = 28;
 		boolean isMe = true;
 		Point des = null;
