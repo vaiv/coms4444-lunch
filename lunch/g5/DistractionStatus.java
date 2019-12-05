@@ -98,6 +98,9 @@ public class DistractionStatus {
     public Command executeStrategy(PlayerState ps) {
         StrategyType move = strategy.get(0);
 
+        if(move.mode == StrategyMode.MOVE_FOOD && ps.get_held_item_type() == null )
+            this.strategy.clear();
+
         if (move.mode == StrategyMode.MOVE_NOFOOD || move.mode == StrategyMode.MOVE_FOOD) {
             Point source = ps.get_location();
 
