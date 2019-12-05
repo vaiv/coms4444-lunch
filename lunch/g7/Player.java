@@ -253,7 +253,7 @@ public class Player implements lunch.sim.Player
 		else if(!ps.is_player_searching() && ps.get_held_item_type() != null)
 		{
 			// if almost finished food, flash it to distract until the last seconds
-			if (currentRatio >= 0.995 && timeLimit - time > 200) {
+			if (currentRatio >= 0.998 && timeLimit - time > 200) {
 				return new Command();
 			}
 			currentRatio += 1.0 / totalFoodTime;
