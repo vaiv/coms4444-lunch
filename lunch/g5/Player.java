@@ -21,6 +21,8 @@ public class Player implements lunch.sim.Player {
     private Integer nMonkeys;
     private Integer nGeese;
     private Integer overallTime;
+    private ArrayList<ArrayList<Point>> playerMovement = new ArrayList<>();
+    private boolean thereIsRandomPlayer = false;
 
     MatrixPredictor matrixPredictor;
     EatingStatus eatingStatus;
@@ -55,6 +57,9 @@ public class Player implements lunch.sim.Player {
         this.nFamily = f;
         this.overallTime = (int)Math.round(t);
         this.nMonkeys = m;
+        for (int i = 0; i < f; i++) {
+            playerMovement.add(new ArrayList<Point>());
+        }
         this.nGeese = g;
         this.random = new Random(this.seed + id);
 
@@ -196,6 +201,10 @@ public class Player implements lunch.sim.Player {
         System.out.println("[|] nTimestepsSomeoneIsDistr.:\t" + nTimestepsSomeoneIsDistractor);
         System.out.println("[|] estTime2EatEvrthg.ButSand.:\t" + estimatedTimeToEatEverythingButSandwiches(ps));
         System.out.println("[|] estTime2EatEvrthg.:\t\t" + estimatedTimeToEatEverything(ps));
+        System.out.println("[|] thereIsRandomPlayer:\t" + thereIsRandomPlayer);
+        if(thereIsRandomPlayer) {
+            return BehaviorType.AGGRESSIVE;
+        }
         // Zero it down if we are distracting
         if(weAreDistracting()) {
             nTimestepsWithNoDistractor = 0;
@@ -328,6 +337,29 @@ public class Player implements lunch.sim.Player {
             case AGGRESSIVE:
                 command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
                 break;
+        }
+        // Check if there is random player
+        if (turn < 10) {
+            for (int i = 0; i < members.size(); i++) {
+                if(i == this.id) {
+                    continue;
+                }
+                ArrayList<Point> onePlayerMovement = playerMovement.get(i);
+                Point currentMember = members.get(i).get_location();
+                Point previousMember = previousMembers.get(i).get_location();
+                Point movement = PointUtilities.substract(currentMember, previousMember);
+                if(!onePlayerMovement.contains(movement)){
+                    onePlayerMovement.add(movement);
+                }
+            }
+        }
+        if (turn == 10) {
+            for (ArrayList<Point> onePlayerMovement: playerMovement) {
+                System.out.println(onePlayerMovement.size());
+                if(onePlayerMovement.size() > 9) {
+                    thereIsRandomPlayer = true;
+                }
+            }
         }
         // Record things for the next turn
         previousBehaviourType = type;
