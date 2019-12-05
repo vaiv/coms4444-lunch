@@ -39,6 +39,7 @@ public class Player implements lunch.sim.Player {
     private boolean beAggressiveTillTheEnd = false;
     private int nTimestepsWithNoDistractor = 0;
     private int nTimestepsSomeoneIsDistractor = 0;
+    private int nTimesSwitchedToDistraction = 0;
 
     private DistractionStrategy mDistraction;
 
@@ -129,6 +130,19 @@ public class Player implements lunch.sim.Player {
         return true;
     }
 
+    private boolean weReallyHaveOnlySandwiches(PlayerState ps) {
+        HashMap<FoodType, Integer> es = EatingStatus.getEatingStatusLeft(ps);
+        for (FoodType food : es.keySet()) {
+            if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
+                continue;
+            }
+            if (es.get(food) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean everyoneHasOnlySandwiches(ArrayList<Family> members) {
         ArrayList<HashMap<FoodType, Double>> es = eatingStatus.getPercentages(previousMembers, members);
         for (int i = 0; i < es.size(); i++) {
@@ -153,7 +167,7 @@ public class Player implements lunch.sim.Player {
             if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
                 continue;
             } else {
-                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 60.0) + 70;
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 120.0) + 70;
             }
         }
         return timeToEat;
@@ -168,9 +182,9 @@ public class Player implements lunch.sim.Player {
                 continue;
             }
             if (food == FoodType.SANDWICH1 || food == FoodType.SANDWICH2) {
-                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0 + nGeese * 3.0) / 60.0) + 70;
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0 + nGeese * 2.0) / 120.0) + 70;
             } else {
-                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 60.0) + 70;
+                timeToEat += (int) Math.round(timeLeft * (120.0 + nMonkeys * 1.0) / 120.0) + 70;
             }
         }
         return timeToEat;
@@ -203,6 +217,9 @@ public class Player implements lunch.sim.Player {
         System.out.println("[|] estTime2EatEvrthg.:\t\t" + estimatedTimeToEatEverything(ps));
         System.out.println("[|] thereIsRandomPlayer:\t" + thereIsRandomPlayer);
         if(thereIsRandomPlayer) {
+            return BehaviorType.AGGRESSIVE;
+        }
+        if(nTimesSwitchedToDistraction > 5) {
             return BehaviorType.AGGRESSIVE;
         }
         // Zero it down if we are distracting
@@ -249,12 +266,12 @@ public class Player implements lunch.sim.Player {
         // ================== INITIAL CHECKS DONE ============================
 
         // If we have almost eaten our food with aggresive and there is still some time => go distract
-        if (weHaveEatenOurFood(ps) && timeLeft() > 400) {
+        if (!weReallyHaveOnlySandwiches(ps) && weHaveEatenOurFood(ps) && timeLeft() > 400) {
             return BehaviorType.DISTRACTION_NOEAT;
         }
         // Check if we are distacting
         if (weAreDistracting()) {
-            if (nGeese > 25) {
+            if (nGeese > 25 || nMonkeys > 90) {
                 if (!weHaveOnlySandwiches(ps)) {
                     if (timeLeft() < estimatedTimeToEatEverythingButSandwiches(ps)) {
                         beAggressiveTillTheEnd = true;
@@ -271,13 +288,13 @@ public class Player implements lunch.sim.Player {
             }
         }
         // If we are distraction and there is a distractor
-        int somebodyDistractingThreshold = 20 + random.nextInt(30);
+        int somebodyDistractingThreshold = 30 + random.nextInt(30);
         System.out.println("[|] somebodyDistractingThresh.:\t" + somebodyDistractingThreshold);
         if (weAreDistracting() && nTimestepsSomeoneIsDistractor >= somebodyDistractingThreshold){
             return BehaviorType.AGGRESSIVE;
         }
         // Is there is no other distractor => go be one
-        if(weAreDistracting() || nTimestepsWithNoDistractor >= 30) {
+        if(!weReallyHaveOnlySandwiches(ps) && (weAreDistracting() || nTimestepsWithNoDistractor >= 40)) {
             if(weHaveEatenOurFood(ps)) {
                 return BehaviorType.DISTRACTION_NOEAT;
             } else {
@@ -320,12 +337,14 @@ public class Player implements lunch.sim.Player {
             case DISTRACTION_EAT:
                 if(previousBehaviourType != BehaviorType.DISTRACTION_EAT) {
                     mDistraction.resetDistractionStrategy(ps);
+                    nTimesSwitchedToDistraction++;
                 }
                 command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
                 break;
             case DISTRACTION_NOEAT:
                 if(previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
                     mDistraction.resetDistractionStrategy(ps);
+                    nTimesSwitchedToDistraction++;
                 }
                 command = mDistraction.getCommand(members, animals, previousAnimals, ps, false);
                 break;

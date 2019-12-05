@@ -24,8 +24,8 @@ public class FamilyBehaviorPredictor {
     public FamilyBehaviorPredictor(int f, int m) {
         this.nMonkeys = m;
         this.nFamily = f;
-        this.thresholdIn = Math.min(2.0 * m / f, m * 0.3);
-        this.thresholdOut = Math.min(4.0 * m / f, m * 0.9);
+        this.thresholdIn = Math.min(2.0 * m / f, m * 0.1);
+        this.thresholdOut = Math.min(4.0 * m / f, m * 0.8);
     }
 
     public ArrayList<Integer> getFollowingNumbers(ArrayList<Family> members, ArrayList<Animal> animals, ArrayList<Animal> previousAnimals) {
@@ -49,7 +49,7 @@ public class FamilyBehaviorPredictor {
             for(Pair<Point, Point> animal: animalLocations) {
                 Point p1 = animal.getKey();
                 Point p2 = animal.getValue();
-                if((Point.dist(p1, p0) < 20) || (Point.dist(p1, p0) < radius && PointUtilities.isInLine(p1, p0, p2))) {
+                if((Point.dist(p1, p0) < 5) || (Point.dist(p1, p0) < radius && PointUtilities.isInLine(p1, p0, p2))) {
                     nAnimalsFollowing += 1;
                 }
             }
