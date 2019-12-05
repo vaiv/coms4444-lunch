@@ -37,7 +37,7 @@ public class Player implements lunch.sim.Player {
 
     private BehaviorType previousBehaviourType = BehaviorType.AGGRESSIVE;
     private boolean beAggressiveTillTheEnd = false;
-    private int nTimestepsWithNoDistractor = 0;
+    private int nTimestepsWithNoDistractor = -2;
     private int nTimestepsSomeoneIsDistractor = 0;
     private int nTimesSwitchedToDistraction = 0;
 
@@ -294,7 +294,7 @@ public class Player implements lunch.sim.Player {
             return BehaviorType.AGGRESSIVE;
         }
         // Is there is no other distractor => go be one
-        if(!weReallyHaveOnlySandwiches(ps) && (weAreDistracting() || nTimestepsWithNoDistractor >= 40)) {
+        if(!weReallyHaveOnlySandwiches(ps) && (weAreDistracting() || nTimestepsWithNoDistractor == -1 || nTimestepsWithNoDistractor >= 30)) {
             if(weHaveEatenOurFood(ps)) {
                 return BehaviorType.DISTRACTION_NOEAT;
             } else {
