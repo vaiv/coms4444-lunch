@@ -17,11 +17,13 @@ public class PlayerState extends Agent<lunch.sim.PlayerState> {
     private final int id;
     private FoodType foodSearched;
     private int turn;
+    private int maxTurns;
 
-    public PlayerState(int id, lunch.sim.PlayerState original) {
+    public PlayerState(int id, lunch.sim.PlayerState original, int maxTurns) {
         super(original);
         this.id = id;
         turn = 0;
+        this.maxTurns = maxTurns;
     }
 
     public int getId() {
@@ -42,6 +44,10 @@ public class PlayerState extends Agent<lunch.sim.PlayerState> {
      */
     public void tick() {
         this.turn++;
+    }
+    
+    public int getRemainingTime() {
+        return maxTurns - turn;
     }
 
     /**
