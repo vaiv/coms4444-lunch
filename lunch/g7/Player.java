@@ -421,6 +421,9 @@ public class Player implements lunch.sim.Player
 		if (!geese.isEmpty()) {
 			distGeese = Point.dist(geese.get(0).get_location(), ps.get_location());
 		}
+		if (geese.size() >= 50 && (cur == FoodType.SANDWICH1 || cur == FoodType.SANDWICH2)) {
+			return true;
+		}
 		return ((cur != FoodType.SANDWICH1 && cur != FoodType.SANDWICH2) || distGeese >= rangeGeese) && distMonkey >= rangeMonkeys;
 	}
 
