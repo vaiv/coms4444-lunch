@@ -55,8 +55,12 @@ public class Player implements lunch.sim.Player {
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
-        // shouldDistract = False
+        boolean noGeese = false;
+        if (numGeese < 1) {
+            noGeese = true;
+        }
+        shouldDistract = Helper.shouldDistract(members, ps, random, this.id, noGeese);
+        // shouldDistract = false;
         // Never distract if the time is no more than 20 minutes or if there are fewer than 20 monkeys
         // The 20 monkeys condition can be changed
         if ((t <= 1200) || (numMonkeys <= 20)) {
@@ -77,7 +81,7 @@ public class Player implements lunch.sim.Player {
             // Need to put food away before we can move
             // means we're not there yet
             // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK (unless no geese)
-            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || numGeese < 1)) {
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || noGeese)) {
                 return MonkeyWalk(animals, location, ps);
             }
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
@@ -87,7 +91,7 @@ public class Player implements lunch.sim.Player {
             prev_animals = new ArrayList<>(animals);
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
         } else {
-            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || numGeese < 1)) {
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || noGeese)) {
                 return MonkeyStop(animals, location, ps);
             }
             return tryToEat(animals, prev_animals, ps);
@@ -96,6 +100,7 @@ public class Player implements lunch.sim.Player {
 
     public Command MonkeyWalk(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
+        prev_animals = new ArrayList<>(animals);
         // if food out and monkeys not in grabbing distance, just keep going
         if (ps.get_held_item_type() != null && monkey_time > 2) {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
@@ -121,14 +126,17 @@ public class Player implements lunch.sim.Player {
 
     public Command MonkeyStop(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
+        //prev_animals = new ArrayList<>(animals);
         if (ps.get_held_item_type() != null) {
             if (monkey_time <= 2) {
+                prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return tryToEat(animals, prev_animals, ps);
             }
         } else {
             // food is inside bag
+            prev_animals = new ArrayList<>(animals);
             if (monkey_time >= 3) {
                 return Helper.takeOutFood(ps);
             } else {

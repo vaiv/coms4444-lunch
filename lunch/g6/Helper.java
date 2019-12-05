@@ -380,7 +380,7 @@ public class Helper {
         return new Command(); 
     }
 
-    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id) {
+    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id, boolean noGeese) {
         boolean distract = false;
         Point distractingCorner = new Point(50, 50);
         Double minDist = Double.MAX_VALUE;
@@ -405,6 +405,10 @@ public class Helper {
             if (curLoc.x > 10 && curLoc.y > 10) {
                 distract = false;
             }
+        }
+        // Should not distract with sandwiches (unless no geese)
+        if (!ps.check_availability_item(FoodType.EGG) && !noGeese) {
+            distract = false;
         }
         return distract;
     }
