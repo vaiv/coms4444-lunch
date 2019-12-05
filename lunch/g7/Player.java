@@ -116,6 +116,9 @@ public class Player implements lunch.sim.Player
 
 		// if the player almost finished food, and there is sufficient time to distract
 		if (currentRatio >= 0.99 && timeLimit - time >= 800) {
+			if (!ps.is_player_searching() && ps.get_held_item_type() != null) {
+				return new Command(CommandType.KEEP_BACK);
+			}
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             if (this.id == 0) {
