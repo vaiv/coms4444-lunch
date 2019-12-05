@@ -30,6 +30,9 @@ public class Player implements lunch.sim.Player
 	private boolean inPosition = false;
 	private boolean isDistractor = false;
 	private boolean isArrive = false;
+	private boolean enoughTime = true;
+	private boolean inDistractPosition = false;
+	private boolean backToCorner = false;
 
 	public Player()
 	{
@@ -67,29 +70,29 @@ public class Player implements lunch.sim.Player
 		// initial move, go to corresponding corners
 		if (!inPosition) {
 			Point dest = new Point(0, 0);
-			if (this.id == 0) {
-				// no need for distractor if monkey size is low
-				if (monkeys.size() >= 10) {
-					dest = new Point(0, 0);
-					isDistractor = true;
-				}
-				else {
+//			if (this.id == 0) {
+//				// no need for distractor if monkey size is low
+//				if (monkeys.size() >= 10) {
+//					dest = new Point(0, 0);
+//					isDistractor = true;
+//				}
+//				else {
+//					dest = new Point(50, -50);
+//				}
+//			}
+//			else {
+			switch ((this.id + 1) % 3) {
+				case 0:
 					dest = new Point(50, -50);
-				}
+					break;
+				case 1:
+					dest = new Point(-50, 50);
+					break;
+				case 2:
+					dest = new Point(-50, -50);
+					break;
 			}
-			else {
-				switch ((this.id + 1) % 3) {
-					case 0:
-						dest = new Point(50, -50);
-						break;
-					case 1:
-						dest = new Point(-50, 50);
-						break;
-					case 2:
-						dest = new Point(-50, -50);
-						break;
-				}
-			}
+//			}
 			Point start = new Point(ps.get_location());
 			Command res = getMove(start, dest, ps);
 			if (res == null) {
@@ -109,15 +112,56 @@ public class Player implements lunch.sim.Player
 		else
 			ratioForTime = 0.70;
 		ratioForTime += geese.size() * 0.10;
-		ratioForTime = Math.min(ratioForTime, 0.8);
+		ratioForTime = Math.min(ratioForTime, 1.0);
+
+		// if there is no distractor, we need to distract
+		if (time == 250 + 75 * ps.get_id() && !isThereDistractor(members, monkeys)) {
+			isDistractor = true;
+		}
+
+		// move distractor to position
+		if (isDistractor && !inDistractPosition && enoughTime) {
+			Point dest = new Point(0, 0);
+			Command res = getMove(ps.get_location(), dest, ps);
+			if (res != null) {
+				return res;
+			}
+			inDistractPosition = true;
+		}
+
+//		// if someone else decided to be the distractor, stop being the distractor and move away
+//		if (time == 460 + 50 * ps.get_id() && isThereDistractor(members, monkeys)) {
+//			isDistractor = false;
+//		}
+//
+//		if (!isDistractor && !backToCorner) {
+//			Point dest = new Point(0, 0);
+//			switch ((this.id + 1) % 3) {
+//				case 0:
+//					dest = new Point(50, -50);
+//					break;
+//				case 1:
+//					dest = new Point(-50, 50);
+//					break;
+//				case 2:
+//					dest = new Point(-50, -50);
+//					break;
+//			}
+//			Command res = getMove(ps.get_location(), dest, ps);
+//			if (res != null) {
+//				return res;
+//			}
+//			backToCorner = true;
+//		}
 
 		// if there is not enough time for distractor to finish food, go to corner
-		if (isDistractor && currentRatio <= 0.4 && time >= ratioForTime * timeLimit) {
+		if (isDistractor && currentRatio <= ratioForTime - 0.1 && time >= ratioForTime * timeLimit) {
 			Point dest = new Point(50, -50);
 			Command res = getMove(ps.get_location(), dest, ps);
 			if (res != null) {
 				return res;
 			}
+			enoughTime = false;
 			isDistractor = false;
 		}
 
@@ -384,13 +428,19 @@ public class Player implements lunch.sim.Player
 	private boolean isThereDistractor(List<Family> members, List<Animal> monkeys) {
 		int totalMonkeys = monkeys.size();
 		for (Family member : members) {
+			if (member.get_id().equals(id))
+				continue;
+			Point location = member.get_location();
+			if (Double.compare(location.x, 0) == 0 && Double.compare(location.y, 0) == 0) {
+				return true;
+			}
 			int numMonkeys = 0;
 			for (Animal monkey : monkeys) {
-				if (Point.dist(member.get_location(), monkey.get_location()) <= 40) {
+				if (Point.dist(member.get_location(), monkey.get_location()) <= 35) {
 					numMonkeys++;
 				}
 			}
-			if (numMonkeys >= 0.8 * totalMonkeys){
+			if (numMonkeys >= 0.75 * totalMonkeys){
 				return true;
 			}
 		}
