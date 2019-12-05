@@ -403,6 +403,20 @@ public class Player implements lunch.sim.Player
 		return maxRegion;
 	}
 
+	private boolean areMonkeysEverywhere() {
+		HashMap<Integer, Double> sum_densities = runningSumDensities(75);
+		double total = 0.0;
+		for (Integer i=1; i<=4; i++) {
+			total += sum_densities.get(i);
+		}
+		for (Integer i=0; i<=4; i++) {
+			if (sum_densities.get(i) / total < 0.1) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// private Point getWalkingTargetToDenseRegion(int window, PlayerState ps) {
 	// 	return this.getWalkingTarget(window, false, ps);
 	// }
@@ -594,8 +608,29 @@ public class Player implements lunch.sim.Player
 		return new Point(x,y);
 	}
 
+	// gives how many times our fair shair of distracting we're ever willing to do
+	private double getShareMultiple(int familySize) {
+		if (familySize == 2) {
+			return 1.2;
+		}
+		else if (familySize == 3) {
+			return 1.7;
+		}
+		else if (familySize == 4 || familySize == 5) {
+			return 2.0;
+		}
+		else if (familySize == 6) {
+			return 2.5;
+		}
+		else {
+			return 3.0;
+		}
+	}
+
 	private boolean distractingTooOften(int familySize) {
-		double threshold = 1 / (double)familySize * 3; // thrice our fair share of distracting, we need to start eating too
+		double shareMultiple = getShareMultiple(familySize);
+		// limit to shareMultiple our fair share of distracting, we need to start eating too
+		double threshold = 1 / (double)familySize * shareMultiple; 
 		if (totalTimeDistracting / total_time > threshold) {
 			System.out.println(threshold + " Threshold");
 			return true;
@@ -719,7 +754,9 @@ public class Player implements lunch.sim.Player
 			updatePlayerRole(ps, members);
 			double flowRatio = getFlowRatio(ps, animals);
 
-			boolean waitToEat = flowRatio >= 1.5;
+			// if monkeys are uniform across the map, we should be less patient
+			// if the monkeys seem to be congregating in one region, we should be more patient to let them go there
+			boolean waitToEat = flowRatio >= 4.0;
 
 			for(int i = 0; i < animals.size(); i++) {
 				prevAnimalLocs.set(i, animals.get(i).get_location());
