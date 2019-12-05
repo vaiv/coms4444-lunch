@@ -23,7 +23,12 @@ public abstract class EatAtPositionStrategy extends Strategy {
 
     public EatAtPositionStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
         super(family, animals, state, random);
-        monkeyMargin = 35.0;
+        int closeByMonkeys = countAnimalsWithIn(AnimalType.MONKEY, 5.0);
+        double percentCloseMonkeys = (closeByMonkeys / getMonkeyDensity()) * 100;
+        if(percentCloseMonkeys > 50.0){monkeyMargin = 10.0;} //TODO: check that we are not being the distractor aka we have high monkey density on purpose
+        else if(percentCloseMonkeys > 35.0){monkeyMargin = 20.0;}
+        else if (percentCloseMonkeys > 20){monkeyMargin = 30.0;}
+        else{monkeyMargin = 35.0;}
     }
 
     public EatAtPositionStrategy(Point position, List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
