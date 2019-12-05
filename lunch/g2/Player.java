@@ -34,6 +34,7 @@ public class Player implements lunch.sim.Player
 	private int timeEating;
 	private int timeDistracting;
 	private boolean foodAlmostGone;
+	private Double totalTimeDistracting;
 
 	public void updateState(PlayerState ps) {
 		String newState = "";
@@ -65,6 +66,7 @@ public class Player implements lunch.sim.Player
 		this.timeEating = 0;
 		this.timeDistracting = 0;
 		this.foodAlmostGone = false;
+		this.totalTimeDistracting = 0.0;
 
 		this.eatLocations = new ArrayList<Point>();
 		this.eatLocations.add(new Point(50, -50));
@@ -164,7 +166,7 @@ public class Player implements lunch.sim.Player
 		int fac = (delta_x < 0) ? -1: 1;
 		Point move = new Point(ps.get_location().x + fac * Math.cos(bearing), ps.get_location().y + fac * Math.sin(bearing));
 
-		if (Point.dist(ps.get_location(), this.walkingTarget) < 5) {
+		if (Point.dist(ps.get_location(), this.walkingTarget) < 1) {
 			this.walkingTarget = null;
 		}
 		
@@ -353,13 +355,14 @@ public class Player implements lunch.sim.Player
 
 	// find the region of the map that has had the least number of animals
 	// averaged over the last window of seconds
+	// don't consider bottom right because we're looking for somewhere to eat
 	private Integer getMinRegion(int window) {
 		HashMap<Integer, Double> sum_densities = runningSumDensities(window);
 
 		// find min region
 		Integer minRegion = 0;
 		Double minDensity = Double.POSITIVE_INFINITY;
-		for (Integer i=1; i<=4; i++) {
+		for (Integer i=1; i<=3; i++) {
 			if (sum_densities.get(i) < minDensity) {
 				minDensity = sum_densities.get(i);
 				minRegion = i;
@@ -400,77 +403,77 @@ public class Player implements lunch.sim.Player
 		return maxRegion;
 	}
 
-	private Point getWalkingTargetToDenseRegion(int window, PlayerState ps) {
-		return this.getWalkingTarget(window, false, ps);
-	}
+	// private Point getWalkingTargetToDenseRegion(int window, PlayerState ps) {
+	// 	return this.getWalkingTarget(window, false, ps);
+	// }
 
-	private Point getWalkingTargetToEmptyRegion(int window, PlayerState ps) {
-		return this.getWalkingTarget(window, true, ps);
-	}
+	// private Point getWalkingTargetToEmptyRegion(int window, PlayerState ps) {
+	// 	return this.getWalkingTarget(window, true, ps);
+	// }
 
-	private boolean areRegionsDiagonal(Integer region1, Integer region2) {
-		if (region1 == 1 && region2 == 4) {
-			return true;
-		}
-		if (region1 == 2 && region2 == 3) {
-			return true;
-		}
-		if (region1 == 3 && region2 == 2) {
-			return true;
-		}
-		if (region1 == 4 && region2 == 1) {
-			return true;
-		}
-		return false;
-	}
+	// private boolean areRegionsDiagonal(Integer region1, Integer region2) {
+	// 	if (region1 == 1 && region2 == 4) {
+	// 		return true;
+	// 	}
+	// 	if (region1 == 2 && region2 == 3) {
+	// 		return true;
+	// 	}
+	// 	if (region1 == 3 && region2 == 2) {
+	// 		return true;
+	// 	}
+	// 	if (region1 == 4 && region2 == 1) {
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
 
-	private boolean isMinRegionMuchBetter(Integer currentRegion, Integer minRegion, int window) {
+	// private boolean isMinRegionMuchBetter(Integer currentRegion, Integer minRegion, int window) {
 		
-		// if we have to walk diagonal, then no
-		if (areRegionsDiagonal(currentRegion, minRegion)) {
-			return false;
-		}
+	// 	// if we have to walk diagonal, then no
+	// 	if (areRegionsDiagonal(currentRegion, minRegion)) {
+	// 		return false;
+	// 	}
 
-		double threshold = 3.0;
-		HashMap<Integer, Double> sum_densities = runningSumDensities(window);
-		Double minRegionDensity = getMinRegionDensity(sum_densities);
-		Double currentRegionDensity = sum_densities.get(currentRegion);
-		if (currentRegionDensity - minRegionDensity > threshold) {
-			return true;
-		}
-		return false;
-	}
+	// 	double threshold = 3.0;
+	// 	HashMap<Integer, Double> sum_densities = runningSumDensities(window);
+	// 	Double minRegionDensity = getMinRegionDensity(sum_densities);
+	// 	Double currentRegionDensity = sum_densities.get(currentRegion);
+	// 	if (currentRegionDensity - minRegionDensity > threshold) {
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
 
 
 	// specifies where to walk once we know the region of least density
-	private Point getWalkingTarget(int window, boolean useMinRegion, PlayerState ps) {
-		Integer desiredRegion = useMinRegion ? getMinRegion(window) : getMaxRegion(window);
-		int distFromOrigin = useMinRegion ? 35: 5;
+	// private Point getWalkingTarget(int window, boolean useMinRegion, PlayerState ps) {
+	// 	Integer desiredRegion = useMinRegion ? getMinRegion(window) : getMaxRegion(window);
+	// 	int distFromOrigin = useMinRegion ? 35: 5;
 
-		// don't walk unless it's really worth the time
-		Integer currentRegion = getRegion(ps.get_location().x, ps.get_location().y);
-		if (useMinRegion && !isMinRegionMuchBetter(currentRegion, desiredRegion, window)) {
-			return null;
-		}
+	// 	// don't walk unless it's really worth the time
+	// 	Integer currentRegion = getRegion(ps.get_location().x, ps.get_location().y);
+	// 	if (useMinRegion && !isMinRegionMuchBetter(currentRegion, desiredRegion, window)) {
+	// 		return null;
+	// 	}
 
-		else if (desiredRegion == 1) {
-			return new Point(-distFromOrigin, distFromOrigin);
-		} 
+	// 	else if (desiredRegion == 1) {
+	// 		return new Point(-distFromOrigin, distFromOrigin);
+	// 	} 
 
-		else if (desiredRegion == 2) {
-			return new Point(distFromOrigin, distFromOrigin);
-		}
+	// 	else if (desiredRegion == 2) {
+	// 		return new Point(distFromOrigin, distFromOrigin);
+	// 	}
 
-		else if (desiredRegion == 3) {
-			return new Point(-distFromOrigin, -distFromOrigin);
-		}
+	// 	else if (desiredRegion == 3) {
+	// 		return new Point(-distFromOrigin, -distFromOrigin);
+	// 	}
 
-		else if (desiredRegion == 4) {
-			return new Point(distFromOrigin, -distFromOrigin);
-		}
+	// 	else if (desiredRegion == 4) {
+	// 		return new Point(distFromOrigin, -distFromOrigin);
+	// 	}
 
-		return null;
-	}
+	// 	return null;
+	// }
 
 
 	private Integer getCurrentEatingLocation(PlayerState ps) {
@@ -480,6 +483,27 @@ public class Player implements lunch.sim.Player
 			}
 		}
 		return null;
+	}
+
+	private Integer freeEatingCornerIdx(ArrayList<Integer> occupancies) {
+		for (int i=0; i<=4; i+=2) {  // corners are at the even indices
+			if (occupancies.get(i) == 0) {
+				return i;
+			}
+		}
+		return null;
+	}
+
+	private int convertRegionToEatingCorner(int region) {
+		if (region == 1) {
+			return 2;
+		}
+		else if (region == 2) {
+			return 0;
+		}
+		else {
+			return 4;
+		}
 	}
 
 	private Point getNewEatingLocation(ArrayList<Family> members, PlayerState ps) {
@@ -495,13 +519,25 @@ public class Player implements lunch.sim.Player
 		}
 
 		int minIdx = occupancies.indexOf(Collections.min(occupancies));
-		// don't move if new location is equally as good as where we are at
+		
+		// don't move if we already have an isolated position
 		Integer current = getCurrentEatingLocation(ps);
-		if (current != null && occupancies.get(minIdx) == occupancies.get(current) - 1) {
+		if (current != null && occupancies.get(current) == 1) {
 			return null;
 		}
 
-		return this.eatLocations.get(minIdx);
+		// if there is an empty eating spot, check if a corner is open
+		// otherwise move to the empty spot 
+		if (occupancies.get(minIdx) == 0) {
+			Integer freeCorner = freeEatingCornerIdx(occupancies);
+			return freeCorner != null ? this.eatLocations.get(freeCorner) : this.eatLocations.get(minIdx);
+		}
+
+		// if there is no empty spot, move to the corner of historically low monkey counts
+		// we define historically as the last 100 seconds
+		int minRegion = getMinRegion(200);
+		int minCorner = convertRegionToEatingCorner(minRegion);
+		return this.eatLocations.get(minCorner);
 	}
 
 	private boolean isPointSafe(Point p, ArrayList<Animal> animals) {
@@ -551,31 +587,46 @@ public class Player implements lunch.sim.Player
 		return new Command(CommandType.WAIT);
 	};
 
+	// moves us slightly away from the wall
 	private Point moveInwardTarget(PlayerState ps) {
 		double x = ps.get_location().x / 1.5;
 		double y = ps.get_location().y / 1.5;
 		return new Point(x,y);
 	}
 
+	private boolean distractingTooOften(int familySize) {
+		double threshold = 1 / (double)familySize * 3; // thrice our fair share of distracting, we need to start eating too
+		if (totalTimeDistracting / total_time > threshold) {
+			System.out.println(threshold + " Threshold");
+			return true;
+		}
+		return false;
+	}
+
 	private void updatePlayerRole(PlayerState ps, ArrayList<Family> members) {
-		
+		if (distractingTooOften(members.size())) {
+			System.out.println("DISTRACTING TOO OFTEN");
+		}
+
 		int timeInCurrentRole;
 
 		// update time in current role
 		if (this.playerRole.equals("eat")) {
-			this.timeEating += 1;
+			this.timeEating += 1; // time since started role
 			timeInCurrentRole = this.timeEating;
 		}
 		else {
-			this.timeDistracting += 1;
+			this.timeDistracting += 1;  // time since started role
 			timeInCurrentRole = this.timeDistracting;
+			totalTimeDistracting += 1;  // time spent distracting over the entire game
 		}
 
-		if(members.size() == 1 || timeRemaining() < 400) {
-			this.playerRole = "eat";  // no distracting here
+		if(members.size() == 1 || timeRemaining() < 400 || distractingTooOften(members.size())) {
+			this.playerRole = "eat";  // and distracting will never resume again
 		}
 
-		if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > 500) {
+		else if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > 500) {
+			System.out.println(timeInCurrentRole);
 			this.playerRole = "distract";
 			this.timeDistracting = 0;
 			this.walkingTarget = this.foodAlmostGone ? moveInwardTarget(ps) : new Point(25,25);
@@ -685,7 +736,7 @@ public class Player implements lunch.sim.Player
 				return hideFood;
 			}
 
-			// determines when we walk.  Will want to modify this.  Just something for now to see the behavior.
+			// determines when we check to see if we should update our position
 			if ((this.currentTime == 20 || this.currentTime % 100 == 0) && this.playerRole.equals("eat")) {
 				this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
 			}
@@ -740,7 +791,7 @@ public class Player implements lunch.sim.Player
 
 	}
 
-	int time_needed(PlayerState ps) //get the time needed to finish eating everything 
+	int time_needed(PlayerState ps) // get the time needed to finish eating everything 
 	{
 
 		return ps.get_time_for_item(FoodType.SANDWICH1) + ps.get_time_for_item(FoodType.SANDWICH2) +ps.get_time_for_item(FoodType.FRUIT1) + ps.get_time_for_item(FoodType.FRUIT2) + ps.get_time_for_item(FoodType.EGG)+ ps.get_time_for_item(FoodType.COOKIE);
