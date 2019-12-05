@@ -29,6 +29,7 @@ public class Player implements lunch.sim.Player
 
 	private boolean inPosition = false;
 	private boolean isDistractor = false;
+	private boolean isArrive = false;
 
 	public Player()
 	{
@@ -99,6 +100,10 @@ public class Player implements lunch.sim.Player
 			ratioForTime = 0.60;
 		else
 			ratioForTime = 0.75;
+		if (geese.size() >= 30) {
+			ratioForTime += 0.10;
+		}
+
 		// if there is not enough time for distractor to finish food, go to corner
 		if (isDistractor && currentRatio <= 0.4 && time >= ratioForTime * timeLimit) {
 			Point dest = new Point(50, -50);
@@ -114,15 +119,27 @@ public class Player implements lunch.sim.Player
 		    isDistractor = true;
             Point dest = new Point(0, 0);
             if (this.id == 0) {
-				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
-				dest = desToDistract;
+            	Point nxt = pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members);
+            	if (!isArrive) {
+					dest = nxt;
+					desToDistract = nxt;
+				}
+            	else {
+            		dest = desToDistract;
+				}
 				if (dest == null) {
 					dest = new Point(0, 0);
 				}
             }
             else {
-				desToDistract = desToDistract == null ? pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members) : desToDistract;
-				dest = desToDistract;
+				Point nxt = pointToHelpDistract(ps.get_location(), getDistractorLoctaion(members, monkeys), members);
+				if (!isArrive) {
+					dest = nxt;
+					desToDistract = nxt;
+				}
+				else {
+					dest = desToDistract;
+				}
 				if (dest == null) {
 					switch ((this.id + 1) % 3) {
 						case 0:
@@ -139,6 +156,7 @@ public class Player implements lunch.sim.Player
             }
             Command res = getMove(ps.get_location(), dest, ps);
             if (res != null) {
+				isArrive = true;
                 return res;
             }
 		}
@@ -275,8 +293,11 @@ public class Player implements lunch.sim.Player
 	private boolean isDangerours(PlayerState ps, List<Animal> monkeys, List<Animal> geese) {
 		if (foodToTakeOut != null && (foodToTakeOut == FoodType.SANDWICH1 || foodToTakeOut == FoodType.SANDWICH2))
 			return detectGeese(ps, geese) || detectMonkeys(ps, monkeys);
-		else {
+		else if (foodToTakeOut != null) {
 			return detectMonkeys(ps, monkeys);
+		}
+		else {
+			return false;
 		}
 	}
 
