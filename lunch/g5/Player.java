@@ -328,10 +328,35 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command;
         // Get the bahivour typ to execute
-        if (didEveryoneEat(ps) || weHaveOnlySandwiches(ps)) {
+        if(thereIsRandomPlayer) {
+            command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
+        } else if (didEveryoneEat(members, ps) || weHaveOnlySandwiches(ps)) {
             command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
         } else {
             command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
+        }
+        // Check if there is random player
+        if (turn < 10) {
+            for (int i = 0; i < members.size(); i++) {
+                if(i == this.id) {
+                    continue;
+                }
+                ArrayList<Point> onePlayerMovement = playerMovement.get(i);
+                Point currentMember = members.get(i).get_location();
+                Point previousMember = previousMembers.get(i).get_location();
+                Point movement = PointUtilities.substract(currentMember, previousMember);
+                if(!onePlayerMovement.contains(movement)){
+                    onePlayerMovement.add(movement);
+                }
+            }
+        }
+        if (turn == 10) {
+            for (ArrayList<Point> onePlayerMovement: playerMovement) {
+                System.out.println(onePlayerMovement.size());
+                if(onePlayerMovement.size() > 9) {
+                    thereIsRandomPlayer = true;
+                }
+            }
         }
         // Record things for the next turn
         previousAnimals = animals;
