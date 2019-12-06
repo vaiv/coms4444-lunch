@@ -203,7 +203,15 @@ public class Player implements lunch.sim.Player
 			min_dist = Math.min(min_dist,Point.dist(ps.get_location(),animals.get(i).get_location()));
 		}
 
-		System.out.println(min_dist);
+		FoodType foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE :
+				ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
+						ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 :
+								ps.check_availability_item(FoodType.EGG) ? FoodType.EGG :
+										ps.check_availability_item(FoodType.SANDWICH1) ? FoodType.SANDWICH1 :
+												ps.check_availability_item(FoodType.SANDWICH2) ? FoodType.SANDWICH2	:
+														null;
+
+//		System.out.println(min_dist);
 /*
 		if(turn<100)
 		{
@@ -265,9 +273,17 @@ public class Player implements lunch.sim.Player
 			}
 		}
 		// if no animal in vicinity then take a bite
+		//distract if we have 1 second of SANDWICH2 left
 		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null)
 		{
-			return new Command(CommandType.EAT);
+			if(t-turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1){
+				return new Command(CommandType.WAIT);
+			}
+			else if (t-turn < 500  && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1){
+				return new Command(CommandType.EAT);}
+			else{
+				return new Command(CommandType.EAT);
+			}
 		}
 
 		// System.out.println("player is searching");
