@@ -597,12 +597,12 @@ public class Player implements lunch.sim.Player
 			this.playerRole = "eat";
 		}
 
-		else if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > 100) {
+		else if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > (int)(this.total_time / 10)) {
 			this.playerRole = "distract";
 			this.timeDistracting = 0;
 			this.walkingTarget = this.foodAlmostGone ? moveInwardTarget(ps) : new Point(25,25);
 		}
-		else if (this.playerRole.equals("distract") && stopDistract(ps, members) && timeInCurrentRole > 100){
+		else if (this.playerRole.equals("distract") && stopDistract(ps, members) && timeInCurrentRole > (int)(this.total_time / 10)) {
 			this.playerRole = "eat";
 			this.timeEating = 0;
 			this.walkingTarget = getNewEatingLocation(members, ps, true);
