@@ -75,7 +75,7 @@ public class Player implements lunch.sim.Player {
             return tryToEat(animals, prev_animals, ps);
         // Step 2: find the sparsest location on a wall to eat
         if (turn == 50)
-            corner = new Point(-50, -50); //Helper.findSparseLoc(members, ps, random);
+            corner = Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress
         Point location = !shouldDistract ? corner : new Point(50, 50);
         if (!ps.get_location().equals(location)) {

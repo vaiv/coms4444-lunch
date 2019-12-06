@@ -420,7 +420,7 @@ public class Helper {
      * @return
      */
     public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps, Random r) {
-        ArrayList<Point> corners = new ArrayList<Point>(Arrays.asList(new Point(-50, -50), new Point(-50, 50), new Point(-50, 50), new Point(50, 50)));
+        ArrayList<Point> corners = new ArrayList<Point>(Arrays.asList(new Point(-50, -50), new Point(-50, 50), new Point(-50, 50)));
         HashMap<Point, ArrayList<Family>> cornerMemberMap = new HashMap<>();
         for (Family f: members) {
             Point curLoc = f.get_location();
