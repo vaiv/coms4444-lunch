@@ -1,71 +1,99 @@
-"""
-This script will generate all combinatons of length familySize from the list of players.
+import os
+import thread
+import subprocess
+import sys, time
+from subprocess import Popen, list2cmdline, call
+from itertools import combinations
 
-It will then have each combination play games with monkeys and geese ranging from
-minMonkey to maxMonkey and minGeese to maxGeese
+players = ['g1','g2','g3','g4','g5','g6','g7','g8','random']
+geese = [0,100,30,5,15]
+monkeys = [300,0,15,30,100]
+time_limit = [30,45,60,90,20,10]
+reps = [1,2,3,4,5]
+k_list = [1,2,3,4,4,5,6,7,8,9]
 
-It stores every result in a dataframe and keeps a list of (players, dataframe)
+commands = []
+run = 0
+for k in k_list:
+    combs = combinations(players,k)
+    for comb in combs:
+        f = len(comb)
+        for g in geese:
+            for m in monkeys:
+                for t in time_limit:
+                    run+=1
+                    path ='tournament_logs/run_' +str(run)
+                    os.system('mkdir -p '+path)
+                    for r in reps:
+                        log_file = 'run_' + str(r) + '.txt'
+                        log_file = os.path.join(path,log_file)
+                        player_list = ''
+                        for player in comb:
+                            player_list += ' ' + player
+                        cmd = 'java lunch.sim.Simulator -t ' + str(t*60) + ' --players ' + player_list
+                        cmd+= ' -m ' + str(m) + ' -g '+ str(g) + ' -f '+str(f) + ' -s '+ str(42+r) + '  -l ' + log_file
+                        print(cmd)
+                        commands.append(cmd)
 
-It's probably best to run this in an interactive setting like a jupyter notebook or using -i on python.
-"""
+                        
+                        
 
 
-import subprocess, sys, os, glob, re, itertools
-import pandas as pd
 
-#parameters
-players = ['g2','g4','g5','g7','g8']
-mainPlayer = 'g4'
-familySize = 4
-time = 3600
-minMonkey = 30
-maxMonkey = 60
-minGeese = 30
-maxGeese = 60
-seed = 12345
-legibleOutput = False #disable this to have more machine readable output
-multi = False # Turn on to have all families play, turn off to only have families with one group play (g4,g4,g4,g4)
+def cpu_count():
+    ''' Returns the number of CPUs in the system
+    '''
+    num = 1
+    if sys.platform == 'win32':
+        try:
+            num = int(os.environ['NUMBER_OF_PROCESSORS'])
+        except (ValueError, KeyError):
+            pass
+    elif sys.platform == 'darwin':
+        try:
+            num = int(os.popen('sysctl -n hw.ncpu').read())
+        except ValueError:
+            pass
+    else:
+        try:
+            num = os.sysconf('SC_NPROCESSORS_ONLN')
+        except (ValueError, OSError, AttributeError):
+            pass
 
-logPath = './logs'
-if not os.path.exists(logPath):
-    os.makedirs(logPath)
+    return num
 
-allPossibleFamilies = [list(x) for x in itertools.combinations(players, familySize)]
-allPossibleFamilies.extend([[x]*familySize for x in players])
-print(allPossibleFamilies)
+def exec_commands(cmds):
+    ''' Exec commands in parallel in multiple process 
+    (as much as we have CPU)
+    '''
+    if not cmds: return # empty list
 
-def runGames(team):
-    results = pd.DataFrame(index = list(range(minGeese, maxGeese+1)), columns = list(range(minMonkey, maxMonkey+1)))
-    for m in range(minMonkey, maxMonkey+1):
-        for g in range(minGeese, maxGeese+1):
-            try:
-                process = ["java", "lunch.sim.Simulator", "-t", str(time), "--players"]
-                process.extend(team)
-                process.extend(["-m",str(m),"-g",str(g),"-f", str(familySize), "-s", str(seed), "-l" ,f'{logPath}/log_{mainPlayer}_{m}_{g}.txt'])
-                print(" ".join(process))
-                processResult = subprocess.check_output(process)
-                processResult = processResult.decode('utf-8')
-                ri = processResult.index('----------------------------------------------Summary of results------------------------------------------\n\n')
-                scoresheet = processResult[ri:]
-                scores = scoresheet.split('\n\n')
-                scores = scores[2:]
-                scores = scores[:-2]
-                numericals = [int(x.split('\t\t')[1]) for x in scores]
-                totalScore = sum(numericals)
-                print(f'Team : {mainPlayer}, m: {m}, g: {g}, score: {totalScore}')
-                results[g][m] = totalScore
-            except:
-                print("unexpected result for ", " ".join(process))
-                print(processResult)
+    def done(p):
+        return p.poll() is not None
+    def success(p):
+        return p.returncode == 0
+    def fail():
+        sys.exit(1)
 
-    if(legibleOutput):
-        results.index.name = "geese"
-        results = results.add_suffix(' monkeys')
+    max_task = cpu_count()
+    processes = []
+    while True:
+        while cmds and len(processes) < max_task:
+            task = cmds.pop()
+	    print(task)
+            processes.append(Popen(task,shell=True))
 
-    return results
+        for p in processes:
+            if done(p):
+                if success(p):
+                    processes.remove(p)
+                else:
+                    fail()
 
-if(multi):
-    results = [ (x, runGames(x)) for x in allPossibleFamilies ]
-else:
-    results = runGames([mainPlayer]*familySize)
-    results.to_csv("./games_results.csv")
+        if not processes and not cmds:
+            break
+        else:
+            time.sleep(0.05)
+
+exec_commands(commands)
+	
