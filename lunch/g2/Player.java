@@ -409,7 +409,7 @@ public class Player implements lunch.sim.Player
 		for (Integer i=1; i<=4; i++) {
 			total += sum_densities.get(i);
 		}
-		for (Integer i=0; i<=4; i++) {
+		for (Integer i=1; i<=4; i++) {
 			if (sum_densities.get(i) / total < 0.1) {
 				return true;
 			}
