@@ -265,6 +265,28 @@ public class Helper {
         double time_to_reach = close_3 - 5;
         return time_to_reach;
     }
+    
+    // Get the number of monkeys within 40m of a point
+    public static int countMonkeys(ArrayList<Animal> animals, Point p) {
+        return countMonkeys(animals, p, 40.0);
+    }
+    
+    // Get the number of monkeys within a certain distance of a point
+    public static int countMonkeys(ArrayList<Animal> animals, Point p, double d) {
+        int count = 0;
+        double dist = 0.0;
+        for (int i = 0; i < animals.size(); i++) {
+            Animal thisAnimal = animals.get(i);
+            if (thisAnimal.which_animal() == AnimalType.GOOSE)
+                continue;
+            Point thisLoc = thisAnimal.get_location();
+            dist = Point.dist(thisLoc, p);
+            if (dist <= d) {
+                count++;
+            }
+        }
+        return count;
+    }
 
     /**
      * Helper function: move a player to a new target position
@@ -348,8 +370,6 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            // if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
-            //     continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
@@ -358,7 +378,7 @@ public class Helper {
         return new Command(); 
     }
 
-    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id) {
+    public static boolean shouldDistract(ArrayList<Family> members, PlayerState ps, Random r, Integer id, boolean noGeese) {
         boolean distract = false;
         Point distractingCorner = new Point(50, 50);
         Double minDist = Double.MAX_VALUE;
@@ -384,6 +404,10 @@ public class Helper {
                 distract = false;
             }
         }
+        // Should not distract with sandwiches (unless no geese)
+        if (!ps.check_availability_item(FoodType.EGG) && !noGeese) {
+            distract = false;
+        }
         return distract;
     }
 
@@ -394,7 +418,7 @@ public class Helper {
      * @return
      */
     public static Point findSparseLoc(ArrayList<Family> members, PlayerState ps, Random r) {
-        ArrayList<Point> corners = new ArrayList<Point>(Arrays.asList(new Point(-50, -50), new Point(-50, 50), new Point(-50, 50), new Point(50, 50)));
+        ArrayList<Point> corners = new ArrayList<Point>(Arrays.asList(new Point(-50, -50), new Point(-50, 50), new Point(-50, 50)));
         HashMap<Point, ArrayList<Family>> cornerMemberMap = new HashMap<>();
         for (Family f: members) {
             Point curLoc = f.get_location();

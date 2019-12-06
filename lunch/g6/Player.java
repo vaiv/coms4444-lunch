@@ -26,6 +26,7 @@ public class Player implements lunch.sim.Player {
     private Integer id;
     private Integer turn;
     private String avatars;
+    private double t;
 
     private ArrayList<Animal> prev_animals;
     private HashMap<Integer, Point> trajectories;
@@ -33,6 +34,8 @@ public class Player implements lunch.sim.Player {
     private ArrayList<Animal> incomingGeese;
     private Point corner; 
     private static boolean shouldDistract; 
+    private Integer numMonkeys;
+    private Integer numGeese;
 
 
     public Player() {
@@ -41,16 +44,38 @@ public class Player implements lunch.sim.Player {
     
     public String init(ArrayList<Family> members, Integer id, int f, ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         this.id = id;
+        this.t = t;
         avatars = "flintstone";
         random = new Random(s);
         prev_animals = new ArrayList<>(animals);
-        shouldDistract = false; 
+        shouldDistract = false;
+        numMonkeys = m;
+        numGeese = g;
         return avatars;
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
-        // shouldDistract = False
+ 
+        boolean noGeese = false;
+        if (numGeese < 1) {
+            noGeese = true;
+        }
+        shouldDistract = Helper.shouldDistract(members, ps, random, this.id, noGeese);
+        // shouldDistract = false;
+        // Never distract if the time is no more than 20 minutes or if there are fewer than 20 monkeys
+        // The 20 monkeys condition can be changed
+        if ((t <= 1200) || (numMonkeys <= 20)) {
+            shouldDistract = false;
+        }
+
+        // if(!shouldDistract && turn > 100){
+        //     int monkeys = Helper.countMonkeys(animals, new Point(50, 50));
+        //     double ratio = (double) monkeys / (double) numMonkeys;
+        //     if(ratio < 0.3)
+        //         shouldDistract = true;
+        //     //else shouldDistract = false;
+        // }
+        
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -59,24 +84,27 @@ public class Player implements lunch.sim.Player {
             return tryToEat(animals, prev_animals, ps);
         // Step 2: find the sparsest location on a wall to eat
         if (turn == 50)
-            corner = new Point(-50, -50); //Helper.findSparseLoc(members, ps, random);
+            corner = Helper.findSparseLoc(members, ps, random);
         // Step 3: go to corner and eat or go to center and distract depending on progress
         Point location = !shouldDistract ? corner : new Point(50, 50);
         if (!ps.get_location().equals(location)) {
             // Need to put food away before we can move
             // means we're not there yet
-            // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK
-            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
+            // MAKE SURE THAT NOT DOING SANDWICH FOR MONKEY WALK (unless no geese)
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || noGeese)) {
                 return MonkeyWalk(animals, location, ps);
             }
             if (ps.get_held_item_type() != null || ps.is_player_searching()) {
                 prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
-            prev_animals = new ArrayList<>(animals);
-            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
+            else{
+                prev_animals = new ArrayList<>(animals);
+                return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
+            }
+            
         } else {
-            if (shouldDistract == true && ps.check_availability_item(FoodType.EGG)) {
+            if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || noGeese)) {
                 return MonkeyStop(animals, location, ps);
             }
             return tryToEat(animals, prev_animals, ps);
@@ -85,6 +113,7 @@ public class Player implements lunch.sim.Player {
 
     public Command MonkeyWalk(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
+        prev_animals = new ArrayList<>(animals);
         // if food out and monkeys not in grabbing distance, just keep going
         if (ps.get_held_item_type() != null && monkey_time > 2) {
             return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
@@ -98,7 +127,7 @@ public class Player implements lunch.sim.Player {
             return Helper.takeOutFood(ps);
         }
         // if food out and monkeys too close, put away
-        if (ps.get_held_item_type()!=null&&monkey_time <= 2) {
+        if (ps.get_held_item_type() != null && monkey_time <= 2) {
             return new Command(CommandType.KEEP_BACK);
         }
         // if food not out and monkeys too close, just move away
@@ -110,14 +139,17 @@ public class Player implements lunch.sim.Player {
 
     public Command MonkeyStop(ArrayList<Animal> animals, Point location, PlayerState ps) {
         double monkey_time = Helper.getMonkeyTime(animals, ps);
+        //prev_animals = new ArrayList<>(animals);
         if (ps.get_held_item_type() != null) {
             if (monkey_time <= 2) {
+                prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             } else {
                 return tryToEat(animals, prev_animals, ps);
             }
         } else {
             // food is inside bag
+            prev_animals = new ArrayList<>(animals);
             if (monkey_time >= 3) {
                 return Helper.takeOutFood(ps);
             } else {
@@ -138,9 +170,9 @@ public class Player implements lunch.sim.Player {
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
         prev_animals = new ArrayList<>(animals);
         // No food in hand
+        Double eatTime = 2.0; 
         if (ps.get_held_item_type() == null) {
-            double minTime = !ps.is_player_searching() ? 11.0 : (ps.time_to_finish_search() + 1.0);
-            // minTime += 10; 
+            double minTime = !ps.is_player_searching() ? 10.0 + eatTime: (ps.time_to_finish_search() + eatTime);
             if ((!ps.check_availability_item(FoodType.EGG))) {
                 // Due to ordering, this check implies eating a sandwich
                 if ((geeseTime > minTime) && (monkeyTime > minTime)) {
@@ -162,8 +194,8 @@ public class Player implements lunch.sim.Player {
         
         // With food in hand
         else if (ps.get_held_item_type() != null) {
-            boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= 1.0);
-            boolean cond2 = (monkeyTime <= 1.0);
+            boolean cond1 = (ps.get_held_item_type() == FoodType.SANDWICH && geeseTime <= eatTime);
+            boolean cond2 = (monkeyTime <= eatTime);
             if (cond1 || cond2) {
                 return new Command(CommandType.KEEP_BACK);
             } else {
