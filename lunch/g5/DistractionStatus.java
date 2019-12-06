@@ -44,7 +44,7 @@ public class DistractionStatus {
             case ABORT:
                 return String.format("ABORT");
             default:
-                Log.log("Cannot decipher wtf this is");
+                // Log.log("Cannot decipher wtf this is");
             }
             return null;
         }

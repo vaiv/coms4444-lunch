@@ -58,7 +58,7 @@ public class DistractionStrategy {
             Integer eatSteps = DistractionUtilities.getEatBuffer(
                     DistractionUtilities.simulateTimestep(animalLocs, curMove.timestep), ps.get_location());
             if (eatSteps < 0) {
-                Log.log("validateStrategy : Aborting food removal");
+                // Log.log("validateStrategy : Aborting food removal");
                 this.status.strategy.clear();
                 this.status.addAbort();
             }
