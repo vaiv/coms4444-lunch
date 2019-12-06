@@ -184,44 +184,42 @@ public class Player implements lunch.sim.Player
 	}
 
 	private FoodType pickEatingFood(PlayerState ps, ArrayList<Double> goose_dists) {
-		FoodType f;
-		Double minGooseDist = goose_dists.size() == 0 ? Double.POSITIVE_INFINITY : Collections.min(goose_dists);
-
-		if(ps.check_availability_item(FoodType.COOKIE))
-		{
-			f = FoodType.COOKIE;
-		}
-		else if (ps.check_availability_item(FoodType.SANDWICH1) && minGooseDist > 25.0) 
-		{
-			f = FoodType.SANDWICH1;
-		}
-		else if (ps.check_availability_item(FoodType.SANDWICH2) && minGooseDist > 25.0) 
-		{
-			f = FoodType.SANDWICH2;
-		}
-		else if(ps.check_availability_item(FoodType.EGG))
-		{
-			f = FoodType.EGG;
-		}
-		else if(ps.check_availability_item(FoodType.FRUIT1))
-		{
-			f = FoodType.FRUIT1;
-		}
-		else if(ps.check_availability_item(FoodType.FRUIT2))
-		{
-			f = FoodType.FRUIT2;
-		}
-		else if(ps.check_availability_item(FoodType.SANDWICH1))
-		{
-			f = FoodType.SANDWICH1;
-		}
-		else 
-		{
-			f = FoodType.SANDWICH2;
-		}
-
-		return f;
-	}
+        FoodType f;
+        Double minGooseDist = goose_dists.size() == 0 ? Double.POSITIVE_INFINITY : Collections.min(goose_dists);
+        if(ps.check_availability_item(FoodType.COOKIE))
+        {
+            f = FoodType.COOKIE;
+        }
+        else if (ps.check_availability_item(FoodType.SANDWICH1) && minGooseDist > 25.0 && goose_dists.size()>20) 
+        {
+            f = FoodType.SANDWICH1;
+        }
+        else if (ps.check_availability_item(FoodType.SANDWICH2) && minGooseDist > 25.0 && goose_dists.size()>20) 
+        {
+            f = FoodType.SANDWICH2;
+        }
+        else if(ps.check_availability_item(FoodType.EGG))
+        {
+            f = FoodType.EGG;
+        }
+        else if(ps.check_availability_item(FoodType.FRUIT1))
+        {
+            f = FoodType.FRUIT1;
+        }
+        else if(ps.check_availability_item(FoodType.FRUIT2))
+        {
+            f = FoodType.FRUIT2;
+        }
+        else if(ps.check_availability_item(FoodType.SANDWICH1))
+        {
+            f = FoodType.SANDWICH1;
+        }
+        else 
+        {
+            f = FoodType.SANDWICH2;
+        }
+        return f;
+    }
 
 	private Command makeEatingProgress(PlayerState ps, boolean waitToEat, ArrayList<Double> goose_dists) {
 		//if holding something, eat it
@@ -721,7 +719,7 @@ public class Player implements lunch.sim.Player
 			}
 
 			// determines when we check to see if we should update our position
-			if ((this.currentTime == 1 || this.currentTime % 100 == 0) && this.playerRole.equals("eat")) {
+			if ((this.currentTime == 2 || this.currentTime % 100 == 0) && this.playerRole.equals("eat")) {
 				this.walkingTarget = getNewEatingLocation(members, ps);  // also checks if walking is worth the time
 			}
 
