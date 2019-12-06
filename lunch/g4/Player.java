@@ -306,13 +306,7 @@ public class Player implements lunch.sim.Player {
 				}
 
 				// Take out the food item if it is a sandwich
-				if(!gooseTooClose) {
-					
-					// Take out the sandwich as a distraction
-//					if(totalTime - turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1) {
-//						foodCurrentlySearchingFor = FoodType.SANDWICH;
-//						return new Command(CommandType.TAKE_OUT, foodType);
-//					}
+				if(!gooseTooClose) {					
 					
 					// Take out the sandwich for eating
 					if(totalTime - turn < 500 || ps.get_time_for_item(foodType) < TIME_LEFT_TO_BE_GREEDY_WITH_SANDWICH ||
@@ -328,10 +322,6 @@ public class Player implements lunch.sim.Player {
 		
 		if(!ps.is_player_searching() && ps.get_held_item_type() != null) {
 			foodCurrentlySearchingFor = null;
-
-//			// If there is enough time and there is little left of the last sandwich, use it as a distraction
-//			if(!monkeysTooClose && !gooseTooClose && totalTime - turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1)
-//				return new Command(CommandType.WAIT);
 
 			// Eat if no animal is too close
 			if((!monkeysTooClose && (ps.get_held_item_type() != FoodType.SANDWICH)) ||
