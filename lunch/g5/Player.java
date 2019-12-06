@@ -204,18 +204,18 @@ public class Player implements lunch.sim.Player {
     }
 
     public BehaviorType getNextBehaviorType(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        System.out.println("[" + this.id + "v] =======================================");
-        System.out.println("[|] timeLeft: \t\t\t" + timeLeft());
-        System.out.println("[|] weAreDistracting:\t\t" + weAreDistracting());
-        System.out.println("[|] noDistractor:\t\t" + noDistractor(members, animals, ps));
-        System.out.println("[|] beAggressiveTillTheEnd:\t" + beAggressiveTillTheEnd);
-        System.out.println("[|] weHaveEatenOurFood: \t" + weHaveEatenOurFood(ps));
-        System.out.println("[|] didEveryoneEat:\t\t" + didEveryoneEat(members, ps));
-        System.out.println("[|] nTimestepsWithNoDistractor:\t" + nTimestepsWithNoDistractor);
-        System.out.println("[|] nTimestepsSomeoneIsDistr.:\t" + nTimestepsSomeoneIsDistractor);
-        System.out.println("[|] estTime2EatEvrthg.ButSand.:\t" + estimatedTimeToEatEverythingButSandwiches(ps));
-        System.out.println("[|] estTime2EatEvrthg.:\t\t" + estimatedTimeToEatEverything(ps));
-        System.out.println("[|] thereIsRandomPlayer:\t" + thereIsRandomPlayer);
+        //System.out.println("[" + this.id + "v] =======================================");
+        //System.out.println("[|] timeLeft: \t\t\t" + timeLeft());
+        //System.out.println("[|] weAreDistracting:\t\t" + weAreDistracting());
+        //System.out.println("[|] noDistractor:\t\t" + noDistractor(members, animals, ps));
+        //System.out.println("[|] beAggressiveTillTheEnd:\t" + beAggressiveTillTheEnd);
+        //System.out.println("[|] weHaveEatenOurFood: \t" + weHaveEatenOurFood(ps));
+        //System.out.println("[|] didEveryoneEat:\t\t" + didEveryoneEat(members, ps));
+        //System.out.println("[|] nTimestepsWithNoDistractor:\t" + nTimestepsWithNoDistractor);
+        //System.out.println("[|] nTimestepsSomeoneIsDistr.:\t" + nTimestepsSomeoneIsDistractor);
+        //System.out.println("[|] estTime2EatEvrthg.ButSand.:\t" + estimatedTimeToEatEverythingButSandwiches(ps));
+        //System.out.println("[|] estTime2EatEvrthg.:\t\t" + estimatedTimeToEatEverything(ps));
+        //System.out.println("[|] thereIsRandomPlayer:\t" + thereIsRandomPlayer);
         if(thereIsRandomPlayer) {
             return BehaviorType.AGGRESSIVE;
         }
@@ -289,7 +289,7 @@ public class Player implements lunch.sim.Player {
         }
         // If we are distraction and there is a distractor
         int somebodyDistractingThreshold = 30 + random.nextInt(30);
-        System.out.println("[|] somebodyDistractingThresh.:\t" + somebodyDistractingThreshold);
+        //System.out.println("[|] somebodyDistractingThresh.:\t" + somebodyDistractingThreshold);
         if (weAreDistracting() && nTimestepsSomeoneIsDistractor >= somebodyDistractingThreshold){
             return BehaviorType.AGGRESSIVE;
         }
@@ -352,7 +352,7 @@ public class Player implements lunch.sim.Player {
         }
         if (turn == 10) {
             for (ArrayList<Point> onePlayerMovement: playerMovement) {
-                System.out.println(onePlayerMovement.size());
+                //System.out.println(onePlayerMovement.size());
                 if(onePlayerMovement.size() > 9) {
                     thereIsRandomPlayer = true;
                 }
