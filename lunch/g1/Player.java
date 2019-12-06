@@ -77,8 +77,8 @@ public class Player implements lunch.sim.Player
            priorityList.add(FoodType.EGG);
            priorityList.add(FoodType.SANDWICH1);
            priorityList.add(FoodType.SANDWICH2);
-		   
-		   
+
+
 		   // time left: 1552
 //		   priorityList.add(FoodType.COOKIE);
 //		   priorityList.add(FoodType.FRUIT1);
@@ -140,7 +140,7 @@ public class Player implements lunch.sim.Player
 		int num_monkey_away = 0;
 		for (int i = 0; i < animals.size(); i++){
 			Animal animal = animals.get(i);
-			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 31.0 ){
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 32.0 ){
 				System.out.print("check monkey away ");
 				System.out.println(animalMovement);
 				if(animalMovement.get(i)){
@@ -193,6 +193,7 @@ public class Player implements lunch.sim.Player
             Point next_move = new Point(current_location.x + corner_direction.x, current_location.y + corner_direction.y);
             return Command.createMoveCommand(next_move);
         }
+
 
 
 
@@ -261,7 +262,7 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
-			if(checkMonkeyAway(animals, ps) && priorityList.size() > 2) return new Command(CommandType.KEEP_BACK);
+			if(checkMonkeyAway(animals, ps) && (priorityList.size() > 2 || this.num_geese <= 30)) return new Command(CommandType.KEEP_BACK);
 			for(FoodType food_type: priorityList)
 			{
 				if(ps.check_availability_item(food_type))
