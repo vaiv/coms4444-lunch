@@ -67,6 +67,15 @@ public class Player implements lunch.sim.Player {
         if ((t <= 1200) || (numMonkeys <= 20)) {
             shouldDistract = false;
         }
+
+        // if(!shouldDistract && turn > 100){
+        //     int monkeys = Helper.countMonkeys(animals, new Point(50, 50));
+        //     double ratio = (double) monkeys / (double) numMonkeys;
+        //     if(ratio < 0.3)
+        //         shouldDistract = true;
+        //     //else shouldDistract = false;
+        // }
+        
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
         // Step 1: wait and try to eat in the middle, both distracting and 
@@ -89,8 +98,11 @@ public class Player implements lunch.sim.Player {
                 prev_animals = new ArrayList<>(animals);
                 return new Command(CommandType.KEEP_BACK);
             }
-            prev_animals = new ArrayList<>(animals);
-            return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
+            else{
+                prev_animals = new ArrayList<>(animals);
+                return Command.createMoveCommand(Helper.moveTo(ps.get_location(), location));
+            }
+            
         } else {
             if (shouldDistract == true && (ps.check_availability_item(FoodType.EGG) || noGeese)) {
                 return MonkeyStop(animals, location, ps);
@@ -158,7 +170,7 @@ public class Player implements lunch.sim.Player {
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
         prev_animals = new ArrayList<>(animals);
         // No food in hand
-        Double eatTime = 1.0; 
+        Double eatTime = 2.0; 
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 10.0 + eatTime: (ps.time_to_finish_search() + eatTime);
             if ((!ps.check_availability_item(FoodType.EGG))) {

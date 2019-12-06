@@ -370,8 +370,6 @@ public class Helper {
         // Implement priority: cookie --> non sandwich --> sandwich 
         FoodType[] ordered = new FoodType[]{FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG, FoodType.SANDWICH1, FoodType.SANDWICH2};
         for (FoodType food_type: ordered) {
-            // if (!shouldDistract(ps) && food_type == FoodType.FRUIT2 && ps.get_time_for_item(FoodType.FRUIT2) <= 115)
-            //     continue; 
             if (ps.check_availability_item(food_type)) {
                 Command c = new Command(CommandType.TAKE_OUT, food_type);
                 return c;
