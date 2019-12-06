@@ -77,8 +77,8 @@ public class Player implements lunch.sim.Player
            priorityList.add(FoodType.EGG);
            priorityList.add(FoodType.SANDWICH1);
            priorityList.add(FoodType.SANDWICH2);
-		   
-		   
+
+
 		   // time left: 1552
 //		   priorityList.add(FoodType.COOKIE);
 //		   priorityList.add(FoodType.FRUIT1);
@@ -140,7 +140,7 @@ public class Player implements lunch.sim.Player
 		int num_monkey_away = 0;
 		for (int i = 0; i < animals.size(); i++){
 			Animal animal = animals.get(i);
-			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 31.0 ){
+			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 32.0 ){
 				System.out.print("check monkey away ");
 				System.out.println(animalMovement);
 				if(animalMovement.get(i)){
@@ -196,6 +196,7 @@ public class Player implements lunch.sim.Player
 
 
 
+
 		Double min_dist = Double.MAX_VALUE;
 
 		for(Integer i=0;i<animals.size();i++)
@@ -203,7 +204,15 @@ public class Player implements lunch.sim.Player
 			min_dist = Math.min(min_dist,Point.dist(ps.get_location(),animals.get(i).get_location()));
 		}
 
-		System.out.println(min_dist);
+		FoodType foodType = ps.check_availability_item(FoodType.COOKIE) ? FoodType.COOKIE :
+				ps.check_availability_item(FoodType.FRUIT1) ? FoodType.FRUIT1 :
+						ps.check_availability_item(FoodType.FRUIT2) ? FoodType.FRUIT2 :
+								ps.check_availability_item(FoodType.EGG) ? FoodType.EGG :
+										ps.check_availability_item(FoodType.SANDWICH1) ? FoodType.SANDWICH1 :
+												ps.check_availability_item(FoodType.SANDWICH2) ? FoodType.SANDWICH2	:
+														null;
+
+//		System.out.println(min_dist);
 /*
 		if(turn<100)
 		{
@@ -253,7 +262,7 @@ public class Player implements lunch.sim.Player
 		// if no animal is near then take out food
 		else if (!ps.is_player_searching() &&  min_dist>=5 && ps.get_held_item_type()==null )
 		{
-			if(checkMonkeyAway(animals, ps) && priorityList.size() > 2) return new Command(CommandType.KEEP_BACK);
+			if(checkMonkeyAway(animals, ps) && (priorityList.size() > 2 || this.num_geese <= 30)) return new Command(CommandType.KEEP_BACK);
 			for(FoodType food_type: priorityList)
 			{
 				if(ps.check_availability_item(food_type))
@@ -265,9 +274,17 @@ public class Player implements lunch.sim.Player
 			}
 		}
 		// if no animal in vicinity then take a bite
+		//distract if we have 1 second of SANDWICH2 left
 		else if(!ps.is_player_searching() && ps.get_held_item_type()!=null)
 		{
-			return new Command(CommandType.EAT);
+			if(t-turn > 200 && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1){
+				return new Command(CommandType.WAIT);
+			}
+			else if (t-turn < 500  && foodType == FoodType.SANDWICH2 && ps.get_time_for_item(foodType) == 1){
+				return new Command(CommandType.EAT);}
+			else{
+				return new Command(CommandType.EAT);
+			}
 		}
 
 		// System.out.println("player is searching");
