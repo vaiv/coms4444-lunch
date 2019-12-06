@@ -37,15 +37,18 @@ public abstract class EatAtPositionStrategy extends Strategy {
             double closeByMonkeys = countAnimalsWithIn(AnimalType.MONKEY, 40.0);
             double percentCloseMonkeys = (closeByMonkeys / getMonkeyDensity()) * 100;
             //System.out.println(percentCloseMonkeys);
-            if (percentCloseMonkeys > 50.0) {
-                monkeyMargin = 10.0;
+            if (percentCloseMonkeys > 65.0) {
+                monkeyMargin = 12.0;
             } //TODO: check that we are not being the distractor aka we have high monkey density on purpose
-            else if (percentCloseMonkeys > 35.0) {
-                monkeyMargin = 20.0;
-            } else if (percentCloseMonkeys > 20) {
+            else if (percentCloseMonkeys > 50.0) {
                 monkeyMargin = 30.0;
-            } else {
+            } else if (percentCloseMonkeys > 30.0) {
                 monkeyMargin = 35.0;
+            } else {
+                monkeyMargin = 40.0;
+            }
+            if (this.countDistractors(0.4) > 1) {
+                monkeyMargin = 40.0;
             }
         }
         if (state.getAvailableFood().isEmpty()) {
