@@ -141,8 +141,8 @@ public class Player implements lunch.sim.Player
 		for (int i = 0; i < animals.size(); i++){
 			Animal animal = animals.get(i);
 			if (animal.which_animal() ==AnimalType.MONKEY && Point.dist(ps.get_location(),animal.get_location()) < 32.0 ){
-				System.out.print("check monkey away ");
-				System.out.println(animalMovement);
+			//	System.out.print("check monkey away ");
+			//	System.out.println(animalMovement);
 				if(animalMovement.get(i)){
 					num_monkey_away += 1;
 					System.out.println(num_monkey_away);
@@ -420,7 +420,7 @@ public class Player implements lunch.sim.Player
 			animalDirections.set(ind, theta);
 			ind++;
 		}
-		System.out.print("get movement ");
-		System.out.println(animalMovement);
+		//System.out.print("get movement ");
+		//System.out.println(animalMovement);
 	}
 }

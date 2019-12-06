@@ -8,9 +8,9 @@ from itertools import combinations
 players = ['g1','g2','g3','g4','g5','g6','g7','g8','random']
 geese = [0,100,30,5,15]
 monkeys = [300,0,15,30,100]
-time_limit = [30,45,60,90,20,10]
+time_limit = [10]
 reps = [1,2,3,4,5]
-k_list = [1,2,3,4,4,5,6,7,8,9]
+k_list = [1,2,3,4,5,6,7,8,9]
 
 commands = []
 run = 0
@@ -32,6 +32,7 @@ for k in k_list:
                             player_list += ' ' + player
                         cmd = 'java lunch.sim.Simulator -t ' + str(t*60) + ' --players ' + player_list
                         cmd+= ' -m ' + str(m) + ' -g '+ str(g) + ' -f '+str(f) + ' -s '+ str(42+r) + '  -l ' + log_file
+			cmd+= ' > /dev/null'
                         print(cmd)
                         commands.append(cmd)
 

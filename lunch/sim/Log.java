@@ -45,7 +45,7 @@ public class Log {
 		Date date = new Date();
 		str = dateFormat.format(date) + str + "\n";
 		// System.err.print(str);
-		System.out.println(str);
+		//System.out.println(str);
 		if (fileWriter == null) return;
 		try {
 			fileWriter.append(str);

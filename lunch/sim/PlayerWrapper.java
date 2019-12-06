@@ -59,6 +59,7 @@ public class PlayerWrapper {
         catch (Exception ex) 
         {
             System.out.println("Player " + this.name + " has possibly timed out.");
+	    System.out.println(ex.getMessage());
             Log.record("Player " + this.name + " has possibly timed out.");
             Log.record(ex.getMessage());
             // throw ex;
@@ -90,7 +91,9 @@ public class PlayerWrapper {
         catch (Exception ex) 
         {
             System.out.println("Player " + this.name + " has possibly timed out.");
+	    System.out.println(ex.getMessage());
             Log.record("Player " + this.name + " has possibly timed out.");
+	    Log.record(ex.getMessage());
             // throw ex;
         }       
 
