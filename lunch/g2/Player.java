@@ -417,10 +417,10 @@ public class Player implements lunch.sim.Player
 		}
 		for (Integer i=1; i<=4; i++) {
 			if (sum_densities.get(i) / total < 0.1) {
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	private Integer getCurrentEatingLocation(PlayerState ps) {
@@ -586,6 +586,7 @@ public class Player implements lunch.sim.Player
 			this.timeEating += 1; // time since started role
 			timeInCurrentRole = this.timeEating;
 		}
+
 		else {
 			this.timeDistracting += 1;  // time since started role
 			timeInCurrentRole = this.timeDistracting;
