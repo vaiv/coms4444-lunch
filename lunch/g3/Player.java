@@ -243,15 +243,12 @@ public class Player implements lunch.sim.Player {
 
     private boolean distractorExists(PlayerState ps, ArrayList<Family> members, int partition) {
         double x_threshold = -50+100/partition; double y_threshold = -50+100/partition;
-        System.out.println("x " + this.id + " y " + members.size());
         for (int i = 0; i < members.size(); ++i) {
             Point loc = members.get(i).get_location();
             if (this.id != i && x_threshold <= loc.x && y_threshold <= loc.y) {
-              System.out.println(i + " " + loc.x + " " + loc.y + " True");
                 return true;
             }
         }
-        System.out.println("False");
         return false;
     }
 }
