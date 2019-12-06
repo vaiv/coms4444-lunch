@@ -124,6 +124,7 @@ public class Player implements lunch.sim.Player {
      */
     private Strategy selectStrategy() {
         return new DistractIfNeededStrategy(family, animals, state, random);
+        //return new MonkeyLureStrategy(family, animals, state, random);
     }
 
     private String describe(Command command) {
