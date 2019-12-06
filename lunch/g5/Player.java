@@ -328,7 +328,9 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command;
         // Get the bahivour typ to execute
-        if(thereIsRandomPlayer) {
+        if (this.nFamily == 1 || this.nMonkeys < 10) {
+            command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
+        } else if(thereIsRandomPlayer) {
             command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
         } else if (didEveryoneEat(members, ps) || weHaveOnlySandwiches(ps)) {
             command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
