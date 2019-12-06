@@ -33,7 +33,6 @@ public class MonkeyLureStrategy extends Strategy {
         //    distractors = nDistractors;
         //}
         //System.out.println("Monkey Concentration: " + getMonkeyConcentration());
-
         if (state.isSearching()) {
             if (dangerAnimal()) {
                 targetPosition = getGoToPoint();
@@ -85,12 +84,17 @@ public class MonkeyLureStrategy extends Strategy {
     }
 
     protected boolean shouldTakeFoodOut() {
+//        List<Animal> nearMonkeys = getAnimalsWithIn(AnimalType.MONKEY, 20);
+//        return nearMonkeys.stream()
+//                .map(m -> m.predictLocation(10))
+//                .filter(p -> distance(state.getLocation(), p) < 5.0 + 1e-2)
+//                .count() < 3;
         return countAnimalsWithIn(AnimalType.MONKEY, 6) < 3;
     }
 
     protected boolean shouldScape() {
         List<Animal> nearMonkeys = getAnimalsWithIn(AnimalType.MONKEY, 20);
-        List<Point> nextML = nearMonkeys.stream().map(m -> m.predictLocation(5)).collect(Collectors.toList());
+        List<Point> nextML = nearMonkeys.stream().map(m -> m.predictLocation(4)).collect(Collectors.toList());
         return countWithInRadius(nextML, state.getLocation(), 5.0 + 1e-7) >= 3;
     }
 
@@ -102,16 +106,16 @@ public class MonkeyLureStrategy extends Strategy {
         if (dToCenter == null) {
             dToCenter = 0.0;
         }
-        dToCenter = -dToCenter;
+        dToCenter = -dToCenter + Math.PI / 2;
 //        final int[] deltas = {0, -1, 1, 2, -2, 3, -3, 4, -4, 5, -5, 6};
 //        final double inc = 2 * Math.PI / 12;
-        final int nDeltas = 4;
+        final int nDeltas = 8;
         final double inc = 2 * Math.PI / nDeltas;
         for (int i = 0; i < nDeltas; i++) {
             Point dest = moveInDirection(location, dToCenter + DELTAS[i] * inc);
             if (countWithInRadius(nextML, dest, 5.0 + 1e-7) < 3
                     //&& distance(dest, CENTER) < 10 + 20 * (1-getMonkeyConcentration())
-                    && ((Math.abs(dest.x) < 15 && Math.abs(dest.y) < 15) || dest.y < 40)
+                    && ((Math.abs(dest.x) < 15 && Math.abs(dest.y) < 15) || (dest.x > 0 && dest.x < 30 && dest.y > 0 && dest.y < 30))
                     && Point.within_bounds(dest)) {
                 return dest;
             }
@@ -120,7 +124,7 @@ public class MonkeyLureStrategy extends Strategy {
     }
 
     protected Point getGoToPoint() {
-        int movingTime = 10;
+        int movingTime = 12;
         List<Animal> nearMonkeys = getAnimalsWithIn(AnimalType.MONKEY, 100);
         List<Point> nextML = nearMonkeys.stream().map(m -> m.predictLocation(20 + movingTime)).collect(Collectors.toList());
         final Point location = state.getLocation();
@@ -128,11 +132,11 @@ public class MonkeyLureStrategy extends Strategy {
         if (dToCenter == null) {
             dToCenter = 0.0;
         }
-        final int nDeltas = getMonkeyConcentration() > 0.6 ? 4 : 8;
+        final int nDeltas = getMonkeyConcentration() > 0.5 ? 4 : 8;
         final double inc = 2 * Math.PI / nDeltas;
         for (int i = 0; i < nDeltas; i++) {
             Point dest = moveInDirection(location, dToCenter + DELTAS[i] * inc, movingTime);
-            if (countWithInRadius(nextML, dest, 8.0 + 1e-7) < 3) {
+            if (countWithInRadius(nextML, dest, 8.0 + 1e-7) < 3 && Point.within_bounds(dest)) {
                 return dest;
             }
         }

@@ -68,8 +68,9 @@ public class DistractIfNeededStrategy extends Strategy {
         if (family.size() == 1) {
             return false;
         }
+        boolean isThereRandomPlayer = family.stream().anyMatch(fm -> fm.isRandomPlayer());
         if (state.getTurn() > (state.getId() + 1) * 100) {
-            int distractors = countDistractors(0.5);
+            int distractors = countDistractors(isThereRandomPlayer ? 0.3 : 0.5);
             if (distractors == 0) {
                 consecutiveNoDistractor++;
             } else {
@@ -101,7 +102,7 @@ public class DistractIfNeededStrategy extends Strategy {
         } else {
             consecutiveMoreThanOneDistractors = 0;
         }
-        if (consecutiveMoreThanOneDistractors > 10) {
+        if (consecutiveMoreThanOneDistractors > 50) {
             return true;
         }
         return false;

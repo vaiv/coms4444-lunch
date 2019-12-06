@@ -91,6 +91,10 @@ public class Player implements lunch.sim.Player {
 
         // increase turn counter and return command
         state.tick();
+        if (state.getTurn() > 150) {
+            // stop detecting random players after this turn
+            FamilyMember.RANDOM_PLAYER_DETECTION = false;
+        }
         //System.out.println(describe(command));
         return command;
     }

@@ -154,9 +154,12 @@ public abstract class Strategy {
     protected int countDistractors(double concentration) {
         //double[] densities = new double[this.family.size()];
         int count = 0;
-        for (int i = 0; i < family.size(); i++) {
+        for (FamilyMember fm : family) {
+            if (fm.isRandomPlayer()) {
+                continue;
+            }
             //localized num of monkeys in 40
-            double localDensity = getAnimalsWithIn(AnimalType.MONKEY, 40, family.get(i).getLocation()).size();
+            double localDensity = getAnimalsWithIn(AnimalType.MONKEY, 40, fm.getLocation()).size();
             if (localDensity / numMonkeys > concentration) {
                 count++;
             }
