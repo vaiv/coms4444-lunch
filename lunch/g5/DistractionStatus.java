@@ -44,7 +44,7 @@ public class DistractionStatus {
             case ABORT:
                 return String.format("ABORT");
             default:
-                Log.log("Cannot decipher wtf this is");
+                // Log.log("Cannot decipher wtf this is");
             }
             return null;
         }
@@ -98,6 +98,9 @@ public class DistractionStatus {
     public Command executeStrategy(PlayerState ps) {
         StrategyType move = strategy.get(0);
 
+        if(move.mode == StrategyMode.MOVE_FOOD && ps.get_held_item_type() == null )
+            this.strategy.clear();
+
         if (move.mode == StrategyMode.MOVE_NOFOOD || move.mode == StrategyMode.MOVE_FOOD) {
             Point source = ps.get_location();
 
@@ -121,7 +124,7 @@ public class DistractionStatus {
 
         } else if (move.mode == StrategyMode.TAKE_FOOD) {
             if (move.timestep-- == 10) {
-                FoodType[] foodlist = { FoodType.COOKIE, FoodType.FRUIT1, FoodType.FRUIT2, FoodType.EGG };
+                FoodType[] foodlist = { FoodType.COOKIE, FoodType.EGG, FoodType.FRUIT1, FoodType.FRUIT2 };
 
                 for (FoodType food : foodlist) {
                     if (ps.check_availability_item(food))

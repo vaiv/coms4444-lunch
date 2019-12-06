@@ -43,7 +43,7 @@ public class GeeseShield {
 		}
 		// dangerous, keep back
 		if(Utilities.dangerous(ps, animals, FoodType.SANDWICH2)) {
-			System.out.println("dangerous!");
+			// System.out.println("dangerous!");
 			if (ps.is_player_searching() && ps.get_held_item_type() == null) {
 				return new Command(CommandType.ABORT);
 			}

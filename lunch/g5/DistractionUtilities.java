@@ -102,7 +102,11 @@ public class DistractionUtilities {
 
     public static Pair<Integer, Point> simulateWalking(AnimalPosition monkeyPositions, Point ourLocation,
             Integer eatSteps) {
-        Integer minX = 0, maxX = 35, minY = 0, maxY = 35;
+        
+        Integer minX = DistractionStrategy.minXd;
+        Integer maxX = DistractionStrategy.maxXd;
+        Integer minY = DistractionStrategy.minYd;
+        Integer maxY = DistractionStrategy.maxYd;
 
         // Initiate empty matrices for each timestep
         Integer x = (int) Math.round(ourLocation.x);

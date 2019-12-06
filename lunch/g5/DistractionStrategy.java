@@ -21,6 +21,8 @@ public class DistractionStrategy {
     private Integer id;
     private Integer turn;
 
+    public static Integer minXd = 0, maxXd = 35, minYd = 0, maxYd = 35;
+
     private DistractionStatus status;
 
     public DistractionStrategy() {
@@ -56,7 +58,7 @@ public class DistractionStrategy {
             Integer eatSteps = DistractionUtilities.getEatBuffer(
                     DistractionUtilities.simulateTimestep(animalLocs, curMove.timestep), ps.get_location());
             if (eatSteps < 0) {
-                Log.log("validateStrategy : Aborting food removal");
+                // Log.log("validateStrategy : Aborting food removal");
                 this.status.strategy.clear();
                 this.status.addAbort();
             }
@@ -70,17 +72,18 @@ public class DistractionStrategy {
                     this.status.strategy.clear();
                     this.status.keepFoodIn();
                 } else {
-                    // Log.log("validateStrategy : Decreasing eating time " + curMove.timestep + " -> " + available);
+                    // Log.log("validateStrategy : Decreasing eating time " + curMove.timestep + "
+                    // -> " + available);
                     curMove.timestep = available;
                 }
-            } 
+            }
             // else if (available > curMove.timestep) {
-                // TODO: Recalculate movement with food
-                // curMove.timestep = available;
-                // if (this.status.strategy.size() > 1
-                // && this.status.strategy.get(1).mode ==
-                // DistractionStatus.StrategyMode.MOVE_FOOD)
-                // this.status.strategy.remove(1);
+            // TODO: Recalculate movement with food
+            // curMove.timestep = available;
+            // if (this.status.strategy.size() > 1
+            // && this.status.strategy.get(1).mode ==
+            // DistractionStatus.StrategyMode.MOVE_FOOD)
+            // this.status.strategy.remove(1);
             // }
             return true;
         case MOVE_FOOD:
@@ -93,7 +96,8 @@ public class DistractionStrategy {
 
             Integer buffer = DistractionUtilities.getEatBuffer(animalLocs, newLoc) + 1;
             if (buffer < 0) {
-                // Log.log("validateStrategy : Removing food movement " + curLoc.toString() + newLoc.toString() + curMove.destination.toString() + " " + buffer);
+                // Log.log("validateStrategy : Removing food movement " + curLoc.toString() +
+                // newLoc.toString() + curMove.destination.toString() + " " + buffer);
                 this.status.strategy.remove(0);
             }
             return true;
@@ -142,12 +146,12 @@ public class DistractionStrategy {
             AnimalPosition monkeyPositions = posEstimates[t];
 
             for (int i = -t; i <= t; i++) {
-                if (x + i < 0 || x + i > 35)
+                if (x + i < minXd || x + i > maxXd)
                     continue;
 
                 int jlim = t - Math.abs(i);
                 for (int j = -jlim; j <= jlim; j++) {
-                    if (y + j < 0 || y + j > 35)
+                    if (y + j < minYd || y + j > maxYd)
                         continue;
 
                     Point startingPosition = new Point(x + i, y + j);
@@ -155,7 +159,7 @@ public class DistractionStrategy {
                     if (eatSteps < 0)
                         continue;
 
-                    startingPositions.add(new Temporary(startingPosition, t, eatSteps));
+                    startingPositions.add(new Temporary(startingPosition, t, eatFood ? eatSteps : 0));
                 }
             }
         }
@@ -166,7 +170,7 @@ public class DistractionStrategy {
 
         Integer bestWalkFound = 0;
         DistractionStatus bestStrategy = null;
-        Integer maxWalkPossible = Math.max(Math.max(x, 35 - x), Math.max(y, 35 - y));
+        Integer maxWalkPossible = Math.max(Math.max(x, maxXd - x), Math.max(y, maxYd - y));
 
         // Only consider a few starting positions to avoid timeout
         int consideredCount = 0;
@@ -220,8 +224,15 @@ public class DistractionStrategy {
     /**
      * Reset pre-calculated distraction strategy
      */
-    public void resetDistractionStrategy() {
+    public void resetDistractionStrategy(PlayerState ps) {
         this.status = null;
+        if (ps.get_held_item_type() != null) {
+            this.status = new DistractionStatus();
+            this.status.keepFoodIn();
+        } else if (ps.is_player_searching()){
+            this.status = new DistractionStatus();
+            this.status.addAbort();
+        }
     }
 
     /**
@@ -264,12 +275,17 @@ public class DistractionStrategy {
             return Command.createMoveCommand(new Point(intX, intY));
 
         // If Player is not on lower-right, move to lower-right
-        if ((playerPos.x < -1 || playerPos.y < -1) && ps.get_held_item_type() != null)
+        if ((playerPos.x < minXd || playerPos.y < minYd || playerPos.x > maxXd || playerPos.y > maxYd)
+                && ps.get_held_item_type() != null)
             return new Command(CommandType.KEEP_BACK);
-        if (playerPos.x < -1)
+        if (playerPos.x < minXd)
             return Command.createMoveCommand(new Point(playerPos.x + 1, playerPos.y));
-        if (playerPos.y < -1)
+        if (playerPos.x > maxXd)
+            return Command.createMoveCommand(new Point(playerPos.x - 1, playerPos.y));
+        if (playerPos.y < minYd)
             return Command.createMoveCommand(new Point(playerPos.x, playerPos.y + 1));
+        if (playerPos.y > maxYd)
+            return Command.createMoveCommand(new Point(playerPos.x, playerPos.y - 1));
 
         AnimalPosition animalLocs = AnimalPosition.parse(curAnimals, prvAnimals, true);
         // if (this.turn == 6)
