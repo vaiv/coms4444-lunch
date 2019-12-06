@@ -503,7 +503,7 @@ public class Player implements lunch.sim.Player
 
 	private Point findSafeStep(PlayerState ps, ArrayList<Animal> animals) {
 		// just try random steps until one is safe, or return false after 50 tries
-		boolean found_valid_move= false;
+		boolean found_valid_move = false;
 		Point proposed = new Point(-1,-1);
 		int trial = 0;
 		while(!found_valid_move && trial <= 50)
@@ -701,9 +701,13 @@ public class Player implements lunch.sim.Player
 			updatePlayerRole(ps, members, monkey_dists);
 			double flowRatio = getFlowRatio(ps, animals);
 
+			double lowThreshold = 2.5;
+			double highThreshold = 4.0;
+			double flowThreshold = this.areMonkeysEverywhere() ? highThreshold : lowThreshold;
+
 			// if monkeys are uniform across the map, we should be less patient
 			// if the monkeys seem to be congregating in one region, we should be more patient to let them go there
-			boolean waitToEat = flowRatio >= 4.0;
+			boolean waitToEat = flowRatio >= flowThreshold;
 
 			for(int i = 0; i < animals.size(); i++) {
 				prevAnimalLocs.set(i, animals.get(i).get_location());
