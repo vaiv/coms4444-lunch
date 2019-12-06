@@ -34,6 +34,7 @@ public class Player implements lunch.sim.Player {
     // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
     private ArrayList<Animal> previousAnimals;
     private GreedyEater greedyEater;
+    private DistractionStrategy mDistraction;
 
     public Player() {
         turn = 0;
@@ -47,6 +48,8 @@ public class Player implements lunch.sim.Player {
         this.id = id;
         random = new Random(s);
         greedyEater = new GreedyEater();
+        mDistraction = new DistractionStrategy();
+        mDistraction.init(members, id, f, animals, m, g, t, s);
 
         return new String("");
     };
@@ -91,7 +94,7 @@ public class Player implements lunch.sim.Player {
               }
           }
         } else {
-            Command command = greedyEater.getCommand(members, animals, ps, previousAnimals, turn);
+            Command command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
             previousAnimals = animals;
             turn++;
             return command;
