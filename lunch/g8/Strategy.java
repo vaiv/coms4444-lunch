@@ -151,13 +151,13 @@ public abstract class Strategy {
         return numGeese / family.size();
     }
 
-    protected int countDistractors() {
+    protected int countDistractors(double concentration) {
         //double[] densities = new double[this.family.size()];
         int count = 0;
         for (int i = 0; i < family.size(); i++) {
             //localized num of monkeys in 40
             double localDensity = getAnimalsWithIn(AnimalType.MONKEY, 40, family.get(i).getLocation()).size();
-            if (localDensity / numMonkeys > 0.75) {
+            if (localDensity / numMonkeys > concentration) {
                 count++;
             }
         }

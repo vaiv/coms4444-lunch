@@ -32,6 +32,8 @@ public class DistractIfNeededStrategy extends Strategy {
 
     @Override
     public Command run() throws AbortStrategyException {
+        if (state.getTimeToFinish() == 0)
+            return new Command();
         //System.out.println("T: " + state.getTurn());
         //if (waitingToFinish && (getAveragePercFoodEatenByFamily() > 110 || state.getRemainingTime() < 5)) {
         //    lureStrategy.setCanFinishEating(true);
@@ -67,7 +69,7 @@ public class DistractIfNeededStrategy extends Strategy {
             return false;
         }
         if (state.getTurn() > (state.getId() + 1) * 100) {
-            int distractors = countDistractors();
+            int distractors = countDistractors(0.5);
             if (distractors == 0) {
                 consecutiveNoDistractor++;
             } else {
@@ -93,7 +95,7 @@ public class DistractIfNeededStrategy extends Strategy {
         if (dontSwitchUntil > state.getTurn()) {
             return false;
         }
-        int distractors = countDistractors();
+        int distractors = countDistractors(0.5);
         if (distractors > 1) {
             consecutiveMoreThanOneDistractors++;
         } else {

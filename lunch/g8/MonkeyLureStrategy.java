@@ -18,7 +18,7 @@ public class MonkeyLureStrategy extends Strategy {
 
     private final static int[] DELTAS = {0, -1, 1, 2, -2, 3, -3, 4, -4, 5, -5, 6};
     private Point targetPosition;
-    private int distractors = 0;
+    //private int distractors = 0;
 
     public MonkeyLureStrategy(List<FamilyMember> family, List<Animal> animals, PlayerState state, Random random) {
         super(family, animals, state, random);
@@ -27,11 +27,11 @@ public class MonkeyLureStrategy extends Strategy {
     @Override
     public Command run() throws AbortStrategyException {
 
-        int nDistractors = countDistractors();
-        if (distractors != nDistractors) {
-            System.out.println("T" + state.getTurn() + "Distractor " + nDistractors);
-            distractors = nDistractors;
-        }
+        //int nDistractors = countDistractors();
+        //if (distractors != nDistractors) {
+        //    System.out.println("T" + state.getTurn() + "Distractor " + nDistractors);
+        //    distractors = nDistractors;
+        //}
         //System.out.println("Monkey Concentration: " + getMonkeyConcentration());
 
         if (state.isSearching()) {
