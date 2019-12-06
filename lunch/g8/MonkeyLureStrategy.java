@@ -111,7 +111,7 @@ public class MonkeyLureStrategy extends Strategy {
             Point dest = moveInDirection(location, dToCenter + DELTAS[i] * inc);
             if (countWithInRadius(nextML, dest, 5.0 + 1e-7) < 3
                     //&& distance(dest, CENTER) < 10 + 20 * (1-getMonkeyConcentration())
-                    && Math.abs(dest.x) < 15 && Math.abs(dest.y) < 15
+                    && ((Math.abs(dest.x) < 15 && Math.abs(dest.y) < 15) || dest.y < 40)
                     && Point.within_bounds(dest)) {
                 return dest;
             }
