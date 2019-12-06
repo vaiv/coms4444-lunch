@@ -49,7 +49,7 @@ public class Player implements lunch.sim.Player {
     }
 
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        shouldDistract = Helper.shouldDistract(members, ps, random, this.id);
+        shouldDistract =Helper.shouldDistract(members, ps, random, this.id);
         // shouldDistract = False
         // Calculate the trajectories of animals
         trajectories = Helper.calculateTrajectories(animals, prev_animals);
@@ -138,7 +138,7 @@ public class Player implements lunch.sim.Player {
         double monkeyTime = Helper.getMonkeyTime(animals, ps);
         prev_animals = new ArrayList<>(animals);
         // No food in hand
-        Double eatTime = 6.0; 
+        Double eatTime = 1.0; 
         if (ps.get_held_item_type() == null) {
             double minTime = !ps.is_player_searching() ? 10.0 + eatTime: (ps.time_to_finish_search() + eatTime);
             if ((!ps.check_availability_item(FoodType.EGG))) {
