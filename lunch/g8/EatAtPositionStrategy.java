@@ -32,6 +32,25 @@ public abstract class EatAtPositionStrategy extends Strategy {
 
     @Override
     public Command run() throws AbortStrategyException {
+        //System.out.println(monkeyMargin);
+        if (state.getTurn() % 50 == 0) {
+            double closeByMonkeys = countAnimalsWithIn(AnimalType.MONKEY, 40.0);
+            double percentCloseMonkeys = (closeByMonkeys / getMonkeyDensity()) * 100;
+            //System.out.println(percentCloseMonkeys);
+            if (percentCloseMonkeys > 65.0) {
+                monkeyMargin = 12.0;
+            } //TODO: check that we are not being the distractor aka we have high monkey density on purpose
+            else if (percentCloseMonkeys > 50.0) {
+                monkeyMargin = 30.0;
+            } else if (percentCloseMonkeys > 30.0) {
+                monkeyMargin = 35.0;
+            } else {
+                monkeyMargin = 40.0;
+            }
+            if (this.countDistractors(0.4) > 1) {
+                monkeyMargin = 40.0;
+            }
+        }
         if (state.getAvailableFood().isEmpty()) {
             throw new AbortStrategyException();
         }
@@ -103,55 +122,6 @@ public abstract class EatAtPositionStrategy extends Strategy {
             if (d == 3.1) {
                 ordered.add(FoodType.SANDWICH1);
             } else if (d == 3.2) {
-                ordered.add(FoodType.SANDWICH2);
-            } else if (d == 4.0) {
-                ordered.add(FoodType.COOKIE);
-            } else if (d == 2.1) {
-                ordered.add(FoodType.FRUIT1);
-            } else if (d == 2.2) {
-                ordered.add(FoodType.FRUIT2);
-            } else if (d == 2.0) {
-                ordered.add(FoodType.EGG);
-            } else {
-                System.out.println("There is an error - this food type is invalid");
-            }
-        }
-        return ordered;
-    }
-
-    /**
-     * Sorts the food by prioritizing the points obtained by eating it, with
-     * Sandwiches last
-     *
-     * @param unordered the list of food without any order
-     * @return the ordered list of food
-     */
-    protected List<FoodType> orderFoodSandwichLast(List<FoodType> unordered) {
-        ArrayList<FoodType> ordered = new ArrayList<>();
-        ArrayList<Double> ord = new ArrayList<>();
-        for (FoodType f : unordered) {
-            if (f == FoodType.SANDWICH1) {
-                ord.add(1.1);
-            } else if (f == FoodType.SANDWICH2) {
-                ord.add(1.2);
-            } else if (f == FoodType.COOKIE) {
-                ord.add(4.0);
-            } else if (f == FoodType.FRUIT1) {
-                ord.add(2.1);
-            } else if (f == FoodType.FRUIT2) {
-                ord.add(2.2);
-            } else if (f == FoodType.EGG) {
-                ord.add(2.0);
-            } else {
-                ord.add(1.0); //should never happen
-            }
-        }
-        Collections.sort(ord, Collections.reverseOrder());
-        //System.out.println("ordered ");
-        for (Double d : ord) {
-            if (d == 1.1) {
-                ordered.add(FoodType.SANDWICH1);
-            } else if (d == 1.2) {
                 ordered.add(FoodType.SANDWICH2);
             } else if (d == 4.0) {
                 ordered.add(FoodType.COOKIE);
