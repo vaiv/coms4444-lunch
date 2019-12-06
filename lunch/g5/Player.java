@@ -328,60 +328,12 @@ public class Player implements lunch.sim.Player {
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
         Command command;
         // Get the bahivour typ to execute
-        BehaviorType type = getNextBehaviorType(members, animals, ps);
-        System.out.println("[|] Playing type:\t\t" + type);
-        System.out.println("[" + this.id + "^] =======================================");
-        // Depending on the type generate the appropriate command
-        switch (type) {
-            case DISTRACTION:
-            case DISTRACTION_EAT:
-                if(previousBehaviourType != BehaviorType.DISTRACTION_EAT) {
-                    mDistraction.resetDistractionStrategy(ps);
-                    nTimesSwitchedToDistraction++;
-                }
-                command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
-                break;
-            case DISTRACTION_NOEAT:
-                if(previousBehaviourType != BehaviorType.DISTRACTION_NOEAT) {
-                    mDistraction.resetDistractionStrategy(ps);
-                    nTimesSwitchedToDistraction++;
-                }
-                command = mDistraction.getCommand(members, animals, previousAnimals, ps, false);
-                break;
-            case GEESE_SHIELD:
-            case SANDWICH_FLASHING:
-                command = sandwichFlasher.getCommandSandwichFlasher(members, animals, ps);
-                break;
-            default:
-            case AGGRESSIVE:
-                command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
-                break;
-        }
-        // Check if there is random player
-        if (turn < 10) {
-            for (int i = 0; i < members.size(); i++) {
-                if(i == this.id) {
-                    continue;
-                }
-                ArrayList<Point> onePlayerMovement = playerMovement.get(i);
-                Point currentMember = members.get(i).get_location();
-                Point previousMember = previousMembers.get(i).get_location();
-                Point movement = PointUtilities.substract(currentMember, previousMember);
-                if(!onePlayerMovement.contains(movement)){
-                    onePlayerMovement.add(movement);
-                }
-            }
-        }
-        if (turn == 10) {
-            for (ArrayList<Point> onePlayerMovement: playerMovement) {
-                System.out.println(onePlayerMovement.size());
-                if(onePlayerMovement.size() > 9) {
-                    thereIsRandomPlayer = true;
-                }
-            }
+        if (didEveryoneEat(ps) || weHaveOnlySandwiches(ps)) {
+            command = greedyEater.getCommandCornerEating(members, animals, ps, previousAnimals, turn);
+        } else {
+            command = mDistraction.getCommand(members, animals, previousAnimals, ps, true);
         }
         // Record things for the next turn
-        previousBehaviourType = type;
         previousAnimals = animals;
         previousMembers = members;
         turn++;
