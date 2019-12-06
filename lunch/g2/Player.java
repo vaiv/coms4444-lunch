@@ -104,10 +104,6 @@ public class Player implements lunch.sim.Player
 			else if (animal.which_animal() == AnimalType.GOOSE) {
 				goose_dists.add(dist);
 			}
-			
-			else {
-				System.out.println("Error: animal type unknown");
-			}
 		}
 
 		Collections.sort(monkey_dists);
@@ -226,7 +222,6 @@ public class Player implements lunch.sim.Player
 	private Command makeEatingProgress(PlayerState ps, boolean waitToEat, ArrayList<Double> goose_dists) {
 		//if holding something, eat it
 		if(holdingFood(ps)) {
-			System.out.println("Eating!");
 			return new Command(CommandType.EAT);
 		}
 
@@ -236,11 +231,9 @@ public class Player implements lunch.sim.Player
 			FoodType f = pickEatingFood(ps, goose_dists);
 
 			if(waitToEat) {
-				System.out.println("Asking to wait before trying to eat again...");
 				return new Command(CommandType.WAIT);
 			} else {
 				Command c = new Command(CommandType.TAKE_OUT, f);
-				System.out.println("Sending food to take out");
 				return c;
 			}
 		}
@@ -360,7 +353,7 @@ public class Player implements lunch.sim.Player
 			total += sum_densities.get(region);
 		}
 		Double percentDistracted = total != 0.0 ? sum_densities.get(4) / total : 1.0;
-		if (percentDistracted > .75) {
+		if (percentDistracted > .65) {
 			return true;
 		} 
 		return false;
@@ -530,7 +523,6 @@ public class Player implements lunch.sim.Player
 	}
 
 	public Command distract(PlayerState ps, ArrayList<Animal> animals) {
-		System.out.println("PLaying distract");
 		if(this.descriptiveState.equals("initial")) {
 			FoodType f = this.pickDistractorFood(ps);
 			return new Command(CommandType.TAKE_OUT, f);
@@ -581,7 +573,6 @@ public class Player implements lunch.sim.Player
 		// limit to shareMultiple our fair share of distracting, we need to start eating too
 		double threshold = 1 / (double)familySize * shareMultiple; 
 		if (this.totalTimeDistracting / this.total_time > threshold) {
-			System.out.println(threshold + " Threshold");
 			return true;
 		}
 		return false;
@@ -601,28 +592,21 @@ public class Player implements lunch.sim.Player
 			this.totalTimeDistracting += 1;  // time spent distracting over the entire game
 		}
 
-		System.out.println("HIT HERE-1");
-
 		// cases for which we should never distract again
 		if(members.size() == 1 || timeRemaining() < 400 || distractingTooOften(members.size()) || monkey_dists.size() < 3) {
-			System.out.println("HIT HERE0");
 			this.playerRole = "eat";
 		}
 
-		else if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > 500) {
-			System.out.println("HIT HERE1");
-			System.out.println(timeInCurrentRole);
+		else if (this.playerRole.equals("eat") && startDistract(ps, members) && timeInCurrentRole > 100) {
 			this.playerRole = "distract";
 			this.timeDistracting = 0;
 			this.walkingTarget = this.foodAlmostGone ? moveInwardTarget(ps) : new Point(25,25);
 		}
-		else if (this.playerRole.equals("distract") && stopDistract(ps, members) && timeInCurrentRole > 500){
-			System.out.println("HIT HERE3");
+		else if (this.playerRole.equals("distract") && stopDistract(ps, members) && timeInCurrentRole > 100){
 			this.playerRole = "eat";
 			this.timeEating = 0;
 			this.walkingTarget = getNewEatingLocation(members, ps, true);
 		}
-		System.out.println("HIT HERE4");
 	}
 
 	public double dist(Point p1, Point p2) {
@@ -692,7 +676,6 @@ public class Player implements lunch.sim.Player
 		}
 
 		double flowRatio = numWithin == 0 ? 0.0 : (double) numWithin / (double) Math.max(1.0, numToEnter);
-		System.out.println(flowRatio + "=" + numWithin + "/" + numToEnter);
 		return flowRatio;
 	}
 
@@ -733,8 +716,6 @@ public class Player implements lunch.sim.Player
 				prevAnimalLocs.set(i, animals.get(i).get_location());
 			}
 
-			System.out.println(this.playerRole + ": G2 player role");
-
 			Command hideFood = respondIfDanger(monkey_dists, goose_dists, ps);
 			if (hideFood != null) {
 				return hideFood;
@@ -743,18 +724,12 @@ public class Player implements lunch.sim.Player
 			// determines when we check to see if we should update our position
 			if ((this.currentTime == 5.0 || this.currentTime % 150 == 0) && this.playerRole.equals("eat")) {
 				this.walkingTarget = getNewEatingLocation(members, ps, false);  // also checks if walking is worth the time
-				System.out.println("Just set walking target");
-				System.out.println(this.walkingTarget);
 			}
-
-			System.out.println(this.walkingTarget);
 
 			if (this.walkingTarget != null) {
 				if (ps.is_player_searching()) {
 					return new Command(CommandType.ABORT);
 				}
-				System.out.println("WALKING TO POSITION");
-				System.out.println(this.walkingTarget);
 				return walkToPosition(members, ps);  // we have a target, make progress walking to it.  Null target when we arrive.
 			}
 
@@ -771,7 +746,6 @@ public class Player implements lunch.sim.Player
 			return new Command(CommandType.WAIT);
 		
 		} catch(Exception e) {
-			System.out.println(e.getMessage());
 			return new Command(CommandType.WAIT);
 		}
 	}
@@ -823,7 +797,7 @@ public class Player implements lunch.sim.Player
 		}
 
 		// if no one is doing it, or doing it well, take one for the team.
-		else if(jobAvailable(members) || !isDistractorEffective())
+		else if((jobAvailable(members) || !isDistractorEffective()) && time_needed(ps)/timeRemaining() < 0.5 )
 			return true;
 		
 		else
