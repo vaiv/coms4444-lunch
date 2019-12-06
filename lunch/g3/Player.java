@@ -1,4 +1,5 @@
 package lunch.g3;
+import lunch.g5.*;
 
 import lunch.sim.Command;
 import lunch.sim.CommandType;
@@ -9,6 +10,8 @@ import javafx.util.Pair;
 import lunch.sim.*;
 import javafx.util.Pair;
 
+// g5 dependencies
+import java.util.Random;
 
 public class Player implements lunch.sim.Player {
     // Initialization function.
@@ -18,44 +21,80 @@ public class Player implements lunch.sim.Player {
     private FoodType foodToPull;
     private double THRESHOLD = 6.5;
     private boolean firstMove;
+    private double foodTimer;
+
+    // Imported from g5's distractor
+    private int seed;
+    private Random random;
+    private Integer id;
+    private Integer turn;
+    private String avatars;
+    MatrixPredictor matrixPredictor;
+
+    // An array to store the animals in previous turn (Mainly to know their positions, so we know where they are going)
+    private ArrayList<Animal> previousAnimals;
+    private GreedyEater greedyEater;
+
+    public Player() {
+        turn = 0;
+        matrixPredictor = new MatrixPredictor(5.0, 6.0, 0);
+    }
+
     public String init(ArrayList<Family> members,Integer id, int f,ArrayList<Animal> animals, Integer m, Integer g, double t, Integer s) {
         firstMove = true;
+
+        // Imported from g5's distractor
+        this.id = id;
+        random = new Random(s);
+        greedyEater = new GreedyEater();
+
         return new String("");
     };
 
     // Gets the moves from the player. Number of moves is specified by first parameter.
     public Command getCommand(ArrayList<Family> members, ArrayList<Animal> animals, PlayerState ps) {
-        if(firstMove) {
-            firstMove = false;
-            return Command.createMoveCommand(randomMove(ps));
-        }
+        if (distractorExists(ps, members, 3)) {
+          if(firstMove) {
+              firstMove = false;
+              return Command.createMoveCommand(randomMove(ps));
+          }
 
-        // Is food in hand? Yes -> should we stop?; No -> should we pull food out?
-        if (ps.get_held_item_type() != null) {
-            // Should we stop? Yes -> put food away; No -> keep eating
-            if (shouldStopEating(animals, ps)) {
-                return new Command(CommandType.KEEP_BACK);
-            } else {
-                return new Command(CommandType.EAT, ps.get_held_item_type());
-            }
+          // Is food in hand? Yes -> should we stop?; No -> should we pull food out?
+          if (ps.get_held_item_type() != null) {
+              // Should we stop? Yes -> put food away; No -> keep eating
+              if (shouldStopEating(animals, ps)) {
+                  return new Command(CommandType.KEEP_BACK);
+              } else {
+                  return new Command(CommandType.EAT, ps.get_held_item_type());
+              }
+          } else {
+              // Are we pulling food out? Yes -> should we continue?; No -> are we in the corner?
+              if (ps.is_player_searching()) {
+                  // Should we continue pulling food out? Yes -> pull out; No -> put it back
+                  if (shouldFinishRemoving(animals, ps)) {
+                      return new Command(CommandType.WAIT);
+                  } else {
+                      return new Command(CommandType.ABORT);
+                  }
+              } else {
+                  // Are we in a corner? Yes -> select food
+                  if (inCorner(ps) && startPullOut(animals, ps)) {
+                      this.foodToPull = selectFood(ps);
+                      foodTimer = 0;
+                      return Command.createRetrieveCommand(this.foodToPull);
+                  } else {
+                      if(inCorner((ps))) {
+                          foodTimer++;
+                      }
+                      return Command.createMoveCommand(getNextMoveToCorner(ps));
+                  }
+              }
+          }
         } else {
-            // Are we pulling food out? Yes -> should we continue?; No -> are we in the corner?
-            if (ps.is_player_searching()) {
-                // Should we continue pulling food out? Yes -> pull out; No -> put it back
-                if (shouldFinishRemoving(animals, ps)) {
-                    return new Command(CommandType.WAIT);
-                } else {
-                    return new Command(CommandType.ABORT);
-                }
-            } else {
-                // Are we in a corner? Yes -> select food
-                if (inCorner(ps) && startPullOut(animals, ps)) {
-                    this.foodToPull = selectFood(ps);
-                    return Command.createRetrieveCommand(this.foodToPull);
-                } else {
-                    return Command.createMoveCommand(getNextMoveToCorner(ps));
-                }
-            }
+            Command command = greedyEater.getCommand(members, animals, ps, previousAnimals, turn);
+            previousAnimals = animals;
+            turn++;
+            return command;
         }
     };
 
@@ -75,9 +114,13 @@ public class Player implements lunch.sim.Player {
     }
     public boolean startPullOut(ArrayList<Animal> animals, PlayerState ps) {
         int monkeysNear = 0;
+        double thresholdDist = 35;
+        if(foodTimer > 15) {
+            thresholdDist = Math.max(thresholdDist - foodTimer/5, 20);
+        }
         for(Animal animal : animals) {
             if(animal.which_animal() == AnimalType.MONKEY) {
-                if(dist(animal.get_location(), ps.get_location()) < 35) {
+                if(dist(animal.get_location(), ps.get_location()) < thresholdDist) {
                     monkeysNear++;
                     if(monkeysNear > 2) {
                         return false;
@@ -196,5 +239,16 @@ public class Player implements lunch.sim.Player {
             }
         }
         return corner;
+    }
+
+    private boolean distractorExists(PlayerState ps, ArrayList<Family> members, int partition) {
+        double x_threshold = -50+100/partition; double y_threshold = -50+100/partition;
+        for (int i = 0; i < members.size(); ++i) {
+            Point loc = members.get(i).get_location();
+            if (this.id != i && x_threshold <= loc.x && y_threshold <= loc.y) {
+                return true;
+            }
+        }
+        return false;
     }
 }
